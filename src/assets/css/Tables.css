@@ -1,0 +1,11 @@
+.sticky-header {
+    position: sticky;
+    top: 0;
+    background-color: #fff; /* Ajusta el color de fondo como desees */
+    z-index: 1;
+  }
+  
+  .scrollable-content {
+    max-height: 300px; /* Ajusta la altura máxima según tus necesidades */
+    overflow-y: auto;
+  }

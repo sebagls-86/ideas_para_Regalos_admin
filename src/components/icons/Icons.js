@@ -1,4 +1,15 @@
-import { createIcon } from "@chakra-ui/icons";
+import illustration from "assets/img/logoIdeasParaRegalos.png";
+import { createIcon } from "@chakra-ui/react";
+
+export const IDPLogo = createIcon({
+  displayName: 'IDPLogo',
+  viewBox: '0 0 100 100',
+  path: (
+    <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="none">
+      <image href={illustration} width="100" height="100" />
+    </svg>
+  ),
+});
 
 export const AdobexdLogo = createIcon({
   displayName: "AdobexdLogo",

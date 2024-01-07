@@ -9,6 +9,7 @@ import {
   Td,
   IconButton,
   Icon,
+  Input,
   Button,
   Modal,
   ModalOverlay,
@@ -21,31 +22,36 @@ import {
 import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
-function ListTypesDataFetcher() {
-  const [listTypes, setListTypes] = useState([]);
+function InterestsDataFetcher() {
+  const [interests, setInterests] = useState([]);
+  const [originalInterests, setOriginalInterests] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
-  const [originalListTypes, setOriginalListTypes] = useState([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
 
-  const handleEdit = (listTypeId) => {
-    setEditingRows([...editingRows, listTypeId]);
+  const handleEdit = (interestId) => {
+    setEditingRows([...editingRows, interestId]);
   };
 
-  const handleSave = async (listTypeId, field, value) => {
+  const handleSave = async (interestId, field, value) => {
     try {
-      const updatedListTypes = listTypes.map((listType) => {
-        if (listType.list_type_id === listTypeId) {
-          return { ...listType, [field]: value };
+      if (field === "interest_id") {
+        console.error("No se puede editar el ID del interés.");
+        return;
+      }
+
+      const updatedInterests = interests.map((interest) => {
+        if (interest.interest_id === interestId) {
+          return { ...interest, [field]: value };
         }
-        return listType;
+        return interest;
       });
 
-      setListTypes(updatedListTypes);
-      setEditingRows(editingRows.filter((row) => row !== listTypeId));
+      setInterests(updatedInterests);
+      setEditingRows(editingRows.filter((row) => row !== interestId));
 
-      await fetch(`http://localhost:8080/api/v1/listtypes/${listTypeId}`, {
+      await fetch(`http://localhost:8080/api/v1/interests/${interestId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -54,30 +60,26 @@ function ListTypesDataFetcher() {
         body: JSON.stringify({ [field]: value }),
       });
 
-      console.log(`Campo ${field} del tipo de lista ${listTypeId} actualizado a ${value}`);
+      console.log(`Campo ${field} del interés ${interestId} actualizado a ${value}`);
     } catch (error) {
       console.error("Error al actualizar el campo:", error);
     }
   };
 
-  const handleCancel = (listTypeId) => {
-    const updatedListTypes = listTypes.map((listType) => {
-      if (listType.list_type_id === listTypeId) {
-        const originalListType = originalListTypes.find(
-          (originalType) => originalType.list_type_id === listTypeId
-        );
-        return originalListType ? { ...originalListType } : listType;
-      }
-      return listType;
+  const handleCancel = (interestId) => {
+    const updatedInterests = interests.map((interest) => {
+      const originalInterest = originalInterests.find(
+        (originalInterest) => originalInterest.interest_id === interest.interest_id
+      );
+      return originalInterest ? { ...originalInterest } : interest;
     });
-  
-    setListTypes(updatedListTypes);
-    setEditingRows(editingRows.filter((row) => row !== listTypeId));
+    setInterests(updatedInterests);
+    setEditingRows(editingRows.filter((row) => row !== interestId));
   };
 
-  const handleDelete = async (listTypeId) => {
+  const handleDelete = async (interestId) => {
     try {
-      await fetch(`http://localhost:8080/api/v1/listtypes/${listTypeId}`, {
+      await fetch(`http://localhost:8080/api/v1/interests/${interestId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -85,19 +87,19 @@ function ListTypesDataFetcher() {
         },
       });
 
-      const updatedListTypes = listTypes.filter(
-        (listType) => listType.list_type_id !== listTypeId
+      const updatedInterests = interests.filter(
+        (interest) => interest.interest_id !== interestId
       );
-      setListTypes(updatedListTypes);
+      setInterests(updatedInterests);
 
-      console.log(`Tipo de lista con ID ${listTypeId} eliminado`);
+      console.log(`Interés con ID ${interestId} eliminado`);
     } catch (error) {
-      console.error("Error al eliminar el tipo de lista:", error);
+      console.error("Error al eliminar el interés:", error);
     }
   };
 
-  const handleDeleteConfirmation = (listTypeId) => {
-    setDeleteConfirmationId(listTypeId);
+  const handleDeleteConfirmation = (interestId) => {
+    setDeleteConfirmationId(interestId);
     setShowDeleteConfirmation(true);
   };
 
@@ -121,12 +123,12 @@ function ListTypesDataFetcher() {
       },
     };
 
-    fetch("http://localhost:8080/api/v1/listtypes", requestOptions)
+    fetch("http://localhost:8080/api/v1/interests", requestOptions)
       .then((response) => response.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setListTypes(data.data);
-          setOriginalListTypes(data.data);
+          setInterests(data.data);
+          setOriginalInterests(data.data);
         } else {
           console.error(
             "La respuesta del servidor no contiene los datos esperados:",
@@ -135,7 +137,7 @@ function ListTypesDataFetcher() {
         }
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de tipos de lista:", error);
+        console.error("Error al obtener los datos de los intereses:", error);
       });
   }, [token]);
 
@@ -145,73 +147,68 @@ function ListTypesDataFetcher() {
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
-            <Th>Nombre</Th>
+            <Th>Interés</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody className="scrollable-content">
-          {listTypes.map((listType) => (
-            <Tr key={listType.list_type_id}>
-              <Td>{listType.list_type_id}</Td>
+          {interests.map((interest) => (
+            <Tr key={interest.interest_id}>
+              <Td>{interest.interest_id}</Td>
               <Td>
-                {editingRows.includes(listType.list_type_id) ? (
-                  <input
-                    value={listType.list_type_name}
-                    onChange={(e) => {
-                    const updatedListTypes = listTypes.map((item) => {
-                      if (item.list_type_id === listType.list_type_id) {
-                        return { ...item, list_type_name: e.target.value };
-                      }
-                      return item;
-                    });
-                    setListTypes(updatedListTypes);
-                  }}
-                    className="white-input"
+                {editingRows.includes(interest.interest_id) ? (
+                  <Input
+                    value={interest.interest}
+                    onChange={(e) =>
+                      setInterests((prevInterests) =>
+                        prevInterests.map((int) =>
+                          int.interest_id === interest.interest_id
+                            ? { ...int, interest: e.target.value }
+                            : int
+                        )
+                      )
+                    }
+                    minWidth="100px"
+                    color="white"
                   />
                 ) : (
-                  listType.list_type_name
+                  interest.interest
                 )}
               </Td>
               <Td>
                 <IconButton
                   aria-label={
-                    editingRows.includes(listType.list_type_id)
+                    editingRows.includes(interest.interest_id)
                       ? "Guardar"
                       : "Editar"
                   }
                   icon={
                     <Icon
                       as={
-                        editingRows.includes(listType.list_type_id)
+                        editingRows.includes(interest.interest_id)
                           ? FaCheck
                           : FaEdit
                       }
                     />
                   }
                   onClick={() =>
-                    editingRows.includes(listType.list_type_id)
-                      ? handleSave(
-                          listType.list_type_id,
-                          "list_type_name",
-                          listType.list_type_name
-                        )
-                      : handleEdit(listType.list_type_id)
+                    editingRows.includes(interest.interest_id)
+                      ? handleSave(interest.interest_id, "interest", interest.interest)
+                      : handleEdit(interest.interest_id)
                   }
                 />
-                {!editingRows.includes(listType.list_type_id) && (
+                {!editingRows.includes(interest.interest_id) && (
                   <IconButton
                     aria-label="Eliminar"
                     icon={<Icon as={FaTrash} />}
-                    onClick={() =>
-                      handleDeleteConfirmation(listType.list_type_id)
-                    }
+                    onClick={() => handleDeleteConfirmation(interest.interest_id)}
                   />
                 )}
-                {editingRows.includes(listType.list_type_id) && (
+                {editingRows.includes(interest.interest_id) && (
                   <Button
                     aria-label="Cancelar"
                     leftIcon={<Icon as={FaTimes} />}
-                    onClick={() => handleCancel(listType.list_type_id)}
+                    onClick={() => handleCancel(interest.interest_id)}
                   ></Button>
                 )}
               </Td>
@@ -226,7 +223,7 @@ function ListTypesDataFetcher() {
           <ModalHeader>Confirmar eliminación</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            ¿Estás seguro de que deseas eliminar este tipo de lista?
+            ¿Estás seguro de que deseas eliminar este interés?
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
@@ -242,4 +239,4 @@ function ListTypesDataFetcher() {
   );
 }
 
-export default ListTypesDataFetcher;
+export default InterestsDataFetcher;

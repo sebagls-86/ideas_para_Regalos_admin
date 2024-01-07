@@ -24,10 +24,38 @@ import "../../../../assets/css/Tables.css";
 
 function EventsDataFetcher() {
   const [events, setEvents] = useState([]);
+  const [originalEvents, setOriginalEvents] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY";
+  const token =  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
+
+  useEffect(() => {
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    fetch("http://localhost:8080/api/v1/events", requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data && Array.isArray(data.data)) {
+          setEvents(data.data);
+          setOriginalEvents(data.data);
+        } else {
+          console.error(
+            "La respuesta del servidor no contiene los datos esperados:",
+            data
+          );
+        }
+      })
+      .catch((error) => {
+        console.error("Error al obtener los datos de eventos:", error);
+      });
+  }, [token]);
 
   const handleEdit = (eventId) => {
     setEditingRows([...editingRows, eventId]);
@@ -68,6 +96,14 @@ function EventsDataFetcher() {
   };
 
   const handleCancel = (eventId) => {
+    const updatedEvents = events.map((event) => {
+      const originalEvent = originalEvents.find(
+        (originalEvent) => originalEvent.event_id === event.event_id
+      );
+      return originalEvent ? { ...originalEvent } : event;
+    });
+
+    setEvents(updatedEvents);
     setEditingRows(editingRows.filter((row) => row !== eventId));
   };
 
@@ -93,32 +129,6 @@ function EventsDataFetcher() {
     }
   };
 
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/events", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setEvents(data.data);
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de eventos:", error);
-      });
-  }, [token]);
-
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
       <Table variant="simple" mt={8} className="table-container">
@@ -139,7 +149,15 @@ function EventsDataFetcher() {
                 {editingRows.includes(event.event_id) ? (
                   <Input
                     value={event.event_type_id}
-                    onChange={(e) => (event.event_type_id = e.target.value)}
+                    onChange={(e) =>
+                      setEvents((prevEvents) =>
+                        prevEvents.map((ev) =>
+                          ev.event_id === event.event_id
+                            ? { ...ev, event_type_id: e.target.value }
+                            : ev
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
@@ -151,7 +169,15 @@ function EventsDataFetcher() {
                 {editingRows.includes(event.event_id) ? (
                   <Input
                     value={event.name}
-                    onChange={(e) => (event.name = e.target.value)}
+                    onChange={(e) =>
+                      setEvents((prevEvents) =>
+                        prevEvents.map((ev) =>
+                          ev.event_id === event.event_id
+                            ? { ...ev, name: e.target.value }
+                            : ev
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
@@ -163,7 +189,15 @@ function EventsDataFetcher() {
                 {editingRows.includes(event.event_id) ? (
                   <Input
                     value={event.date}
-                    onChange={(e) => (event.date = e.target.value)}
+                    onChange={(e) =>
+                      setEvents((prevEvents) =>
+                        prevEvents.map((ev) =>
+                          ev.event_id === event.event_id
+                            ? { ...ev, date: e.target.value }
+                            : ev
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />

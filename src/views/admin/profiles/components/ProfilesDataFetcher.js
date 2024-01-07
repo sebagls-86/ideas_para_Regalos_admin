@@ -8,6 +8,8 @@ import {
   Th,
   Td,
   IconButton,
+  Icon,
+  Input,
   Button,
   Modal,
   ModalOverlay,
@@ -17,16 +19,16 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
-import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
+import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function ProfilesDataFetcher() {
   const [profiles, setProfiles] = useState([]);
+  const [originalProfiles, setOriginalProfiles] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [profileIdToDelete, setProfileIdToDelete] = useState(null);
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY";
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
 
   const handleEdit = (profileId) => {
     setEditingRows([...editingRows, profileId]);
@@ -40,10 +42,10 @@ function ProfilesDataFetcher() {
         }
         return profile;
       });
-  
+
       setProfiles(updatedProfiles);
       setEditingRows(editingRows.filter((row) => row !== profileId));
-  
+
       await fetch(`http://localhost:8080/api/v1/profiles/${profileId}`, {
         method: "PATCH",
         headers: {
@@ -52,7 +54,7 @@ function ProfilesDataFetcher() {
         },
         body: JSON.stringify({ [field]: value }),
       });
-  
+
       console.log(`Campo ${field} del perfil ${profileId} actualizado a ${value}`);
     } catch (error) {
       console.error("Error al actualizar el campo:", error);
@@ -60,6 +62,13 @@ function ProfilesDataFetcher() {
   };
 
   const handleCancel = (profileId) => {
+    const updatedProfiles = profiles.map((profile) => {
+      const originalProfile = originalProfiles.find(
+        (originalProfile) => originalProfile.profile_id === profile.profile_id
+      );
+      return originalProfile ? { ...originalProfile } : profile;
+    });
+    setProfiles(updatedProfiles);
     setEditingRows(editingRows.filter((row) => row !== profileId));
   };
 
@@ -85,19 +94,19 @@ function ProfilesDataFetcher() {
   };
 
   const handleDeleteConfirmation = (profileId) => {
-    setProfileIdToDelete(profileId);
-    setIsConfirmationOpen(true);
+    setDeleteConfirmationId(profileId);
+    setShowDeleteConfirmation(true);
   };
 
   const handleDeleteConfirm = async () => {
-    await handleDelete(profileIdToDelete);
-    setIsConfirmationOpen(false);
-    setProfileIdToDelete(null);
+    await handleDelete(deleteConfirmationId);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
   };
 
   const handleDeleteCancel = () => {
-    setIsConfirmationOpen(false);
-    setProfileIdToDelete(null);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
   };
 
   useEffect(() => {
@@ -114,6 +123,7 @@ function ProfilesDataFetcher() {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setProfiles(data.data);
+          setOriginalProfiles(data.data); // Guarda la data original al cargar
         } else {
           console.error(
             "La respuesta del servidor no contiene los datos esperados:",
@@ -134,10 +144,6 @@ function ProfilesDataFetcher() {
             <Th>ID</Th>
             <Th>Nombre</Th>
             <Th>Apellido</Th>
-            <Th>ID de usuario</Th>
-            <Th>Rango de edad</Th>
-            <Th>Relación</Th>
-            <Th>Fecha de creación</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -145,59 +151,98 @@ function ProfilesDataFetcher() {
           {profiles.map((profile) => (
             <Tr key={profile.profile_id}>
               <Td>{profile.profile_id}</Td>
-              <Td>{profile.name}</Td>
-              <Td>{profile.last_name}</Td>
-              <Td>{profile.user_id}</Td>
-              <Td>{profile.age_range_id}</Td>
-              <Td>{profile.relationship_id}</Td>
-              <Td>{new Date(profile.created_at).toLocaleString()}</Td>
               <Td>
-                <Box display="flex" alignItems="center">
-                  {editingRows.includes(profile.profile_id) ? (
-                    <>
-                      <IconButton
-                        aria-label="Guardar"
-                        icon={<FaCheck />}
-                        onClick={() => handleSave(profile.profile_id)}
-                        mr={2}
-                      />
-                      <IconButton
-                        aria-label="Cancelar"
-                        icon={<FaTimes />}
-                        onClick={() => handleCancel(profile.profile_id)}
-                      />
-                    </>
-                  ) : (
-                    <IconButton
-                      aria-label="Editar"
-                      icon={<FaEdit />}
-                      onClick={() => handleEdit(profile.profile_id)}
-                      mr={2}
-                    />
-                  )}
-
-                  {!editingRows.includes(profile.profile_id) && (
-                    <IconButton
-                      aria-label="Eliminar"
-                      icon={<FaTrash />}
-                      onClick={() =>
-                        handleDeleteConfirmation(profile.profile_id)
+                {editingRows.includes(profile.profile_id) ? (
+                  <Input
+                    value={profile.name}
+                    onChange={(e) =>
+                      setProfiles((prevProfiles) =>
+                        prevProfiles.map((prof) =>
+                          prof.profile_id === profile.profile_id
+                            ? { ...prof, name: e.target.value }
+                            : prof
+                        )
+                      )
+                    }
+                    minWidth="100px"
+                    color="white"
+                  />
+                ) : (
+                  profile.name
+                )}
+              </Td>
+              <Td>
+                {editingRows.includes(profile.profile_id) ? (
+                  <Input
+                    value={profile.last_name}
+                    onChange={(e) =>
+                      setProfiles((prevProfiles) =>
+                        prevProfiles.map((prof) =>
+                          prof.profile_id === profile.profile_id
+                            ? { ...prof, last_name: e.target.value }
+                            : prof
+                        )
+                      )
+                    }
+                    minWidth="100px"
+                    color="white"
+                  />
+                ) : (
+                  profile.last_name
+                )}
+              </Td>
+              <Td>
+                <IconButton
+                  aria-label={
+                    editingRows.includes(profile.profile_id)
+                      ? "Guardar"
+                      : "Editar"
+                  }
+                  icon={
+                    <Icon
+                      as={
+                        editingRows.includes(profile.profile_id)
+                          ? FaCheck
+                          : FaEdit
                       }
                     />
-                  )}
-                </Box>
+                  }
+                  onClick={() =>
+                    editingRows.includes(profile.profile_id)
+                      ? handleSave(profile.profile_id, "name", profile.name)
+                      : handleEdit(profile.profile_id)
+                  }
+                />
+                {!editingRows.includes(profile.profile_id) && (
+                  <IconButton
+                    aria-label="Eliminar"
+                    icon={<Icon as={FaTrash} />}
+                    onClick={() =>
+                      handleDeleteConfirmation(profile.profile_id)
+                    }
+                  />
+                )}
+                {editingRows.includes(profile.profile_id) && (
+                  <Button
+                    aria-label="Cancelar"
+                    leftIcon={<Icon as={FaTimes} />}
+                    onClick={() => handleCancel(profile.profile_id)}
+                  ></Button>
+                )}
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
 
-      <Modal isOpen={isConfirmationOpen} onClose={handleDeleteCancel}>
+      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Confirmar eliminación</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>¿Estás seguro de que deseas eliminar este perfil?</ModalBody>
+          <ModalBody>
+            ¿Estás seguro de que deseas eliminar este perfil?
+          </ModalBody>
           <ModalFooter>
             <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
               Eliminar

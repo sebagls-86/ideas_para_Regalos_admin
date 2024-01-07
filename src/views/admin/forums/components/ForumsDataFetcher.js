@@ -27,8 +27,9 @@ function ForumsDataFetcher() {
   const [selectedForum, setSelectedForum] = useState(null);
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
   const [forumIdToDelete, setForumIdToDelete] = useState(null);
+  const [originalForums, setOriginalForums] = useState([]);
   const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
 
   const handleEdit = (forumId) => {
     setEditingRows([...editingRows, forumId]);
@@ -43,9 +44,9 @@ function ForumsDataFetcher() {
 
       const updatedForums = forums.map((forum) => {
         if (forum.forum_id === forumId) {
-          return { ...forums, [field]: value };
+          return { ...forum, [field]: value };
         }
-        return forums;
+        return forum;
       });
 
       setForums(updatedForums);
@@ -67,6 +68,13 @@ function ForumsDataFetcher() {
   };
 
   const handleCancel = (forumId) => {
+    const updatedForums = forums.map((forum) => {
+      const originalForum = originalForums.find(
+        (originalForum) => originalForum.forum_id === forum.forum_id
+      );
+      return originalForum ? { ...originalForum } : forum;
+    });
+    setForums(updatedForums);
     setEditingRows(editingRows.filter((row) => row !== forumId));
   };
 
@@ -130,6 +138,7 @@ function ForumsDataFetcher() {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setForums(data.data);
+          setOriginalForums(data.data);
         } else {
           console.error(
             "La respuesta del servidor no contiene los datos esperados:",
@@ -160,8 +169,48 @@ function ForumsDataFetcher() {
           {forums.map((forum) => (
             <Tr key={forum.forum_id}>
               <Td>{forum.forum_id}</Td>
-              <Td>{forum.title}</Td>
-              <Td>{forum.description}</Td>
+              <Td>
+                {editingRows.includes(forum.forum_id) ? (
+                  <input
+                    value={
+                      forums.find((f) => f.forum_id === forum.forum_id)
+                        ?.title || ""
+                    }
+                    onChange={(e) => {
+                      const updatedForums = forums.map((f) => {
+                        if (f.forum_id === forum.forum_id) {
+                          return { ...f, title: e.target.value };
+                        }
+                        return f;
+                      });
+                      setForums(updatedForums);
+                    }}
+                  />
+                ) : (
+                  forum.title
+                )}
+              </Td>
+              <Td>
+                {editingRows.includes(forum.forum_id) ? (
+                  <input
+                    value={
+                      forums.find((f) => f.forum_id === forum.forum_id)
+                        ?.description || ""
+                    }
+                    onChange={(e) => {
+                      const updatedForums = forums.map((f) => {
+                        if (f.forum_id === forum.forum_id) {
+                          return { ...f, description: e.target.value };
+                        }
+                        return f;
+                      });
+                      setForums(updatedForums);
+                    }}
+                  />
+                ) : (
+                  forum.description
+                )}
+              </Td>
               <Td>
                 <IconButton
                   aria-label="Ver Mensajes"
@@ -183,11 +232,9 @@ function ForumsDataFetcher() {
                       />
                       <IconButton
                         aria-label="Cancelar"
-                        leftIcon={<Icon as={FaTimes} />}
+                        icon={<Icon as={FaTimes} />}
                         onClick={() => handleCancel(forum.forum_id)}
-                      >
-                        Cancelar
-                      </IconButton>
+                      />
                     </>
                   ) : (
                     <IconButton

@@ -11,15 +11,24 @@ import {
   Icon,
   Input,
   Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
-function UserDataFetcher() {
-  const [userData, setUserData] = useState([]);
+function UsersDataFetcher() {
+  const [users, setUsers] = useState([]);
+  const [originalUsers, setOriginalUsers] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NDk0MjQ5fQ.mDEPvo6mZQo6EeudHx4uMUUNWJ2gkQV6a9FJcnNKQxo";
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
 
   const handleEdit = (userId) => {
     setEditingRows([...editingRows, userId]);
@@ -27,23 +36,18 @@ function UserDataFetcher() {
 
   const handleSave = async (userId, field, value) => {
     try {
-      if (field === "user_id") {
-        console.error("No se puede editar el ID de usuario.");
-        return;
-      }
-
-      const updatedUserData = userData.map((user) => {
+      const updatedUsers = users.map((user) => {
         if (user.user_id === userId) {
           return { ...user, [field]: value };
         }
         return user;
       });
 
-      setUserData(updatedUserData);
+      setUsers(updatedUsers);
       setEditingRows(editingRows.filter((row) => row !== userId));
 
       await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -51,15 +55,20 @@ function UserDataFetcher() {
         body: JSON.stringify({ [field]: value }),
       });
 
-      console.log(
-        `Campo ${field} del usuario ${userId} actualizado a ${value}`
-      );
+      console.log(`Campo ${field} del usuario ${userId} actualizado a ${value}`);
     } catch (error) {
       console.error("Error al actualizar el campo:", error);
     }
   };
 
   const handleCancel = (userId) => {
+    const updatedUsers = users.map((user) => {
+      const originalUser = originalUsers.find(
+        (originalUser) => originalUser.user_id === user.user_id
+      );
+      return originalUser ? { ...originalUser } : user;
+    });
+    setUsers(updatedUsers);
     setEditingRows(editingRows.filter((row) => row !== userId));
   };
 
@@ -73,10 +82,10 @@ function UserDataFetcher() {
         },
       });
 
-      const updatedUserData = userData.filter(
+      const updatedUsers = users.filter(
         (user) => user.user_id !== userId
       );
-      setUserData(updatedUserData);
+      setUsers(updatedUsers);
 
       console.log(`Usuario con ID ${userId} eliminado`);
     } catch (error) {
@@ -84,9 +93,27 @@ function UserDataFetcher() {
     }
   };
 
+  const handleDeleteConfirmation = (userId) => {
+    setDeleteConfirmationId(userId);
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    await handleDelete(deleteConfirmationId);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
+  };
+
   useEffect(() => {
     const requestOptions = {
+      method: "GET",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
     };
@@ -94,55 +121,73 @@ function UserDataFetcher() {
     fetch("http://localhost:8080/api/v1/users", requestOptions)
       .then((response) => response.json())
       .then((data) => {
-        if (Array.isArray(data.data)) {
-          setUserData(data.data);
+        if (data && Array.isArray(data.data)) {
+          setUsers(data.data);
+          setOriginalUsers(data.data); // Guarda la data original al cargar
         } else {
-          console.error("Los datos de usuario no son un array:", data);
+          console.error(
+            "La respuesta del servidor no contiene los datos esperados:",
+            data
+          );
         }
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de usuario:", error);
+        console.error("Error al obtener los datos de usuarios:", error);
       });
-  }, []);
+  }, [token]);
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-  <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" mt={8} className="table-container">
         <Thead className="sticky-header">
           <Tr>
-            <Th>User ID</Th>
-            <Th>Name</Th>
-            <Th>Last Name</Th>
+            <Th>ID de Usuario</Th>
+            <Th>Nombre</Th>
+            <Th>Apellido</Th>
             <Th>Email</Th>
-            <Th>Birth Day</Th>
+            <Th>Fecha de Nacimiento</Th>
             <Th>Avatar</Th>
             <Th>Banner</Th>
-            <Th>Actions</Th>
+            <Th>Acciones</Th>
           </Tr>
         </Thead>
         <Tbody className="scrollable-content">
-          {userData.map((user, index) => (
-            <Tr key={index}>
+          {users.map((user) => (
+            <Tr key={user.user_id}>
               <Td>{user.user_id}</Td>
               <Td>
                 {editingRows.includes(user.user_id) ? (
                   <Input
                     value={user.name}
-                    onChange={(e) => (user.name = e.target.value)}
+                    onChange={(e) =>
+                      setUsers((prevUsers) =>
+                        prevUsers.map((usr) =>
+                          usr.user_id === user.user_id
+                            ? { ...usr, name: e.target.value }
+                            : usr
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
                 ) : (
-                  <span style={{ display: "block", minWidth: "100px" }}>
-                    {user.name}
-                  </span>
+                  user.name
                 )}
               </Td>
               <Td>
                 {editingRows.includes(user.user_id) ? (
                   <Input
                     value={user.last_name}
-                    onChange={(e) => (user.last_name = e.target.value)}
+                    onChange={(e) =>
+                      setUsers((prevUsers) =>
+                        prevUsers.map((usr) =>
+                          usr.user_id === user.user_id
+                            ? { ...usr, last_name: e.target.value }
+                            : usr
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
@@ -154,8 +199,16 @@ function UserDataFetcher() {
                 {editingRows.includes(user.user_id) ? (
                   <Input
                     value={user.email}
-                    onChange={(e) => (user.email = e.target.value)}
-                    minWidth="200px"
+                    onChange={(e) =>
+                      setUsers((prevUsers) =>
+                        prevUsers.map((usr) =>
+                          usr.user_id === user.user_id
+                            ? { ...usr, email: e.target.value }
+                            : usr
+                        )
+                      )
+                    }
+                    minWidth="100px"
                     color="white"
                   />
                 ) : (
@@ -165,20 +218,36 @@ function UserDataFetcher() {
               <Td>
                 {editingRows.includes(user.user_id) ? (
                   <Input
-                    value={user.birth_day}
-                    onChange={(e) => (user.birth_day = e.target.value)}
+                    value={user.birth_date}
+                    onChange={(e) =>
+                      setUsers((prevUsers) =>
+                        prevUsers.map((usr) =>
+                          usr.user_id === user.user_id
+                            ? { ...usr, birth_date: e.target.value }
+                            : usr
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
                 ) : (
-                  user.birth_day
+                  user.birth_date
                 )}
               </Td>
               <Td>
                 {editingRows.includes(user.user_id) ? (
                   <Input
                     value={user.avatar}
-                    onChange={(e) => (user.avatar = e.target.value)}
+                    onChange={(e) =>
+                      setUsers((prevUsers) =>
+                        prevUsers.map((usr) =>
+                          usr.user_id === user.user_id
+                            ? { ...usr, avatar: e.target.value }
+                            : usr
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
@@ -190,7 +259,15 @@ function UserDataFetcher() {
                 {editingRows.includes(user.user_id) ? (
                   <Input
                     value={user.banner}
-                    onChange={(e) => (user.banner = e.target.value)}
+                    onChange={(e) =>
+                      setUsers((prevUsers) =>
+                        prevUsers.map((usr) =>
+                          usr.user_id === user.user_id
+                            ? { ...usr, banner: e.target.value }
+                            : usr
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
@@ -201,27 +278,37 @@ function UserDataFetcher() {
               <Td>
                 <IconButton
                   aria-label={
-                    editingRows.includes(user.user_id) ? "Save" : "Edit"
+                    editingRows.includes(user.user_id)
+                      ? "Guardar"
+                      : "Editar"
                   }
                   icon={
                     <Icon
-                      as={editingRows.includes(user.user_id) ? FaCheck : FaEdit}
+                      as={
+                        editingRows.includes(user.user_id)
+                          ? FaCheck
+                          : FaEdit
+                      }
                     />
                   }
                   onClick={() =>
                     editingRows.includes(user.user_id)
-                      ? handleSave(user.user_id)
+                      ? handleSave(user.user_id, "name", user.name)
                       : handleEdit(user.user_id)
                   }
                 />
-                <IconButton
-                  aria-label="Delete"
-                  icon={<Icon as={FaTrash} />}
-                  onClick={() => handleDelete(user.user_id)}
-                />
+                {!editingRows.includes(user.user_id) && (
+                  <IconButton
+                    aria-label="Eliminar"
+                    icon={<Icon as={FaTrash} />}
+                    onClick={() =>
+                      handleDeleteConfirmation(user.user_id)
+                    }
+                  />
+                )}
                 {editingRows.includes(user.user_id) && (
                   <Button
-                    aria-label="Cancel"
+                    aria-label="Cancelar"
                     leftIcon={<Icon as={FaTimes} />}
                     onClick={() => handleCancel(user.user_id)}
                   ></Button>
@@ -231,8 +318,27 @@ function UserDataFetcher() {
           ))}
         </Tbody>
       </Table>
+
+      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirmar eliminación</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            ¿Estás seguro de que deseas eliminar este usuario?
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
+              Eliminar
+            </Button>
+            <Button variant="ghost" onClick={handleDeleteCancel}>
+              Cancelar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }
 
-export default UserDataFetcher;
+export default UsersDataFetcher;

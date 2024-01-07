@@ -20,7 +20,7 @@ import {
 import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
-function ProductsCatalogDataFetcher() {
+function ListProductsDataFetcher() {
   const [productsCatalog, setProductsCatalog] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
   const [originalProductsCatalog, setOriginalProductsCatalog] = useState([]);
@@ -308,4 +308,4 @@ function ProductsCatalogDataFetcher() {
   );
 }
 
-export default ProductsCatalogDataFetcher;
+export default ListProductsDataFetcher;

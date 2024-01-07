@@ -24,10 +24,11 @@ import "../../../../assets/css/Tables.css";
 
 function CategoriesDataFetcher() {
   const [categories, setCategories] = useState([]);
+  const [originalCategories, setOriginalCategories] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NDk0MjQ5fQ.mDEPvo6mZQo6EeudHx4uMUUNWJ2gkQV6a9FJcnNKQxo";
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
 
   const handleEdit = (categoryId) => {
     setEditingRows([...editingRows, categoryId]);
@@ -59,8 +60,7 @@ function CategoriesDataFetcher() {
         body: JSON.stringify({ [field]: value }),
       });
 
-      console.log(
-        `Campo ${field} de la categoría ${categoryId} actualizado a ${value}`
+      console.log(`Campo ${field} de la categoría ${categoryId} actualizado a ${value}`
       );
     } catch (error) {
       console.error("Error al actualizar el campo:", error);
@@ -68,6 +68,13 @@ function CategoriesDataFetcher() {
   };
 
   const handleCancel = (categoryId) => {
+    const updatedCategories = categories.map((category) => {
+      const originalCategory = originalCategories.find(
+        (originalCategory) => originalCategory.category_id === category.category_id
+      );
+      return originalCategory ? { ...originalCategory } : category;
+    });
+    setCategories(updatedCategories);
     setEditingRows(editingRows.filter((row) => row !== categoryId));
   };
 
@@ -122,6 +129,7 @@ function CategoriesDataFetcher() {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setCategories(data.data);
+          setOriginalCategories(data.data); // Guarda la data original al cargar
         } else {
           console.error(
             "La respuesta del servidor no contiene los datos esperados:",
@@ -153,7 +161,15 @@ function CategoriesDataFetcher() {
                 {editingRows.includes(category.category_id) ? (
                   <Input
                     value={category.name}
-                    onChange={(e) => (category.name = e.target.value)}
+                    onChange={(e) =>
+                      setCategories((prevCategories) =>
+                        prevCategories.map((cat) =>
+                          cat.category_id === category.category_id
+                            ? { ...cat, name: e.target.value }
+                            : cat
+                        )
+                      )
+                    }
                     minWidth="100px"
                     color="white"
                   />
@@ -166,7 +182,16 @@ function CategoriesDataFetcher() {
                   <Input
                     value={category["/images/categories/categoryImage"]}
                     onChange={(e) =>
-                      (category["/images/categories/categoryImage"] = e.target.value)
+                      setCategories((prevCategories) =>
+                        prevCategories.map((cat) =>
+                          cat.category_id === category.category_id
+                            ? {
+                                ...cat,
+                                "/images/categories/categoryImage": e.target.value,
+                              }
+                            : cat
+                        )
+                      )
                     }
                     minWidth="100px"
                     color="white"
@@ -178,7 +203,9 @@ function CategoriesDataFetcher() {
               <Td>
                 <IconButton
                   aria-label={
-                    editingRows.includes(category.category_id) ? "Guardar" : "Editar"
+                    editingRows.includes(category.category_id)
+                      ? "Guardar"
+                      : "Editar"
                   }
                   icon={
                     <Icon
@@ -191,7 +218,7 @@ function CategoriesDataFetcher() {
                   }
                   onClick={() =>
                     editingRows.includes(category.category_id)
-                      ? handleSave(category.category_id)
+                      ? handleSave(category.category_id, "name", category.name)
                       : handleEdit(category.category_id)
                   }
                 />

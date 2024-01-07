@@ -8,6 +8,8 @@ import {
   Th,
   Td,
   IconButton,
+  Icon,
+  Input,
   Button,
   Modal,
   ModalOverlay,
@@ -17,16 +19,16 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
-import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
+import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function RelationshipsDataFetcher() {
   const [relationships, setRelationships] = useState([]);
+  const [originalRelationships, setOriginalRelationships] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [relationshipIdToDelete, setRelationshipIdToDelete] = useState(null);
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY";
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
+  const token = "tu_token_aqui"; // Reemplaza con tu token
 
   const handleEdit = (relationshipId) => {
     setEditingRows([...editingRows, relationshipId]);
@@ -60,6 +62,13 @@ function RelationshipsDataFetcher() {
   };
 
   const handleCancel = (relationshipId) => {
+    const updatedRelationships = relationships.map((relationship) => {
+      const originalRelationship = originalRelationships.find(
+        (originalRelationship) => originalRelationship.relationship_id === relationship.relationship_id
+      );
+      return originalRelationship ? { ...originalRelationship } : relationship;
+    });
+    setRelationships(updatedRelationships);
     setEditingRows(editingRows.filter((row) => row !== relationshipId));
   };
 
@@ -85,19 +94,19 @@ function RelationshipsDataFetcher() {
   };
 
   const handleDeleteConfirmation = (relationshipId) => {
-    setRelationshipIdToDelete(relationshipId);
-    setIsConfirmationOpen(true);
+    setDeleteConfirmationId(relationshipId);
+    setShowDeleteConfirmation(true);
   };
 
   const handleDeleteConfirm = async () => {
-    await handleDelete(relationshipIdToDelete);
-    setIsConfirmationOpen(false);
-    setRelationshipIdToDelete(null);
+    await handleDelete(deleteConfirmationId);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
   };
 
   const handleDeleteCancel = () => {
-    setIsConfirmationOpen(false);
-    setRelationshipIdToDelete(null);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
   };
 
   useEffect(() => {
@@ -114,6 +123,7 @@ function RelationshipsDataFetcher() {
       .then((data) => {
         if (data && Array.isArray(data.data)) {
           setRelationships(data.data);
+          setOriginalRelationships(data.data); // Guarda la data original al cargar
         } else {
           console.error(
             "La respuesta del servidor no contiene los datos esperados:",
@@ -122,7 +132,7 @@ function RelationshipsDataFetcher() {
         }
       })
       .catch((error) => {
-        console.error("Error al obtener los tipos de relación:", error);
+        console.error("Error al obtener los datos de relaciones:", error);
       });
   }, [token]);
 
@@ -132,7 +142,7 @@ function RelationshipsDataFetcher() {
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
-            <Th>Nombre de la relación</Th>
+            <Th>Nombre</Th>
             <Th>Acciones</Th>
           </Tr>
         </Thead>
@@ -140,54 +150,78 @@ function RelationshipsDataFetcher() {
           {relationships.map((relationship) => (
             <Tr key={relationship.relationship_id}>
               <Td>{relationship.relationship_id}</Td>
-              <Td>{relationship.relationship_name}</Td>
               <Td>
-                <Box display="flex" alignItems="center">
-                  {editingRows.includes(relationship.relationship_id) ? (
-                    <>
-                      <IconButton
-                        aria-label="Guardar"
-                        icon={<FaCheck />}
-                        onClick={() => handleSave(relationship.relationship_id)}
-                        mr={2}
-                      />
-                      <IconButton
-                        aria-label="Cancelar"
-                        icon={<FaTimes />}
-                        onClick={() => handleCancel(relationship.relationship_id)}
-                      />
-                    </>
-                  ) : (
-                    <IconButton
-                      aria-label="Editar"
-                      icon={<FaEdit />}
-                      onClick={() => handleEdit(relationship.relationship_id)}
-                      mr={2}
-                    />
-                  )}
-
-                  {!editingRows.includes(relationship.relationship_id) && (
-                    <IconButton
-                      aria-label="Eliminar"
-                      icon={<FaTrash />}
-                      onClick={() =>
-                        handleDeleteConfirmation(relationship.relationship_id)
+                {editingRows.includes(relationship.relationship_id) ? (
+                  <Input
+                    value={relationship.relationship_name}
+                    onChange={(e) =>
+                      setRelationships((prevRelationships) =>
+                        prevRelationships.map((rel) =>
+                          rel.relationship_id === relationship.relationship_id
+                            ? { ...rel, relationship_name: e.target.value }
+                            : rel
+                        )
+                      )
+                    }
+                    minWidth="100px"
+                    color="white"
+                  />
+                ) : (
+                  relationship.relationship_name
+                )}
+              </Td>
+              <Td>
+                <IconButton
+                  aria-label={
+                    editingRows.includes(relationship.relationship_id)
+                      ? "Guardar"
+                      : "Editar"
+                  }
+                  icon={
+                    <Icon
+                      as={
+                        editingRows.includes(relationship.relationship_id)
+                          ? FaCheck
+                          : FaEdit
                       }
                     />
-                  )}
-                </Box>
+                  }
+                  onClick={() =>
+                    editingRows.includes(relationship.relationship_id)
+                      ? handleSave(relationship.relationship_id, "relationship_name", relationship.relationship_name)
+                      : handleEdit(relationship.relationship_id)
+                  }
+                />
+                {!editingRows.includes(relationship.relationship_id) && (
+                  <IconButton
+                    aria-label="Eliminar"
+                    icon={<Icon as={FaTrash} />}
+                    onClick={() =>
+                      handleDeleteConfirmation(relationship.relationship_id)
+                    }
+                  />
+                )}
+                {editingRows.includes(relationship.relationship_id) && (
+                  <Button
+                    aria-label="Cancelar"
+                    leftIcon={<Icon as={FaTimes} />}
+                    onClick={() => handleCancel(relationship.relationship_id)}
+                  ></Button>
+                )}
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
 
-      <Modal isOpen={isConfirmationOpen} onClose={handleDeleteCancel}>
+      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Confirmar eliminación</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>¿Estás seguro de que deseas eliminar esta relación?</ModalBody>
+          <ModalBody>
+            ¿Estás seguro de que deseas eliminar esta relación?
+          </ModalBody>
           <ModalFooter>
             <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
               Eliminar

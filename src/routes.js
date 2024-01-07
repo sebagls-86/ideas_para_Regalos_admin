@@ -7,6 +7,7 @@ import { TbCalendarStats } from "react-icons/tb";
 import { BsFillCalendarEventFill } from "react-icons/bs";
 import { FaUser, FaPencilAlt, FaBullhorn, FaCalendarAlt,FaListOl, FaUserFriends, FaShoppingBag, FaIdBadge } from "react-icons/fa";
 import { IoMdList } from "react-icons/io";
+import { AiOutlineTag, AiOutlineUnorderedList } from "react-icons/ai";
 
 
 // Admin Imports
@@ -23,7 +24,9 @@ import Profiles from "views/admin/profiles";
 import Lists from "views/admin/lists";
 import ListTypes from "views/admin/listTypes";
 import Relationships from "views/admin/relationships";
+import Interests from "views/admin/interests";
 import ProductsCatalog from "views/admin/productsCatalog";
+import ListProducts from "views/admin/listProducts";
 import NFTMarketplace from "views/admin/marketplace";
 import Profile from "views/admin/profile";
 import DataTables from "views/admin/dataTables";
@@ -89,7 +92,7 @@ const routes = [
   {
     name: "Forums Messages",
     layout: "/admin",
-    path: "/forums-messages",
+    path: "/messages",
     icon: <Icon as={MdForum} width='20px' height='20px' color='inherit' />,
     component: ForumsMessages,
   },
@@ -127,6 +130,20 @@ const routes = [
     path: "/products-catalog",
     icon: <Icon as={FaShoppingBag} width='20px' height='20px' color='inherit' />,
     component: ProductsCatalog,
+  },
+  {
+    name: "Interests",
+    layout: "/admin",
+    path: "/interests",
+    icon: <Icon as={AiOutlineTag} width='20px' height='20px' color='inherit' />,
+    component: Interests,
+  },
+  {
+    name: "List Products",
+    layout: "/admin",
+    path: "/list-products",
+    icon: <Icon as={AiOutlineUnorderedList} width='20px' height='20px' color='inherit' />,
+    component: ListProducts,
   },
   {
     name: "NFT Marketplace",

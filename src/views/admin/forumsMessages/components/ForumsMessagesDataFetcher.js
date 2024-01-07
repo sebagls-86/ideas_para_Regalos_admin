@@ -9,6 +9,7 @@ import {
   Td,
   IconButton,
   Icon,
+  Input,
   Button,
   Modal,
   ModalOverlay,
@@ -18,102 +19,108 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
-import { FaEdit, FaCheck, FaTrash, FaTimes, FaComments } from "react-icons/fa";
+import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
-function ForumsMessagesDataFetcher() {
-  const [forums, setForums] = useState([]);
+function MessagesDataFetcher() {
+  const [messages, setMessages] = useState([]);
+  const [originalMessages, setOriginalMessages] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
-  const [selectedForum, setSelectedForum] = useState(null);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [forumIdToDelete, setForumIdToDelete] = useState(null);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
   const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
 
-  const handleEdit = (forumId) => {
-    setEditingRows([...editingRows, forumId]);
+  const handleEdit = (messageId) => {
+    setEditingRows([...editingRows, messageId]);
   };
 
-  const handleSave = async (forumId, field, value) => {
+  const handleSave = async (messageId, field, value) => {
     try {
       if (field === "message_id") {
-        console.error("No se puede editar el ID del mensaje.");
+        console.error("No se puede editar el ID de la categoría.");
         return;
       }
 
-      const updatedForums = forums.map((message) => {
-        if (message.message_id === forumId) {
+      const updatedMessages = messages.map((message) => {
+        if (message.message_id === messageId) {
           return { ...message, [field]: value };
         }
         return message;
       });
 
-      setForums(updatedForums);
-      setEditingRows(editingRows.filter((row) => row !== forumId));
+      setMessages(updatedMessages);
+      setEditingRows(editingRows.filter((row) => row !== messageId));
 
-      await fetch(`http://localhost:8080/api/v1/forums/forum_id/messages/${forumId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
+      await fetch(
+        `http://localhost:8080/api/v1/forums/forum_id/messages/${messageId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ [field]: value }),
+        }
+      );
 
-      console.log(`Campo ${field} del mensaje ${forumId} actualizado a ${value}`);
+      console.log(
+        `Campo ${field} del mensaje ${messageId} actualizado a ${value}`
+      );
     } catch (error) {
       console.error("Error al actualizar el campo:", error);
     }
   };
 
-  const handleCancel = (forumId) => {
-    setEditingRows(editingRows.filter((row) => row !== forumId));
+  const handleCancel = (messageId) => {
+    const updatedMessages = messages.map((message) => {
+      const originalMessage = originalMessages.find(
+        (originalMessage) => originalMessage.message_id === message.message_id
+      );
+      return originalMessage ? { ...originalMessage } : message;
+    });
+    setMessages(updatedMessages);
+    setEditingRows(editingRows.filter((row) => row !== messageId));
   };
 
-  const handleDelete = async (forumId) => {
+  const handleDelete = async (messageId) => {
     try {
-      await fetch(`http://localhost:8080/api/v1/forums/forum_id/messages/${forumId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const updatedForums = forums.filter(
-        (message) => message.message_id !== forumId
+      await fetch(
+        `http://localhost:8080/api/v1/forums/forum_id/messages/${messageId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
-      setForums(updatedForums);
 
-      console.log(`Mensaje con ID ${forumId} eliminado`);
+      const updatedMessages = messages.filter(
+        (message) => message.message_id !== messageId
+      );
+      setMessages(updatedMessages);
+
+      console.log(`Mensaje con ID ${messageId} eliminado`);
     } catch (error) {
       console.error("Error al eliminar el mensaje:", error);
     }
   };
 
-  const handleViewMessages = (forumId) => {
-    const selected = forums.find((message) => message.message_id === forumId);
-    setSelectedForum(selected);
-  };
-
-  const handleCloseMessages = () => {
-    setSelectedForum(null);
-  };
-
-  const handleDeleteConfirmation = (forumId) => {
-    setForumIdToDelete(forumId);
-    setIsConfirmationOpen(true);
+  const handleDeleteConfirmation = (messageId) => {
+    setDeleteConfirmationId(messageId);
+    setShowDeleteConfirmation(true);
   };
 
   const handleDeleteConfirm = async () => {
-    await handleDelete(forumIdToDelete);
-    setIsConfirmationOpen(false);
-    setForumIdToDelete(null);
+    await handleDelete(deleteConfirmationId);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
   };
 
   const handleDeleteCancel = () => {
-    setIsConfirmationOpen(false);
-    setForumIdToDelete(null);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
   };
 
   useEffect(() => {
@@ -129,7 +136,8 @@ function ForumsMessagesDataFetcher() {
       .then((response) => response.json())
       .then((data) => {
         if (data && Array.isArray(data.data)) {
-          setForums(data.data);
+          setMessages(data.data);
+          setOriginalMessages(data.data); // Guarda la data original al cargar
         } else {
           console.error(
             "La respuesta del servidor no contiene los datos esperados:",
@@ -138,7 +146,7 @@ function ForumsMessagesDataFetcher() {
         }
       })
       .catch((error) => {
-        console.error("Error al obtener los datos de mensajes:", error);
+        console.error("Error al obtener los datos de categorías:", error);
       });
   }, [token]);
 
@@ -157,61 +165,109 @@ function ForumsMessagesDataFetcher() {
           </Tr>
         </Thead>
         <Tbody className="scrollable-content">
-          {forums.map((message) => (
+          {messages.map((message) => (
             <Tr key={message.message_id}>
               <Td>{message.message_id}</Td>
-              <Td>{message.message}</Td>
+              <Td>
+                {editingRows.includes(message.message_id) ? (
+                  <Input
+                    value={message.message}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      const updatedMessages = messages.map((msg) =>
+                        msg.message_id === message.message_id
+                          ? { ...msg, message: value }
+                          : msg
+                      );
+                      setMessages(updatedMessages);
+                    }}
+                    color="white"
+                  />
+                ) : (
+                  message.message
+                )}
+              </Td>
               <Td>{message.user_id}</Td>
               <Td>{message.forum_id}</Td>
-              <Td>{message.images ? message.images.join(', ') : 'N/A'}</Td>
+              <Td>
+                {editingRows.includes(message.message_id) ? (
+                  <Input
+                    value={message.images ? message.images.join(', ') : ''}
+                    onChange={(e) => {
+                      const { value } = e.target;
+                      const updatedMessages = messages.map((msg) =>
+                        msg.message_id === message.message_id
+                          ? { ...msg, images: value.split(', ') }
+                          : msg
+                      );
+                      setMessages(updatedMessages);
+                    }}
+                    minWidth="100px"
+                    color="white"
+                  />
+                ) : message.images ? (
+                  message.images.join(', ')
+                ) : (
+                  'N/A'
+                )}
+              </Td>
               <Td>{new Date(message.date).toLocaleString()}</Td>
               <Td>
-                <Box display="flex" alignItems="center">
-                  {editingRows.includes(message.message_id) ? (
-                    <>
-                      <IconButton
-                        aria-label="Guardar"
-                        icon={<Icon as={FaCheck} />}
-                        onClick={() => handleSave(message.message_id)}
-                        mr={2}
-                      />
-                      <IconButton
-                        aria-label="Cancelar"
-                        leftIcon={<Icon as={FaTimes} />}
-                        onClick={() => handleCancel(message.message_id)}
-                      >
-                        Cancelar
-                      </IconButton>
-                    </>
-                  ) : (
-                    <IconButton
-                      aria-label="Editar"
-                      icon={<Icon as={FaEdit} />}
-                      onClick={() => handleEdit(message.message_id)}
-                      mr={2}
+                <IconButton
+                  aria-label={
+                    editingRows.includes(message.message_id)
+                      ? 'Guardar'
+                      : 'Editar'
+                  }
+                  icon={
+                    <Icon
+                      as={
+                        editingRows.includes(message.message_id)
+                          ? FaCheck
+                          : FaEdit
+                      }
                     />
-                  )}
-
-                  {!editingRows.includes(message.message_id) && (
-                    <IconButton
-                      aria-label="Eliminar"
-                      icon={<Icon as={FaTrash} />}
-                      onClick={() => handleDeleteConfirmation(message.message_id)}
-                    />
-                  )}
-                </Box>
+                  }
+                  onClick={() =>
+                    editingRows.includes(message.message_id)
+                      ? handleSave(
+                          message.message_id,
+                          'message',
+                          message.message
+                        )
+                      : handleEdit(message.message_id)
+                  }
+                />
+                {!editingRows.includes(message.message_id) && (
+                  <IconButton
+                    aria-label="Eliminar"
+                    icon={<Icon as={FaTrash} />}
+                    onClick={() =>
+                      handleDeleteConfirmation(message.message_id)
+                    }
+                  />
+                )}
+                {editingRows.includes(message.message_id) && (
+                  <IconButton
+                    aria-label="Cancelar"
+                    icon={<Icon as={FaTimes} />}
+                    onClick={() => handleCancel(message.message_id)}
+                  />
+                )}
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
 
-      <Modal isOpen={isConfirmationOpen} onClose={handleDeleteCancel}>
+      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Confirmar eliminación</ModalHeader>
           <ModalCloseButton />
-          <ModalBody>¿Estás seguro de que deseas eliminar este mensaje?</ModalBody>
+          <ModalBody>
+            ¿Estás seguro de que deseas eliminar esta categoría?
+          </ModalBody>
           <ModalFooter>
             <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
               Eliminar
@@ -226,4 +282,4 @@ function ForumsMessagesDataFetcher() {
   );
 }
 
-export default ForumsMessagesDataFetcher;
+export default MessagesDataFetcher;

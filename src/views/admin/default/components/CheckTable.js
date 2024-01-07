@@ -10,7 +10,8 @@ import {
   Tr,
   useColorModeValue,
 } from "@chakra-ui/react";
-import React, { useMemo } from "react";
+import React, { useContext, useMemo } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
 import {
   useGlobalFilter,
   usePagination,
@@ -23,7 +24,8 @@ import Card from "components/card/Card";
 import Menu from "components/menu/MainMenu";
 export default function CheckTable(props) {
   const { columnsData, tableData } = props;
-
+  const { token } = useContext(TokenContext);
+  console.log("token", token)
   const columns = useMemo(() => columnsData, [columnsData]);
   const data = useMemo(() => tableData, [tableData]);
 

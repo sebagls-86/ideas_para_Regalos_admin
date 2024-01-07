@@ -29,8 +29,7 @@ function ForumsDataFetcher() {
   const [forumIdToDelete, setForumIdToDelete] = useState(null);
   const [originalForums, setOriginalForums] = useState([]);
   const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
-
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NzMyNzE2fQ.zroIVwP9rbRps8NcSpLDMxMVQz3hkxnOweCrjaZHVDY"
   const handleEdit = (forumId) => {
     setEditingRows([...editingRows, forumId]);
   };
@@ -274,14 +273,15 @@ function ForumsDataFetcher() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      {selectedForum && (
-        <Box>
-          <Box>
-            <h2>Mensajes de {selectedForum.title}</h2>
-            <Button onClick={handleCloseMessages}>Cerrar Mensajes</Button>
-          </Box>
-          <Box>
-            {selectedForum.messages ? (
+      <Modal isOpen={selectedForum} onClose={handleCloseMessages}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>
+            Mensajes de {selectedForum ? selectedForum.title : ""}
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedForum && selectedForum.messages ? (
               selectedForum.messages.map((message) => (
                 <div key={message.message_id}>
                   <p>Usuario: {message.user_name}</p>
@@ -291,9 +291,14 @@ function ForumsDataFetcher() {
             ) : (
               <p>No hay mensajes disponibles para este foro.</p>
             )}
-          </Box>
-        </Box>
-      )}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleCloseMessages}>
+              Cerrar Mensajes
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

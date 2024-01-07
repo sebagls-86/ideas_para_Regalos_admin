@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -21,28 +23,29 @@ import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function AgeRangeDataFetcher() {
+  const { token } = useContext(TokenContext);
   const [ageRanges, setAgeRanges] = useState([]);
   const [originalAgeRanges, setOriginalAgeRanges] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY";
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
-    const handleEdit = (ageRangeId) => {
-      setEditingRows([...editingRows, ageRangeId]);
-    };
-  
-    const handleCancel = (ageRangeId) => {
-      const updatedAgeRanges = ageRanges.map((range) => {
-        const originalRange = originalAgeRanges.find(
-          (originalRange) => originalRange.age_range_id === range.age_range_id
-        );
-        return originalRange ? { ...originalRange } : range;
-      });
-      setAgeRanges(updatedAgeRanges);
-      setEditingRows(editingRows.filter((row) => row !== ageRangeId));
-    };
+  console.log("Token:", token)
+  const handleEdit = (ageRangeId) => {
+    setEditingRows([...editingRows, ageRangeId]);
+  };
+
+  const handleCancel = (ageRangeId) => {
+    const updatedAgeRanges = ageRanges.map((range) => {
+      const originalRange = originalAgeRanges.find(
+        (originalRange) => originalRange.age_range_id === range.age_range_id
+      );
+      return originalRange ? { ...originalRange } : range;
+    });
+    setAgeRanges(updatedAgeRanges);
+    setEditingRows(editingRows.filter((row) => row !== ageRangeId));
+  };
 
   const handleSave = async (ageRangeId, field, value, index) => {
     try {
@@ -61,18 +64,26 @@ function AgeRangeDataFetcher() {
       setAgeRanges(updatedAgeRanges);
       setEditingRows(editingRows.filter((row) => row !== ageRangeId));
 
-      await fetch(`http://localhost:8080/api/v1/ageRanges/${ageRangeId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/v1/ageRanges/${ageRangeId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ [field]: value }),
+        }
+      );
 
       console.log(
         `Campo ${field} del rango de edad ${ageRangeId} actualizado a ${value}`
       );
+
+      if (response.status === 403) {
+        setShowErrorModal(true);
+        throw new Error("Forbidden");
+      }
 
       // Eliminar la entrada correspondiente en originalAgeRanges después de guardar
       const updatedOriginalAgeRanges = [...originalAgeRanges];
@@ -80,18 +91,29 @@ function AgeRangeDataFetcher() {
       setOriginalAgeRanges(updatedOriginalAgeRanges);
     } catch (error) {
       console.error("Error al actualizar el campo:", error);
+      if (error.message === "Forbidden") {
+        setShowErrorModal(true);
+      }
     }
   };
 
   const handleDelete = async (ageRangeId) => {
     try {
-      await fetch(`http://localhost:8080/api/v1/ageRanges/${ageRangeId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/v1/ageRanges/${ageRangeId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 403) {
+        setShowErrorModal(true);
+        throw new Error("Forbidden");
+      }
 
       const updatedAgeRanges = ageRanges.filter(
         (range) => range.age_range_id !== ageRangeId
@@ -101,6 +123,9 @@ function AgeRangeDataFetcher() {
       console.log(`Rango de edad con ID ${ageRangeId} eliminado`);
     } catch (error) {
       console.error("Error al eliminar el rango de edad:", error);
+      if (error.message === "Forbidden") {
+        setShowErrorModal(true);
+      }
     }
   };
 
@@ -159,6 +184,7 @@ function AgeRangeDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
+        <ErrorModal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)} />
         <Tbody className="scrollable-content">
           {ageRanges.map((range, index) => (
             <Tr key={range.age_range_id}>
@@ -186,7 +212,10 @@ function AgeRangeDataFetcher() {
                   <input
                     value={range.minimum_age}
                     onChange={(e) => {
-                      const updatedRange = { ...range, minimum_age: parseInt(e.target.value) };
+                      const updatedRange = {
+                        ...range,
+                        minimum_age: parseInt(e.target.value),
+                      };
                       setAgeRanges((prevRanges) => {
                         const updatedRanges = [...prevRanges];
                         updatedRanges[index] = updatedRange;
@@ -204,7 +233,10 @@ function AgeRangeDataFetcher() {
                   <input
                     value={range.maximum_age}
                     onChange={(e) => {
-                      const updatedRange = { ...range, maximum_age: parseInt(e.target.value) };
+                      const updatedRange = {
+                        ...range,
+                        maximum_age: parseInt(e.target.value),
+                      };
                       setAgeRanges((prevRanges) => {
                         const updatedRanges = [...prevRanges];
                         updatedRanges[index] = updatedRange;
@@ -220,14 +252,25 @@ function AgeRangeDataFetcher() {
               <Td>
                 <IconButton
                   aria-label={
-                    editingRows.includes(range.age_range_id) ? "Guardar" : "Editar"
+                    editingRows.includes(range.age_range_id)
+                      ? "Guardar"
+                      : "Editar"
                   }
                   icon={
-                    editingRows.includes(range.age_range_id) ? <FaCheck /> : <FaEdit />
+                    editingRows.includes(range.age_range_id) ? (
+                      <FaCheck />
+                    ) : (
+                      <FaEdit />
+                    )
                   }
                   onClick={() =>
                     editingRows.includes(range.age_range_id)
-                      ? handleSave(range.age_range_id, "name", range.name, index)
+                      ? handleSave(
+                          range.age_range_id,
+                          "name",
+                          range.name,
+                          index
+                        )
                       : handleEdit(range.age_range_id)
                   }
                 />

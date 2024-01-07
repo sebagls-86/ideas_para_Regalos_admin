@@ -1,11 +1,8 @@
 // Chakra Imports
 import {
   Avatar,
-  Button,
   Flex,
   Icon,
-  Image,
-  Link,
   Menu,
   MenuButton,
   MenuItem,
@@ -18,15 +15,17 @@ import { ItemContent } from "components/menu/ItemContent";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { SidebarResponsive } from "components/sidebar/Sidebar";
 import PropTypes from "prop-types";
-import React from "react";
+import React, { useContext } from "react";
+import { TokenContext } from "contexts/TokenContext";
+import { useHistory } from "react-router-dom";
 // Assets
-import navImage from "assets/img/layout/Navbar.png";
-import { MdNotificationsNone, MdInfoOutline } from "react-icons/md";
+import { MdNotificationsNone } from "react-icons/md";
 import { FaEthereum } from "react-icons/fa";
 import routes from "routes.js";
-import { ThemeEditor } from "./ThemeEditor";
 export default function HeaderLinks(props) {
   const { secondary } = props;
+  const { setToken } = useContext(TokenContext);
+  const history = useHistory();
   // Chakra Color Mode
   const navbarIcon = useColorModeValue("gray.400", "white");
   let menuBg = useColorModeValue("white", "navy.800");
@@ -40,7 +39,13 @@ export default function HeaderLinks(props) {
     "14px 17px 40px 4px rgba(112, 144, 176, 0.18)",
     "14px 17px 40px 4px rgba(112, 144, 176, 0.06)"
   );
-  const borderButton = useColorModeValue("secondaryGray.500", "whiteAlpha.200");
+  
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken("");
+    history.push("/auth/login");
+  };
+
   return (
     <Flex
       w={{ sm: "100%", md: "auto" }}
@@ -212,6 +217,7 @@ export default function HeaderLinks(props) {
               color="red.400"
               borderRadius="8px"
               px="14px"
+              onClick={handleLogout} // Agrega la función handleLogout al hacer clic en Log out
             >
               <Text fontSize="sm">Log out</Text>
             </MenuItem>

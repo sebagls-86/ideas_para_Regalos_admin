@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState, useEffect } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
 import {
   Box,
   Table,
@@ -28,8 +29,8 @@ function UsersDataFetcher() {
   const [editingRows, setEditingRows] = useState([]);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
-
+  const { token } = useContext(TokenContext);
+  console.log("token",token);
   const handleEdit = (userId) => {
     setEditingRows([...editingRows, userId]);
   };

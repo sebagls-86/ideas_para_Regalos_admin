@@ -1,4 +1,4 @@
-import React, { createContext, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 
 export const TokenContext = createContext();
 
@@ -11,16 +11,33 @@ export const TokenProvider = ({ children }) => {
     if (userToken) {
       setToken(userToken);
       setIsAuthenticated(true);
+    } else {
+      setToken('');
+      setIsAuthenticated(false);
     }
   };
 
-  // Ejecutar checkAuth al inicio para establecer los valores iniciales
-  useState(() => {
+  const updateToken = (newToken) => {
+    setToken(newToken);
+    if (newToken) {
+      setIsAuthenticated(true);
+    } else {
+      setIsAuthenticated(false);
+    }
+  };
+
+  const logout = () => {
+    setToken('');
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+  };
+
+  useEffect(() => {
     checkAuth();
   }, []);
 
   return (
-    <TokenContext.Provider value={{ token, setToken, isAuthenticated, setIsAuthenticated }}>
+    <TokenContext.Provider value={{ token, updateToken, isAuthenticated, setIsAuthenticated, logout }}>
       {children}
     </TokenContext.Provider>
   );

@@ -11,21 +11,24 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 // Custom Components
+import { Link } from "react-router-dom";
 import { ItemContent } from "components/menu/ItemContent";
 import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { SidebarResponsive } from "components/sidebar/Sidebar";
 import PropTypes from "prop-types";
 import React, { useContext } from "react";
-import { TokenContext } from "contexts/TokenContext";
+import {TokenContext} from "contexts/TokenContext";
 import { useHistory } from "react-router-dom";
 // Assets
 import { MdNotificationsNone } from "react-icons/md";
 import { FaEthereum } from "react-icons/fa";
 import routes from "routes.js";
+
 export default function HeaderLinks(props) {
   const { secondary } = props;
-  const { setToken } = useContext(TokenContext);
+  const { logout } = useContext(TokenContext);
   const history = useHistory();
+  
   // Chakra Color Mode
   const navbarIcon = useColorModeValue("gray.400", "white");
   let menuBg = useColorModeValue("white", "navy.800");
@@ -39,23 +42,21 @@ export default function HeaderLinks(props) {
     "14px 17px 40px 4px rgba(112, 144, 176, 0.18)",
     "14px 17px 40px 4px rgba(112, 144, 176, 0.06)"
   );
-  
+
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setToken("");
-    history.push("/auth/login");
+   logout();
+    history.replace("/auth/login");
   };
 
   return (
     <Flex
-      w={{ sm: "100%", md: "auto" }}
       alignItems="center"
       flexDirection="row"
       bg={menuBg}
-      flexWrap={secondary ? { base: "wrap", md: "nowrap" } : "unset"}
       p="10px"
       borderRadius="30px"
       boxShadow={shadow}
+      overflow="hidden" // Evita que el contenido provoque desbordamiento
     >
       <SearchBar
         mb={secondary ? { base: "10px", md: "unset" } : "unset"}
@@ -109,6 +110,7 @@ export default function HeaderLinks(props) {
           />
         </MenuButton>
         <MenuList
+          zIndex={9999}
           boxShadow={shadow}
           p="20px"
           borderRadius="20px"
@@ -195,14 +197,16 @@ export default function HeaderLinks(props) {
             </Text>
           </Flex>
           <Flex flexDirection="column" p="10px">
-            <MenuItem
-              _hover={{ bg: "none" }}
-              _focus={{ bg: "none" }}
-              borderRadius="8px"
-              px="14px"
-            >
-              <Text fontSize="sm">Profile Settings</Text>
-            </MenuItem>
+            <Link to="/admin/profile">
+              <MenuItem
+                _hover={{ bg: "none" }}
+                _focus={{ bg: "none" }}
+                borderRadius="8px"
+                px="14px"
+              >
+                <Text fontSize="sm">Profile Settings</Text>
+              </MenuItem>
+            </Link>
             <MenuItem
               _hover={{ bg: "none" }}
               _focus={{ bg: "none" }}

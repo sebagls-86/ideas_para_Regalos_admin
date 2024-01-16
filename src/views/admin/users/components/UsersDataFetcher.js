@@ -1,5 +1,8 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
+import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -24,122 +27,29 @@ import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function UsersDataFetcher() {
-  const [users, setUsers] = useState([]);
-  const [originalUsers, setOriginalUsers] = useState([]);
-  const [editingRows, setEditingRows] = useState([]);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
+  const apiEndpoint = "http://localhost:8080/api/v1/users";
   const { token } = useContext(TokenContext);
-  console.log("token",token);
-  const handleEdit = (userId) => {
-    setEditingRows([...editingRows, userId]);
-  };
+  const {
+    data: users,
+    editingRows,
+    showDeleteConfirmation,
+    showTokenInvalidError,
+    showErrorModal,
+    handleEdit,
+    handleCancel,
+    handleSave,
+    handleDeleteConfirmation,
+    handleDeleteConfirm,
+    handleDeleteCancel,
+    handleCloseErrorModal,
+    handleCloseTokenInvalidError,
+  } = useDataFetcher(apiEndpoint, token);
 
-  const handleSave = async (userId, field, value) => {
-    try {
-      const updatedUsers = users.map((user) => {
-        if (user.user_id === userId) {
-          return { ...user, [field]: value };
-        }
-        return user;
-      });
-
-      setUsers(updatedUsers);
-      setEditingRows(editingRows.filter((row) => row !== userId));
-
-      await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      console.log(`Campo ${field} del usuario ${userId} actualizado a ${value}`);
-    } catch (error) {
-      console.error("Error al actualizar el campo:", error);
-    }
-  };
-
-  const handleCancel = (userId) => {
-    const updatedUsers = users.map((user) => {
-      const originalUser = originalUsers.find(
-        (originalUser) => originalUser.user_id === user.user_id
-      );
-      return originalUser ? { ...originalUser } : user;
-    });
-    setUsers(updatedUsers);
-    setEditingRows(editingRows.filter((row) => row !== userId));
-  };
-
-  const handleDelete = async (userId) => {
-    try {
-      await fetch(`http://localhost:8080/api/v1/users/${userId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const updatedUsers = users.filter(
-        (user) => user.user_id !== userId
-      );
-      setUsers(updatedUsers);
-
-      console.log(`Usuario con ID ${userId} eliminado`);
-    } catch (error) {
-      console.error("Error al eliminar el usuario:", error);
-    }
-  };
-
-  const handleDeleteConfirmation = (userId) => {
-    setDeleteConfirmationId(userId);
-    setShowDeleteConfirmation(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    await handleDelete(deleteConfirmationId);
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/users", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setUsers(data.data);
-          setOriginalUsers(data.data); // Guarda la data original al cargar
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de usuarios:", error);
-      });
-  }, [token]);
+  console.log("token users", token);
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" className="table-container">
         <Thead className="sticky-header">
           <Tr>
             <Th>ID de Usuario</Th>
@@ -152,7 +62,16 @@ function UsersDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
-        <Tbody className="scrollable-content">
+        
+        <TokenInvalidError
+          isOpen={showTokenInvalidError}
+          onClose={handleCloseTokenInvalidError}
+        />
+        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
+        <Tbody
+          className="scrollable-content"
+          style={{ maxHeight: "calc(100vh - 11rem)", overflow: "hidden" }}
+        >
           {users.map((user) => (
             <Tr key={user.user_id}>
               <Td>{user.user_id}</Td>
@@ -161,13 +80,7 @@ function UsersDataFetcher() {
                   <Input
                     value={user.name}
                     onChange={(e) =>
-                      setUsers((prevUsers) =>
-                        prevUsers.map((usr) =>
-                          usr.user_id === user.user_id
-                            ? { ...usr, name: e.target.value }
-                            : usr
-                        )
-                      )
+                      handleSave(user.user_id, "name", e.target.value)
                     }
                     minWidth="100px"
                     color="white"
@@ -181,13 +94,7 @@ function UsersDataFetcher() {
                   <Input
                     value={user.last_name}
                     onChange={(e) =>
-                      setUsers((prevUsers) =>
-                        prevUsers.map((usr) =>
-                          usr.user_id === user.user_id
-                            ? { ...usr, last_name: e.target.value }
-                            : usr
-                        )
-                      )
+                      handleSave(user.user_id, "last_name", e.target.value)
                     }
                     minWidth="100px"
                     color="white"
@@ -201,13 +108,7 @@ function UsersDataFetcher() {
                   <Input
                     value={user.email}
                     onChange={(e) =>
-                      setUsers((prevUsers) =>
-                        prevUsers.map((usr) =>
-                          usr.user_id === user.user_id
-                            ? { ...usr, email: e.target.value }
-                            : usr
-                        )
-                      )
+                      handleSave(user.user_id, "email", e.target.value)
                     }
                     minWidth="100px"
                     color="white"
@@ -221,13 +122,7 @@ function UsersDataFetcher() {
                   <Input
                     value={user.birth_date}
                     onChange={(e) =>
-                      setUsers((prevUsers) =>
-                        prevUsers.map((usr) =>
-                          usr.user_id === user.user_id
-                            ? { ...usr, birth_date: e.target.value }
-                            : usr
-                        )
-                      )
+                      handleSave(user.user_id, "birth_date", e.target.value)
                     }
                     minWidth="100px"
                     color="white"
@@ -241,13 +136,7 @@ function UsersDataFetcher() {
                   <Input
                     value={user.avatar}
                     onChange={(e) =>
-                      setUsers((prevUsers) =>
-                        prevUsers.map((usr) =>
-                          usr.user_id === user.user_id
-                            ? { ...usr, avatar: e.target.value }
-                            : usr
-                        )
-                      )
+                      handleSave(user.user_id, "avatar", e.target.value)
                     }
                     minWidth="100px"
                     color="white"
@@ -261,13 +150,7 @@ function UsersDataFetcher() {
                   <Input
                     value={user.banner}
                     onChange={(e) =>
-                      setUsers((prevUsers) =>
-                        prevUsers.map((usr) =>
-                          usr.user_id === user.user_id
-                            ? { ...usr, banner: e.target.value }
-                            : usr
-                        )
-                      )
+                      handleSave(user.user_id, "banner", e.target.value)
                     }
                     minWidth="100px"
                     color="white"
@@ -279,17 +162,11 @@ function UsersDataFetcher() {
               <Td>
                 <IconButton
                   aria-label={
-                    editingRows.includes(user.user_id)
-                      ? "Guardar"
-                      : "Editar"
+                    editingRows.includes(user.user_id) ? "Guardar" : "Editar"
                   }
                   icon={
                     <Icon
-                      as={
-                        editingRows.includes(user.user_id)
-                          ? FaCheck
-                          : FaEdit
-                      }
+                      as={editingRows.includes(user.user_id) ? FaCheck : FaEdit}
                     />
                   }
                   onClick={() =>
@@ -302,9 +179,7 @@ function UsersDataFetcher() {
                   <IconButton
                     aria-label="Eliminar"
                     icon={<Icon as={FaTrash} />}
-                    onClick={() =>
-                      handleDeleteConfirmation(user.user_id)
-                    }
+                    onClick={() => handleDeleteConfirmation(user.user_id)}
                   />
                 )}
                 {editingRows.includes(user.user_id) && (
@@ -319,7 +194,6 @@ function UsersDataFetcher() {
           ))}
         </Tbody>
       </Table>
-
       <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
         <ModalOverlay />
         <ModalContent>

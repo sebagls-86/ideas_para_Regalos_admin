@@ -1,5 +1,5 @@
 /* eslint-disable */
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
 import { NavLink, useHistory } from "react-router-dom";
 // Chakra imports
@@ -26,6 +26,7 @@ import illustration from "assets/img/logoIdeasParaRegalos.png";
 import { FcGoogle } from "react-icons/fc";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
+import { jwtDecode } from "jwt-decode";
 
 function SignIn() {
   // Chakra color mode
@@ -36,6 +37,8 @@ function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [forceUpdate, setForceUpdate] = useState(false);
+
   const textColor = useColorModeValue(
     isDarkMode ? "white" : "navy.700",
     "white"
@@ -68,6 +71,8 @@ function SignIn() {
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
 
+  const { updateToken } = useContext(TokenContext);
+
   const handleSignIn = async () => {
     try {
       const response = await fetch("http://localhost:8080/api/v1/login", {
@@ -83,15 +88,18 @@ function SignIn() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("data", data);
         const token = data.data.token;
+        const decodedToken = jwtDecode(token);
 
-        localStorage.setItem("token", token);
-        console.log("Token almacenado:", token);
+        if (decodedToken && [1, 2, 3].includes(decodedToken.role)) {
+          updateToken(token);
+          setForceUpdate((prev) => !prev);
+          history.push("/admin/default");
 
-        history.push("/admin/default");
-
-        return token;
+          return token;
+        } else {
+          setErrorMessage("Usuario no autorizado");
+        }
       } else {
         setErrorMessage("Usuario o contraseña incorrectos");
       }
@@ -100,6 +108,10 @@ function SignIn() {
       throw error;
     }
   };
+
+  useEffect(() => {
+    console.log("TokenContext actualizado:", forceUpdate);
+  }, [forceUpdate]);
 
   return (
     <DefaultAuth illustrationBackground={illustration} image={illustration}>

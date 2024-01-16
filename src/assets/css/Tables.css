@@ -1,11 +1,37 @@
-.sticky-header {
+.table-container {
+  table {
+    margin-top: 0;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+
+  th {
     position: sticky;
     top: 0;
-    background-color: #fff; /* Ajusta el color de fondo como desees */
-    z-index: 1;
+    z-index: -1;
+    background-color: white;
   }
+
+  td,
+  th {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+}
+
+.sticky-header {
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 0;
+    background-color: white;
+  }
+}
   
   .scrollable-content {
-    max-height: 300px; /* Ajusta la altura máxima según tus necesidades */
+    max-height: 300px;
     overflow-y: auto;
+    z-index: -2;
   }

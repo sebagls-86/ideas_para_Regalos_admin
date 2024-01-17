@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
+import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -11,13 +15,6 @@ import {
   Icon,
   Input,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
@@ -26,121 +23,29 @@ function mapScheduledValue(value) {
   return value === 1 ? "Sí" : "No";
 }
 
+
 function EventsTypeDataFetcher() {
-  const [events, setEvents] = useState([]);
-  const [editingRows, setEditingRows] = useState([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState(null);
-  const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
+  const apiEndpoint = "http://localhost:8080/api/v1/eventTypes";
+  const token = useContext(TokenContext).token;
 
-  const handleEdit = (eventTypeId) => {
-    setEditingRows([...editingRows, eventTypeId]);
-  };
-
-  const handleSave = async (eventTypeId, field, value) => {
-    try {
-      if (field === "event_type_id") {
-        console.error("No se puede editar el ID del tipo de evento.");
-        return;
-      }
-
-      const updatedEvents = events.map((event) => {
-        if (event.event_type_id === eventTypeId) {
-          return { ...event, [field]: value };
-        }
-        return event;
-      });
-
-      setEvents(updatedEvents);
-      setEditingRows(editingRows.filter((row) => row !== eventTypeId));
-
-      await fetch(`http://localhost:8080/api/v1/eventTypes/${eventTypeId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      console.log(
-        `Campo ${field} del tipo de evento ${eventTypeId} actualizado a ${value}`
-      );
-    } catch (error) {
-      console.error("Error al actualizar el campo:", error);
-    }
-  };
-
-  const handleCancel = (eventTypeId) => {
-    setEditingRows(editingRows.filter((row) => row !== eventTypeId));
-  };
-
-  const handleDelete = (eventTypeId) => {
-    setEventToDelete(eventTypeId);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    await handleDeleteAction(eventToDelete);
-    setShowDeleteModal(false);
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteModal(false);
-    setEventToDelete(null);
-  };
-
-  const handleDeleteAction = async (eventTypeId) => {
-    try {
-      await fetch(`http://localhost:8080/api/v1/eventTypes/${eventTypeId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const updatedEvents = events.filter(
-        (event) => event.event_type_id !== eventTypeId
-      );
-      setEvents(updatedEvents);
-
-      console.log(`Tipo de evento con ID ${eventTypeId} eliminado`);
-    } catch (error) {
-      console.error("Error al eliminar el tipo de evento:", error);
-    }
-  };
-
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/eventTypes", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setEvents(data.data);
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de tipos de eventos:", error);
-      });
-  }, [token]);
+  const {
+    data: eventTypes,
+    editingRows,
+    showTokenInvalidError,
+    showErrorModal,
+    handleEdit,
+    handleCancel,
+    handleSave,
+    handleDeleteConfirmation,
+    handleCloseErrorModal,
+    handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
+  } = useDataFetcher(apiEndpoint, token);
+   
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" className="table-container">
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
@@ -151,23 +56,20 @@ function EventsTypeDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
+        <TokenInvalidError
+          isOpen={showTokenInvalidError}
+          onClose={handleCloseTokenInvalidError}
+        />
+        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
         <Tbody className="scrollable-content">
-          {events.map((event) => (
+          {eventTypes.map((event) => (
             <Tr key={event.event_type_id}>
               <Td>{event.event_type_id}</Td>
               <Td>
-                {editingRows.includes(event.event_type_id) ? (
+                {editingRows.includes(event.event_id) ? (
                   <Input
                     value={event.name}
-                    onChange={(e) =>
-                      setEvents((prevEvents) =>
-                        prevEvents.map((ev) =>
-                          ev.event_type_id === event.event_type_id
-                            ? { ...ev, name: e.target.value }
-                            : ev
-                        )
-                      )
-                    }
+                    onChange={(e) => handleEdit(event.event_type_id)}
                     minWidth="100px"
                     color="white"
                   />
@@ -179,18 +81,10 @@ function EventsTypeDataFetcher() {
                 {editingRows.includes(event.event_type_id) ? (
                   <Input
                     value={event.scheduled}
-                    onChange={(e) =>
-                      setEvents((prevEvents) =>
-                        prevEvents.map((ev) =>
-                          ev.event_type_id === event.event_type_id
-                            ? { ...ev, scheduled: e.target.value }
-                            : ev
-                        )
-                      )
-                    }
+                    onChange={(e) => handleEdit(event.event_type_id)}
                     minWidth="100px"
                     color="white"
-                  />
+                    />
                 ) : (
                   mapScheduledValue(event.scheduled)
                 )}
@@ -198,19 +92,11 @@ function EventsTypeDataFetcher() {
               <Td>
                 {editingRows.includes(event.event_type_id) ? (
                   <Input
-                    value={event.image}
-                    onChange={(e) =>
-                      setEvents((prevEvents) =>
-                        prevEvents.map((ev) =>
-                          ev.event_type_id === event.event_type_id
-                            ? { ...ev, image: e.target.value }
-                            : ev
-                        )
-                      )
-                    }
+                    value={event.scheduled}
+                    onChange={(e) => handleEdit(event.event_type_id)}
                     minWidth="100px"
                     color="white"
-                  />
+                    />
                 ) : (
                   event.image
                 )}
@@ -218,19 +104,11 @@ function EventsTypeDataFetcher() {
               <Td>
                 {editingRows.includes(event.event_type_id) ? (
                   <Input
-                    value={event.date}
-                    onChange={(e) =>
-                      setEvents((prevEvents) =>
-                        prevEvents.map((ev) =>
-                          ev.event_type_id === event.event_type_id
-                            ? { ...ev, date: e.target.value }
-                            : ev
-                        )
-                      )
-                    }
+                    value={event.scheduled}
+                    onChange={(e) => handleEdit(event.event_type_id)}
                     minWidth="100px"
                     color="white"
-                  />
+                    />
                 ) : (
                   event.date
                 )}
@@ -261,7 +139,7 @@ function EventsTypeDataFetcher() {
                   <IconButton
                     aria-label="Eliminar"
                     icon={<Icon as={FaTrash} />}
-                    onClick={() => handleDelete(event.event_type_id)}
+                    onClick={() => handleDeleteConfirmation(event.event_type_id)}
                   />
                 )}
                 {editingRows.includes(event.event_type_id) && (
@@ -275,26 +153,11 @@ function EventsTypeDataFetcher() {
             </Tr>
           ))}
         </Tbody>
-      </Table>
-      <Modal isOpen={showDeleteModal} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            ¿Estás seguro de que deseas eliminar este tipo de evento?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Box>
+        </Table>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar este tipo de evento?"
+        )}
+   </Box>
   );
 }
 

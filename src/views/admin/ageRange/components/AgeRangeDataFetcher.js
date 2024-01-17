@@ -14,17 +14,9 @@ import {
   IconButton,
   Icon,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
 } from "@chakra-ui/react";
 import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
-
 
 function AgeRangeDataFetcher() {
   const apiEndpoint = "http://localhost:8080/api/v1/ageRanges";
@@ -33,17 +25,15 @@ function AgeRangeDataFetcher() {
   const {
     data,
     editingRows,
-    showDeleteConfirmation,
     showTokenInvalidError,
     showErrorModal,
     handleEdit,
     handleCancel,
     handleSave,
     handleDeleteConfirmation,
-    handleDeleteConfirm,
-    handleDeleteCancel,
     handleCloseErrorModal,
     handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
   } = useDataFetcher(apiEndpoint, token);
 
   return (
@@ -100,7 +90,7 @@ function AgeRangeDataFetcher() {
                   range.maximum_age
                 )}
               </Td>
-              <Td>
+              <Td width="100px">
                 <IconButton
                   aria-label={
                     editingRows.includes(range.age_range_id)
@@ -109,21 +99,25 @@ function AgeRangeDataFetcher() {
                   }
                   icon={
                     <Icon
-                    as={
-                    editingRows.includes(range.age_range_id) ? (
-                      <FaCheck />
-                    ) : (
-                      <FaEdit />
-                    )
-                    }
+                      as={
+                        editingRows.includes(range.age_range_id)
+                          ? FaCheck
+                          : FaEdit
+                      }
                     />
                   }
                   onClick={() =>
-                    editingRows.includes(range.age_range_id) ? 
-                    handleSave(range.age_range_id, "name", range.name, index)
-                    : handleEdit(range.age_range_id)
+                    editingRows.includes(range.age_range_id)
+                      ? handleSave(
+                          range.age_range_id,
+                          "name",
+                          range.name,
+                          index
+                        )
+                      : handleEdit(range.age_range_id)
                   }
                 />
+
                 {!editingRows.includes(range.age_range_id) && (
                   <IconButton
                     aria-label="Eliminar"
@@ -143,24 +137,9 @@ function AgeRangeDataFetcher() {
           ))}
         </Tbody>
       </Table>
-      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            ¿Estás seguro de que deseas eliminar este rango de edad?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar este rango de edad?"
+        )}          
     </Box>
   );
 }

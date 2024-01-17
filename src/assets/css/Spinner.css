@@ -1,0 +1,11 @@
+.cargando {
+    background-color: #7E36E7AA;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .cargando .sweet-loading {
+    color: white;
+  }

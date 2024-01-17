@@ -118,7 +118,7 @@ const routes = [
   {
     name: "Relationships",
     layout: "/admin",
-    path: "/list-types",
+    path: "/relationships",
     icon: <Icon as={FaUserFriends} width='20px' height='20px' color='inherit' />,
     component: Relationships,
   },

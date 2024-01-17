@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
+import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -11,139 +15,31 @@ import {
   Icon,
   Input,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function InterestsDataFetcher() {
-  const [interests, setInterests] = useState([]);
-  const [originalInterests, setOriginalInterests] = useState([]);
-  const [editingRows, setEditingRows] = useState([]);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
+  const apiEndpoint = "http://localhost:8080/api/v1/interests";
+  const token = useContext(TokenContext).token;
 
-  const handleEdit = (interestId) => {
-    setEditingRows([...editingRows, interestId]);
-  };
-
-  const handleSave = async (interestId, field, value) => {
-    try {
-      if (field === "interest_id") {
-        console.error("No se puede editar el ID del interés.");
-        return;
-      }
-
-      const updatedInterests = interests.map((interest) => {
-        if (interest.interest_id === interestId) {
-          return { ...interest, [field]: value };
-        }
-        return interest;
-      });
-
-      setInterests(updatedInterests);
-      setEditingRows(editingRows.filter((row) => row !== interestId));
-
-      await fetch(`http://localhost:8080/api/v1/interests/${interestId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      console.log(`Campo ${field} del interés ${interestId} actualizado a ${value}`);
-    } catch (error) {
-      console.error("Error al actualizar el campo:", error);
-    }
-  };
-
-  const handleCancel = (interestId) => {
-    const updatedInterests = interests.map((interest) => {
-      const originalInterest = originalInterests.find(
-        (originalInterest) => originalInterest.interest_id === interest.interest_id
-      );
-      return originalInterest ? { ...originalInterest } : interest;
-    });
-    setInterests(updatedInterests);
-    setEditingRows(editingRows.filter((row) => row !== interestId));
-  };
-
-  const handleDelete = async (interestId) => {
-    try {
-      await fetch(`http://localhost:8080/api/v1/interests/${interestId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const updatedInterests = interests.filter(
-        (interest) => interest.interest_id !== interestId
-      );
-      setInterests(updatedInterests);
-
-      console.log(`Interés con ID ${interestId} eliminado`);
-    } catch (error) {
-      console.error("Error al eliminar el interés:", error);
-    }
-  };
-
-  const handleDeleteConfirmation = (interestId) => {
-    setDeleteConfirmationId(interestId);
-    setShowDeleteConfirmation(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    await handleDelete(deleteConfirmationId);
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/interests", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setInterests(data.data);
-          setOriginalInterests(data.data);
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de los intereses:", error);
-      });
-  }, [token]);
+  const {
+    data: interests,
+    editingRows,
+    showTokenInvalidError,
+    showErrorModal,
+    handleEdit,
+    handleCancel,
+    handleSave,
+    handleDeleteConfirmation,
+    handleCloseErrorModal,
+    handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
+  } = useDataFetcher(apiEndpoint, token);
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" className="table-container">
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
@@ -151,6 +47,11 @@ function InterestsDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
+        <TokenInvalidError
+          isOpen={showTokenInvalidError}
+          onClose={handleCloseTokenInvalidError}
+        />
+        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
         <Tbody className="scrollable-content">
           {interests.map((interest) => (
             <Tr key={interest.interest_id}>
@@ -159,15 +60,7 @@ function InterestsDataFetcher() {
                 {editingRows.includes(interest.interest_id) ? (
                   <Input
                     value={interest.interest}
-                    onChange={(e) =>
-                      setInterests((prevInterests) =>
-                        prevInterests.map((int) =>
-                          int.interest_id === interest.interest_id
-                            ? { ...int, interest: e.target.value }
-                            : int
-                        )
-                      )
-                    }
+                    onChange={(e) => handleEdit(interest.interest_id)}
                     minWidth="100px"
                     color="white"
                   />
@@ -193,7 +86,7 @@ function InterestsDataFetcher() {
                   }
                   onClick={() =>
                     editingRows.includes(interest.interest_id)
-                      ? handleSave(interest.interest_id, "interest", interest.interest)
+                      ? handleSave(interest.interest_id, "name", interest.name)
                       : handleEdit(interest.interest_id)
                   }
                 />
@@ -201,7 +94,9 @@ function InterestsDataFetcher() {
                   <IconButton
                     aria-label="Eliminar"
                     icon={<Icon as={FaTrash} />}
-                    onClick={() => handleDeleteConfirmation(interest.interest_id)}
+                    onClick={() =>
+                      handleDeleteConfirmation(interest.interest_id)
+                    }
                   />
                 )}
                 {editingRows.includes(interest.interest_id) && (
@@ -209,32 +104,18 @@ function InterestsDataFetcher() {
                     aria-label="Cancelar"
                     leftIcon={<Icon as={FaTimes} />}
                     onClick={() => handleCancel(interest.interest_id)}
-                  ></Button>
+                  >
+                    {" "}
+                  </Button>
                 )}
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
-
-      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            ¿Estás seguro de que deseas eliminar este interés?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar este interés?"
+      )}
     </Box>
   );
 }

@@ -15,13 +15,6 @@ import {
   Icon,
   Input,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
 } from "@chakra-ui/react";
 import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
@@ -33,23 +26,21 @@ function CategoriesDataFetcher() {
   const {
     data: categories,
     editingRows,
-    showDeleteConfirmation,
     showTokenInvalidError,
     showErrorModal,
     handleEdit,
     handleCancel,
     handleSave,
     handleDeleteConfirmation,
-    handleDeleteConfirm,
-    handleDeleteCancel,
     handleCloseErrorModal,
     handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
   } = useDataFetcher(apiEndpoint, token);
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
-        <Thead className="sticky-header">
+    <Table variant="simple" className="table-container">
+      <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
             <Th>Nombre</Th>
@@ -70,9 +61,7 @@ function CategoriesDataFetcher() {
                 {editingRows.includes(category.category_id) ? (
                   <Input
                     value={category.name}
-                    onChange={(e) =>
-                      handleEdit(category.category_id)
-                    }
+                    onChange={(e) => handleEdit(category.category_id)}
                     minWidth="100px"
                     color="white"
                   />
@@ -83,15 +72,13 @@ function CategoriesDataFetcher() {
               <Td>
                 {editingRows.includes(category.category_id) ? (
                   <Input
-                    value={category["/images/categories/categoryImage"]}
-                    onChange={(e) =>
-                      handleEdit(category.category_id)
-                    }
+                    value={category.image}
+                    onChange={(e) => handleEdit(category.category_id)}
                     minWidth="100px"
                     color="white"
                   />
                 ) : (
-                  category["/images/categories/categoryImage"]
+                  category.image
                 )}
               </Td>
               <Td>
@@ -120,7 +107,9 @@ function CategoriesDataFetcher() {
                   <IconButton
                     aria-label="Eliminar"
                     icon={<Icon as={FaTrash} />}
-                    onClick={() => handleDeleteConfirmation(category.category_id)}
+                    onClick={() =>
+                      handleDeleteConfirmation(category.category_id)
+                    }
                   />
                 )}
                 {editingRows.includes(category.category_id) && (
@@ -135,25 +124,9 @@ function CategoriesDataFetcher() {
           ))}
         </Tbody>
       </Table>
-
-      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            ¿Estás seguro de que deseas eliminar esta categoría?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar esta categoría?"
+        )}
     </Box>
   );
 }

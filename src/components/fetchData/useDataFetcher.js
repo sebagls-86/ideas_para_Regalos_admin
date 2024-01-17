@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
+import {
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+} from "@chakra-ui/react";
 
 const fetchData = async (apiEndpoint, token, setData, setOriginalData, setShowErrorModal, setShowTokenInvalidError, history) => {
   try {
@@ -8,12 +18,13 @@ const fetchData = async (apiEndpoint, token, setData, setOriginalData, setShowEr
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        
       },
     };
-
+    
     const response = await fetch(apiEndpoint, requestOptions);
 
-    console.log("response", response);
+    console.log("response", response)
 
     if (response.status === 400) {
       setShowTokenInvalidError(true);
@@ -65,12 +76,7 @@ function useDataFetcher(apiEndpoint, token) {
 
 
   const handleCancel = (itemId) => {
-    const updatedData = data.map((item) => {
-      const originalItem = originalData.find(
-        (originalItem) => originalItem.id === item.id
-      );
-      return originalItem ? { ...originalItem } : item;
-    });
+    const updatedData = originalData.map((originalItem) => ({ ...originalItem }));
     setData(updatedData);
     setEditingRows(editingRows.filter((row) => row !== itemId));
   };
@@ -87,7 +93,7 @@ function useDataFetcher(apiEndpoint, token) {
       setData(updatedData);
       setEditingRows(editingRows.filter((row) => row !== itemId));
 
-      const response = await fetch(`${apiEndpoint}/${itemId}`, {
+      const response = await fetch(`http://localhost:8080/api/v1/${apiEndpoint}/${itemId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -108,10 +114,6 @@ function useDataFetcher(apiEndpoint, token) {
       console.error("Error saving data:", error);
       if (error.message === "Forbidden") {
         setShowErrorModal(true);
-        localStorage.removeItem("token");
-        setData([]); // Limpiar datos
-        setOriginalData([]);
-        history.push("/auth/login");
       }
     }
   };
@@ -137,10 +139,6 @@ function useDataFetcher(apiEndpoint, token) {
       console.error("Error deleting data:", error);
       if (error.message === "Forbidden") {
         setShowErrorModal(true);
-        localStorage.removeItem("token");
-        setData([]); // Limpiar datos
-        setOriginalData([]);
-        history.push("/auth/login");
       }
     }
   };
@@ -156,6 +154,45 @@ function useDataFetcher(apiEndpoint, token) {
     setDeleteConfirmationId(null);
   };
 
+  const handleCustomDelete = async (customDeleteUrl, itemId) => {
+    try {
+      const response = await fetch(customDeleteUrl, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (response.status === 403) {
+        setShowErrorModal(true);
+        throw new Error("Forbidden");
+      }
+
+      const updatedData = data.filter((item) => item.id !== itemId);
+      setData(updatedData);
+    } catch (error) {
+      console.error("Error deleting data:", error);
+      if (error.message === "Forbidden") {
+        setShowErrorModal(true);
+       
+      }
+    }
+  };
+
+  const handleCustomDeleteConfirmation = (customDeleteUrl, itemId) => {
+    setDeleteConfirmationId({ customDeleteUrl, itemId });
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleCustomDeleteConfirm = async () => {
+    const { customDeleteUrl, itemId } = deleteConfirmationId;
+    await handleCustomDelete(customDeleteUrl, itemId);
+    setShowDeleteConfirmation(false);
+    setDeleteConfirmationId(null);
+  };
+
+
   const handleDeleteCancel = () => {
     setShowDeleteConfirmation(false);
     setDeleteConfirmationId(null);
@@ -168,6 +205,48 @@ function useDataFetcher(apiEndpoint, token) {
   const handleCloseTokenInvalidError = () => {
     setShowTokenInvalidError(false);
   };
+
+  const renderDeleteConfirmationModal = (bodyContent) => (
+    <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Confirmar eliminación</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          {bodyContent}
+        </ModalBody>
+        <ModalFooter>
+          <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
+            Eliminar
+          </Button>
+          <Button variant="ghost" onClick={handleDeleteCancel}>
+            Cancelar
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+
+  const renderCustomDeleteConfirmationModal = (bodyContent) => (
+    <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Confirmar eliminación</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>
+          {bodyContent}
+        </ModalBody>
+        <ModalFooter>
+          <Button colorScheme="red" mr={3} onClick={handleCustomDeleteConfirm}>
+            Eliminar
+          </Button>
+          <Button variant="ghost" onClick={handleDeleteCancel}>
+            Cancelar
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
 
   useEffect(() => {
     if (!token) {
@@ -191,9 +270,14 @@ function useDataFetcher(apiEndpoint, token) {
     handleDelete,
     handleDeleteConfirmation,
     handleDeleteConfirm,
+    handleCustomDelete,
+    handleCustomDeleteConfirmation,
+    handleCustomDeleteConfirm,
     handleDeleteCancel,
     handleCloseErrorModal,
     handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
+    renderCustomDeleteConfirmationModal,
   };
 }
 

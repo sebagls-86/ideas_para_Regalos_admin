@@ -3,20 +3,21 @@ import { Route, Redirect } from "react-router-dom";
 import { TokenContext } from "contexts/TokenContext";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const { isAuthenticated } = useContext(TokenContext);
+  const { isAuthenticated, updateLastVisitedRoute } = useContext(TokenContext);
 
-  console.log("isAuthenticated", isAuthenticated);
+  console.log("isAuthenticated private route", isAuthenticated);
 
   return (
     <Route
       {...rest}
-      render={(props) =>
-        isAuthenticated ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to="/auth/login" />
-        )
-      }
+      render={(props) => {
+        if (isAuthenticated) {
+          return <Component {...props} />;
+        } else {
+         updateLastVisitedRoute(props.location.pathname);
+          return <Redirect to="/auth/login" />;
+        }
+      }}
     />
   );
 };

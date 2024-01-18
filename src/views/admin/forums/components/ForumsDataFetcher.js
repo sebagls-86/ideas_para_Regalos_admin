@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
+import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -9,94 +13,38 @@ import {
   Td,
   IconButton,
   Icon,
+  Input,
   Button,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
-  ModalBody,
   ModalCloseButton,
+  ModalBody,
+  ModalFooter,
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes, FaComments } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function ForumsDataFetcher() {
-  const [forums, setForums] = useState([]);
-  const [editingRows, setEditingRows] = useState([]);
+  const apiEndpoint = "http://localhost:8080/api/v1/forums";
   const [selectedForum, setSelectedForum] = useState(null);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [forumIdToDelete, setForumIdToDelete] = useState(null);
-  const [originalForums, setOriginalForums] = useState([]);
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NzMyNzE2fQ.zroIVwP9rbRps8NcSpLDMxMVQz3hkxnOweCrjaZHVDY"
-  const handleEdit = (forumId) => {
-    setEditingRows([...editingRows, forumId]);
-  };
+  const token = useContext(TokenContext).token;
 
-  const handleSave = async (forumId, field, value) => {
-    try {
-      if (field === "forum_id") {
-        console.error("No se puede editar el ID del foro.");
-        return;
-      }
+  const {
+    data: forums,
+    editingRows,
+    showTokenInvalidError,
+    showErrorModal,
+    handleEdit,
+    handleCancel,
+    handleSave,
+    handleDeleteConfirmation,
+    handleCloseErrorModal,
+    handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
+  } = useDataFetcher(apiEndpoint, token);
 
-      const updatedForums = forums.map((forum) => {
-        if (forum.forum_id === forumId) {
-          return { ...forum, [field]: value };
-        }
-        return forum;
-      });
-
-      setForums(updatedForums);
-      setEditingRows(editingRows.filter((row) => row !== forumId));
-
-      await fetch(`http://localhost:8080/api/v1/forums/${forumId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      console.log(`Campo ${field} del foro ${forumId} actualizado a ${value}`);
-    } catch (error) {
-      console.error("Error al actualizar el campo:", error);
-    }
-  };
-
-  const handleCancel = (forumId) => {
-    const updatedForums = forums.map((forum) => {
-      const originalForum = originalForums.find(
-        (originalForum) => originalForum.forum_id === forum.forum_id
-      );
-      return originalForum ? { ...originalForum } : forum;
-    });
-    setForums(updatedForums);
-    setEditingRows(editingRows.filter((row) => row !== forumId));
-  };
-
-  const handleDelete = async (forumId) => {
-    try {
-      await fetch(`http://localhost:8080/api/v1/forums/${forumId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const updatedForums = forums.filter(
-        (forum) => forum.forum_id !== forumId
-      );
-      setForums(updatedForums);
-
-      console.log(`Foro con ID ${forumId} eliminado`);
-    } catch (error) {
-      console.error("Error al eliminar el foro:", error);
-    }
-  };
 
   const handleViewMessages = (forumId) => {
     const selected = forums.find((forum) => forum.forum_id === forumId);
@@ -107,52 +55,10 @@ function ForumsDataFetcher() {
     setSelectedForum(null);
   };
 
-  const handleDeleteConfirmation = (forumId) => {
-    setForumIdToDelete(forumId);
-    setIsConfirmationOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    await handleDelete(forumIdToDelete);
-    setIsConfirmationOpen(false);
-    setForumIdToDelete(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setIsConfirmationOpen(false);
-    setForumIdToDelete(null);
-  };
-
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/forums", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setForums(data.data);
-          setOriginalForums(data.data);
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de foros:", error);
-      });
-  }, [token]);
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" className="table-container">
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
@@ -164,26 +70,22 @@ function ForumsDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
+        <TokenInvalidError
+          isOpen={showTokenInvalidError}
+          onClose={handleCloseTokenInvalidError}
+        />
+        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
         <Tbody className="scrollable-content">
           {forums.map((forum) => (
             <Tr key={forum.forum_id}>
               <Td>{forum.forum_id}</Td>
               <Td>
                 {editingRows.includes(forum.forum_id) ? (
-                  <input
-                    value={
-                      forums.find((f) => f.forum_id === forum.forum_id)
-                        ?.title || ""
-                    }
-                    onChange={(e) => {
-                      const updatedForums = forums.map((f) => {
-                        if (f.forum_id === forum.forum_id) {
-                          return { ...f, title: e.target.value };
-                        }
-                        return f;
-                      });
-                      setForums(updatedForums);
-                    }}
+                  <Input
+                    value={forum.title}
+                    onChange={(e) => handleEdit(forum.forum_id)}
+                    minWidth="100px"
+                    color="white"
                   />
                 ) : (
                   forum.title
@@ -191,20 +93,11 @@ function ForumsDataFetcher() {
               </Td>
               <Td>
                 {editingRows.includes(forum.forum_id) ? (
-                  <input
-                    value={
-                      forums.find((f) => f.forum_id === forum.forum_id)
-                        ?.description || ""
-                    }
-                    onChange={(e) => {
-                      const updatedForums = forums.map((f) => {
-                        if (f.forum_id === forum.forum_id) {
-                          return { ...f, description: e.target.value };
-                        }
-                        return f;
-                      });
-                      setForums(updatedForums);
-                    }}
+                  <Input
+                    value={forum.description}
+                    onChange={(e) => handleEdit(forum.forum_id)}
+                    minWidth="100px"
+                    color="white"
                   />
                 ) : (
                   forum.description
@@ -257,22 +150,6 @@ function ForumsDataFetcher() {
           ))}
         </Tbody>
       </Table>
-      <Modal isOpen={isConfirmationOpen} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>¿Estás seguro de que deseas eliminar este foro?</ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
       <Modal isOpen={selectedForum} onClose={handleCloseMessages}>
         <ModalOverlay />
         <ModalContent>
@@ -299,6 +176,9 @@ function ForumsDataFetcher() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar este foro?"
+        )}
     </Box>
   );
 }

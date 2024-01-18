@@ -32,12 +32,6 @@ import Profile from "views/admin/profile";
 
 const routes = [
   {
-    name: "Login",
-    layout: "/auth",
-    path: "/sign-in",
-    component: Login,
-  },
-  {
     name: "Main Dashboard",
     layout: "/admin",
     path: "/default",
@@ -124,7 +118,7 @@ const routes = [
   {
     name: "Relationships",
     layout: "/admin",
-    path: "/list-types",
+    path: "/relationships",
     icon: <Icon as={FaUserFriends} width='20px' height='20px' color='inherit' />,
     component: Relationships,
   },
@@ -155,6 +149,12 @@ const routes = [
     path: "/profile",
     icon: <Icon as={FaIdBadge} width='20px' height='20px' color='inherit' />,
     component: Profile,
+  },
+  {
+    name: "Login",
+    layout: "/auth",
+    path: "/sign-in",
+    component: Login,
   },
  ];
 

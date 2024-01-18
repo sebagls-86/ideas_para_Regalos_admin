@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext, useState } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
+import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -14,7 +18,6 @@ import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
-  ModalFooter,
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
@@ -22,83 +25,25 @@ import { FaEdit, FaCheck, FaTrash, FaTimes, FaComments } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function ListsDataFetcher() {
-  const [lists, setLists] = useState([]);
-  const [editingRows, setEditingRows] = useState([]);
+  const apiEndpoint = "http://localhost:8080/api/v1/lists";
+  const token = useContext(TokenContext).token;
   const [selectedListProducts, setSelectedListProducts] = useState(null);
-  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
-  const [listIdToDelete, setListIdToDelete] = useState(null);
-  const [originalLists, setOriginalLists] = useState([]);
-  const [listProducts, setListProducts] = useState({});
   const [listNames, setListNames] = useState({});
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NzMyNzE2fQ.zroIVwP9rbRps8NcSpLDMxMVQz3hkxnOweCrjaZHVDY";
-  const handleEdit = (listId) => {
-    setEditingRows([...editingRows, listId]);
-  };
+  const [listProducts, setListProducts] = useState({});
 
-  const handleSave = async (listId, field, value) => {
-    try {
-      if (field === "list_id") {
-        console.error("No se puede editar el ID de la lista.");
-        return;
-      }
-
-      const updatedLists = lists.map((list) => {
-        if (list.list_id === listId) {
-          return { ...list, [field]: value };
-        }
-        return list;
-      });
-
-      setLists(updatedLists);
-      setEditingRows(editingRows.filter((row) => row !== listId));
-
-      await fetch(`http://localhost:8080/api/v1/lists/${listId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      console.log(
-        `Campo ${field} de la lista ${listId} actualizado a ${value}`
-      );
-    } catch (error) {
-      console.error("Error al actualizar el campo:", error);
-    }
-  };
-
-  const handleCancel = (listId) => {
-    const updatedLists = lists.map((list) => {
-      const originalList = originalLists.find(
-        (originalList) => originalList.list_id === list.list_id
-      );
-      return originalList ? { ...originalList } : list;
-    });
-    setLists(updatedLists);
-    setEditingRows(editingRows.filter((row) => row !== listId));
-  };
-
-  const handleDelete = async (listId) => {
-    try {
-      await fetch(`http://localhost:8080/api/v1/lists/${listId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const updatedLists = lists.filter((list) => list.list_id !== listId);
-      setLists(updatedLists);
-
-      console.log(`Lista con ID ${listId} eliminada`);
-    } catch (error) {
-      console.error("Error al eliminar la lista:", error);
-    }
-  };
+  const {
+    data: lists,
+    editingRows,
+    showTokenInvalidError,
+    showErrorModal,
+    handleEdit,
+    handleSave,
+    handleCancel,
+    handleDeleteConfirmation,
+    handleCloseTokenInvalidError,
+    handleCloseErrorModal,
+    renderDeleteConfirmationModal,
+  } = useDataFetcher(apiEndpoint, token);
 
   const handleViewProducts = async (listId) => {
     try {
@@ -112,15 +57,16 @@ function ListsDataFetcher() {
           },
         }
       );
-
+  
       if (response.ok) {
         const data = await response.json();
         setSelectedListProducts({
           list_id: data.data.list_id,
-          list_name: listNames[data.data.list_id] || "Nombre no disponible",
+          list_name: data.data.list_name || "Nombre no disponible",
         });
-
+  
         setListProducts({ ...listProducts, [listId]: [data.data] });
+        setListNames({ ...listNames, [listId]: data.data.list_name });
       } else {
         console.error("Error en la respuesta de la API:", response.status);
         // Lógica para manejar errores de respuesta
@@ -134,58 +80,9 @@ function ListsDataFetcher() {
     setSelectedListProducts(null);
   };
 
-  const handleDeleteConfirmation = (listId) => {
-    setListIdToDelete(listId);
-    setIsConfirmationOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    await handleDelete(listIdToDelete);
-    setIsConfirmationOpen(false);
-    setListIdToDelete(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setIsConfirmationOpen(false);
-    setListIdToDelete(null);
-  };
-
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/lists", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setLists(data.data);
-          setOriginalLists(data.data);
-
-          const names = {};
-          data.data.forEach((list) => {
-            names[list.list_id] = list.list_name;
-          });
-          setListNames(names);
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de las listas:", error);
-      });
-  }, [token]);
-
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" className="table-container">
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
@@ -197,6 +94,11 @@ function ListsDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
+        <TokenInvalidError
+          isOpen={showTokenInvalidError}
+          onClose={handleCloseTokenInvalidError}
+        />
+        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
         <Tbody className="scrollable-content">
           {lists.map((list) => (
             <Tr key={list.list_id}>
@@ -204,19 +106,8 @@ function ListsDataFetcher() {
               <Td>
                 {editingRows.includes(list.list_id) ? (
                   <input
-                    value={
-                      lists.find((l) => l.list_id === list.list_id)
-                        ?.list_type || ""
-                    }
-                    onChange={(e) => {
-                      const updatedLists = lists.map((l) => {
-                        if (l.list_id === list.list_id) {
-                          return { ...l, list_type: e.target.value };
-                        }
-                        return l;
-                      });
-                      setLists(updatedLists);
-                    }}
+                    value={list.list_type}
+                    onChange={(e) => handleEdit(list.list_id)}
                   />
                 ) : (
                   list.list_type
@@ -225,19 +116,8 @@ function ListsDataFetcher() {
               <Td>
                 {editingRows.includes(list.list_id) ? (
                   <input
-                    value={
-                      lists.find((l) => l.list_id === list.list_id)
-                        ?.list_name || ""
-                    }
-                    onChange={(e) => {
-                      const updatedLists = lists.map((l) => {
-                        if (l.list_id === list.list_id) {
-                          return { ...l, list_name: e.target.value };
-                        }
-                        return l;
-                      });
-                      setLists(updatedLists);
-                    }}
+                    value={list.list_name}
+                    onChange={(e) => handleEdit(list.list_id)}
                   />
                 ) : (
                   list.list_name
@@ -253,62 +133,53 @@ function ListsDataFetcher() {
               </Td>
               <Td>{list.created_at}</Td>
               <Td>
-                <Box display="flex" alignItems="center">
-                  {editingRows.includes(list.list_id) ? (
-                    <>
-                      <IconButton
-                        aria-label="Guardar"
-                        icon={<Icon as={FaCheck} />}
-                        onClick={() =>
-                          handleSave(list.list_id, "list_name", list.list_name)
-                        }
-                        mr={2}
-                      />
-                      <IconButton
-                        aria-label="Cancelar"
-                        icon={<Icon as={FaTimes} />}
-                        onClick={() => handleCancel(list.list_id)}
-                      />
-                    </>
-                  ) : (
-                    <IconButton
-                      aria-label="Editar"
-                      icon={<Icon as={FaEdit} />}
-                      onClick={() => handleEdit(list.list_id)}
-                      mr={2}
+                <IconButton
+                  aria-label={
+                    editingRows.includes(list.list_id)
+                      ? "Guardar"
+                      : "Editar"
+                  }
+                  icon={
+                    <Icon
+                      as={
+                        editingRows.includes(list.list_id)
+                          ? FaCheck
+                          : FaEdit
+                      }
                     />
-                  )}
-                  {!editingRows.includes(list.list_id) && (
-                    <IconButton
-                      aria-label="Eliminar"
-                      icon={<Icon as={FaTrash} />}
-                      onClick={() => handleDeleteConfirmation(list.list_id)}
-                    />
-                  )}
-                </Box>
+                  }
+                  onClick={() =>
+                    editingRows.includes(list.list_id)
+                      ? handleSave(list.list_id, "list name", list.list_name)
+                      : handleEdit(list.list_id)
+                  }
+                />
+                {!editingRows.includes(list.list_id) && (
+                  <IconButton
+                    aria-label="Eliminar"
+                    icon={<Icon as={FaTrash} />}
+                    onClick={() =>
+                      handleDeleteConfirmation(list.list_id)
+                    }
+                  />
+                )}
+                {editingRows.includes(list.list_id) && (
+                  <Button
+                    aria-label="Cancelar"
+                    leftIcon={<Icon as={FaTimes} />}
+                    onClick={() => handleCancel(list.list_id)}
+                  >
+                    {" "}
+                  </Button>
+                )}
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
-      <Modal isOpen={isConfirmationOpen} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            ¿Estás seguro de que deseas eliminar esta lista?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar esta lista?"
+      )}
       <Modal isOpen={selectedListProducts} onClose={handleCloseProducts}>
         <ModalOverlay />
         <ModalContent>

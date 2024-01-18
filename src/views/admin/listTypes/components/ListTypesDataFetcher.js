@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
+import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -10,138 +14,32 @@ import {
   IconButton,
   Icon,
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
+  Input,
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function ListTypesDataFetcher() {
-  const [listTypes, setListTypes] = useState([]);
-  const [editingRows, setEditingRows] = useState([]);
-  const [originalListTypes, setOriginalListTypes] = useState([]);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
+  const apiEndpoint = "http://localhost:8080/api/v1/listtypes";
+  const token = useContext(TokenContext).token;
 
-  const handleEdit = (listTypeId) => {
-    setEditingRows([...editingRows, listTypeId]);
-  };
-
-  const handleSave = async (listTypeId, field, value) => {
-    try {
-      const updatedListTypes = listTypes.map((listType) => {
-        if (listType.list_type_id === listTypeId) {
-          return { ...listType, [field]: value };
-        }
-        return listType;
-      });
-
-      setListTypes(updatedListTypes);
-      setEditingRows(editingRows.filter((row) => row !== listTypeId));
-
-      await fetch(`http://localhost:8080/api/v1/listtypes/${listTypeId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      console.log(`Campo ${field} del tipo de lista ${listTypeId} actualizado a ${value}`);
-    } catch (error) {
-      console.error("Error al actualizar el campo:", error);
-    }
-  };
-
-  const handleCancel = (listTypeId) => {
-    const updatedListTypes = listTypes.map((listType) => {
-      if (listType.list_type_id === listTypeId) {
-        const originalListType = originalListTypes.find(
-          (originalType) => originalType.list_type_id === listTypeId
-        );
-        return originalListType ? { ...originalListType } : listType;
-      }
-      return listType;
-    });
-  
-    setListTypes(updatedListTypes);
-    setEditingRows(editingRows.filter((row) => row !== listTypeId));
-  };
-
-  const handleDelete = async (listTypeId) => {
-    try {
-      await fetch(`http://localhost:8080/api/v1/listtypes/${listTypeId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const updatedListTypes = listTypes.filter(
-        (listType) => listType.list_type_id !== listTypeId
-      );
-      setListTypes(updatedListTypes);
-
-      console.log(`Tipo de lista con ID ${listTypeId} eliminado`);
-    } catch (error) {
-      console.error("Error al eliminar el tipo de lista:", error);
-    }
-  };
-
-  const handleDeleteConfirmation = (listTypeId) => {
-    setDeleteConfirmationId(listTypeId);
-    setShowDeleteConfirmation(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    await handleDelete(deleteConfirmationId);
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/listtypes", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setListTypes(data.data);
-          setOriginalListTypes(data.data);
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de tipos de lista:", error);
-      });
-  }, [token]);
+  const {
+    data: listTypes,
+    editingRows,
+    showTokenInvalidError,
+    showErrorModal,
+    handleEdit,
+    handleCancel,
+    handleSave,
+    handleDeleteConfirmation,
+    handleCloseErrorModal,
+    handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
+  } = useDataFetcher(apiEndpoint, token);
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" className="table-container">
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
@@ -149,24 +47,22 @@ function ListTypesDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
+        <TokenInvalidError
+          isOpen={showTokenInvalidError}
+          onClose={handleCloseTokenInvalidError}
+        />
+        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
         <Tbody className="scrollable-content">
           {listTypes.map((listType) => (
             <Tr key={listType.list_type_id}>
               <Td>{listType.list_type_id}</Td>
               <Td>
                 {editingRows.includes(listType.list_type_id) ? (
-                  <input
+                  <Input
                     value={listType.list_type_name}
-                    onChange={(e) => {
-                    const updatedListTypes = listTypes.map((item) => {
-                      if (item.list_type_id === listType.list_type_id) {
-                        return { ...item, list_type_name: e.target.value };
-                      }
-                      return item;
-                    });
-                    setListTypes(updatedListTypes);
-                  }}
-                    className="white-input"
+                    onChange={(e) => handleEdit(listType.list_type_id)}
+                    minWidth="100px"
+                    color="white"
                   />
                 ) : (
                   listType.list_type_name
@@ -212,32 +108,16 @@ function ListTypesDataFetcher() {
                     aria-label="Cancelar"
                     leftIcon={<Icon as={FaTimes} />}
                     onClick={() => handleCancel(listType.list_type_id)}
-                  ></Button>
+                  />
                 )}
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
-
-      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            ¿Estás seguro de que deseas eliminar este tipo de lista?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar este tipo de lista?"
+      )}
     </Box>
   );
 }

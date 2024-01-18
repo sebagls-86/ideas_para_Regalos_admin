@@ -1,4 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useContext } from "react";
+import { TokenContext } from "../../../../contexts/TokenContext";
+import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
+import ErrorModal from "../../../../components/modalError/modalError";
 import {
   Box,
   Table,
@@ -10,149 +14,32 @@ import {
   IconButton,
   Icon,
   Input,
-  Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
+  Button
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function MessagesDataFetcher() {
-  const [messages, setMessages] = useState([]);
-  const [originalMessages, setOriginalMessages] = useState([]);
-  const [editingRows, setEditingRows] = useState([]);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGFkbWluIiwidXNlcl9pZCI6OSwiZXhwIjoxNzA0NjQ2MjI1fQ.71pwKibJqOWTYJFWq1XwVVaqESzh1z9vrgdAgIVcEKY"; // Reemplaza con tu token
+  const apiEndpoint = "http://localhost:8080/api/v1/messages";
+  const token = useContext(TokenContext).token;
 
-  const handleEdit = (messageId) => {
-    setEditingRows([...editingRows, messageId]);
-  };
-
-  const handleSave = async (messageId, field, value) => {
-    try {
-      if (field === "message_id") {
-        console.error("No se puede editar el ID de la categoría.");
-        return;
-      }
-
-      const updatedMessages = messages.map((message) => {
-        if (message.message_id === messageId) {
-          return { ...message, [field]: value };
-        }
-        return message;
-      });
-
-      setMessages(updatedMessages);
-      setEditingRows(editingRows.filter((row) => row !== messageId));
-
-      await fetch(
-        `http://localhost:8080/api/v1/forums/forum_id/messages/${messageId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ [field]: value }),
-        }
-      );
-
-      console.log(
-        `Campo ${field} del mensaje ${messageId} actualizado a ${value}`
-      );
-    } catch (error) {
-      console.error("Error al actualizar el campo:", error);
-    }
-  };
-
-  const handleCancel = (messageId) => {
-    const updatedMessages = messages.map((message) => {
-      const originalMessage = originalMessages.find(
-        (originalMessage) => originalMessage.message_id === message.message_id
-      );
-      return originalMessage ? { ...originalMessage } : message;
-    });
-    setMessages(updatedMessages);
-    setEditingRows(editingRows.filter((row) => row !== messageId));
-  };
-
-  const handleDelete = async (messageId) => {
-    try {
-      await fetch(
-        `http://localhost:8080/api/v1/forums/forum_id/messages/${messageId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const updatedMessages = messages.filter(
-        (message) => message.message_id !== messageId
-      );
-      setMessages(updatedMessages);
-
-      console.log(`Mensaje con ID ${messageId} eliminado`);
-    } catch (error) {
-      console.error("Error al eliminar el mensaje:", error);
-    }
-  };
-
-  const handleDeleteConfirmation = (messageId) => {
-    setDeleteConfirmationId(messageId);
-    setShowDeleteConfirmation(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    await handleDelete(deleteConfirmationId);
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirmation(false);
-    setDeleteConfirmationId(null);
-  };
-
-  useEffect(() => {
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    fetch("http://localhost:8080/api/v1/messages", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        if (data && Array.isArray(data.data)) {
-          setMessages(data.data);
-          setOriginalMessages(data.data); // Guarda la data original al cargar
-        } else {
-          console.error(
-            "La respuesta del servidor no contiene los datos esperados:",
-            data
-          );
-        }
-      })
-      .catch((error) => {
-        console.error("Error al obtener los datos de categorías:", error);
-      });
-  }, [token]);
+  const {
+    data: messages,
+    editingRows,
+    showTokenInvalidError,
+    showErrorModal,
+    handleEdit,
+    handleCancel,
+    handleSave,
+    handleDeleteConfirmation,
+    handleCloseErrorModal,
+    handleCloseTokenInvalidError,
+    renderDeleteConfirmationModal,
+  } = useDataFetcher(apiEndpoint, token);
 
   return (
     <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" mt={8} className="table-container">
+      <Table variant="simple" className="table-container">
         <Thead className="sticky-header">
           <Tr>
             <Th>ID</Th>
@@ -164,6 +51,11 @@ function MessagesDataFetcher() {
             <Th>Acciones</Th>
           </Tr>
         </Thead>
+        <TokenInvalidError
+          isOpen={showTokenInvalidError}
+          onClose={handleCloseTokenInvalidError}
+        />
+        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
         <Tbody className="scrollable-content">
           {messages.map((message) => (
             <Tr key={message.message_id}>
@@ -172,15 +64,8 @@ function MessagesDataFetcher() {
                 {editingRows.includes(message.message_id) ? (
                   <Input
                     value={message.message}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      const updatedMessages = messages.map((msg) =>
-                        msg.message_id === message.message_id
-                          ? { ...msg, message: value }
-                          : msg
-                      );
-                      setMessages(updatedMessages);
-                    }}
+                    onChange={(e) => handleEdit(message.message_id)}
+                    minWidth="100px"
                     color="white"
                   />
                 ) : (
@@ -192,32 +77,24 @@ function MessagesDataFetcher() {
               <Td>
                 {editingRows.includes(message.message_id) ? (
                   <Input
-                    value={message.images ? message.images.join(', ') : ''}
-                    onChange={(e) => {
-                      const { value } = e.target;
-                      const updatedMessages = messages.map((msg) =>
-                        msg.message_id === message.message_id
-                          ? { ...msg, images: value.split(', ') }
-                          : msg
-                      );
-                      setMessages(updatedMessages);
-                    }}
+                    value={message.message}
+                    onChange={(e) => handleEdit(message.message_id)}
                     minWidth="100px"
                     color="white"
                   />
                 ) : message.images ? (
-                  message.images.join(', ')
+                  message.images.join(", ")
                 ) : (
-                  'N/A'
+                  "N/A"
                 )}
               </Td>
               <Td>{new Date(message.date).toLocaleString()}</Td>
-              <Td>
+              <Td width="em">
                 <IconButton
                   aria-label={
                     editingRows.includes(message.message_id)
-                      ? 'Guardar'
-                      : 'Editar'
+                      ? "Guardar"
+                      : "Editar"
                   }
                   icon={
                     <Icon
@@ -230,11 +107,7 @@ function MessagesDataFetcher() {
                   }
                   onClick={() =>
                     editingRows.includes(message.message_id)
-                      ? handleSave(
-                          message.message_id,
-                          'message',
-                          message.message
-                        )
+                      ? handleSave(message.message_id, "name", message.name)
                       : handleEdit(message.message_id)
                   }
                 />
@@ -248,36 +121,20 @@ function MessagesDataFetcher() {
                   />
                 )}
                 {editingRows.includes(message.message_id) && (
-                  <IconButton
+                  <Button
                     aria-label="Cancelar"
-                    icon={<Icon as={FaTimes} />}
+                    leftIcon={<Icon as={FaTimes} />}
                     onClick={() => handleCancel(message.message_id)}
-                  />
+                  ></Button>
                 )}
               </Td>
             </Tr>
           ))}
         </Tbody>
       </Table>
-
-      <Modal isOpen={showDeleteConfirmation} onClose={handleDeleteCancel}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Confirmar eliminación</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            ¿Estás seguro de que deseas eliminar esta categoría?
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
-              Eliminar
-            </Button>
-            <Button variant="ghost" onClick={handleDeleteCancel}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      {renderDeleteConfirmationModal(
+        "¿Estás seguro de que deseas eliminar este mensaje?"
+      )}
     </Box>
   );
 }

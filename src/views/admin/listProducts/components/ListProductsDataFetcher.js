@@ -1,8 +1,11 @@
 import React, { useContext } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
-import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
-import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
-import ErrorModal from "../../../../components/modalError/modalError";
+import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
+import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
+import useFeedbackModal from "../../../../components/modals/feedbackModal";
+import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
+import ErrorModal from "../../../../components/modals/modalError";
 import {
   Box,
   Table,
@@ -11,6 +14,8 @@ import {
   Tr,
   Th,
   Td,
+  Flex,
+  IconButton,
   Icon,
   Button,
 } from "@chakra-ui/react";
@@ -20,64 +25,98 @@ import "../../../../assets/css/Tables.css";
 function ListProductsDataFetcher() {
   const apiEndpoint = "http://localhost:8080/api/v1/lists/listProducts";
   const token = useContext(TokenContext).token;
-  
+
+  const { FeedbackModal } = useFeedbackModal();
+
   const {
-    data: productsCatalog,
+    data: listProducts,
     editingRows,
     showTokenInvalidError,
     showErrorModal,
-    handleCustomDeleteConfirmation,
     handleCancel,
-    handleCloseErrorModal,
+    handleCustomDeleteConfirmation,
     handleCloseTokenInvalidError,
+    handleCloseErrorModal,
     renderCustomDeleteConfirmationModal,
   } = useDataFetcher(apiEndpoint, token);
 
+  const customFilter = (list, searchTerm) => {
+    const matchId = list.list_id
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const listProductMatch = list.list_product
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    return matchId || listProductMatch;
+  };
+
+  const { searchTerm, handleSearch, filteredData } = useCustomFilter(
+    listProducts,
+    customFilter
+  );
+
   return (
-    <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" className="table-container">
-        <Thead className="sticky-header">
-          <Tr>
-            <Th>ID Lista</Th>
-            <Th>Producto</Th>
-            <Th>Acciones</Th>
-          </Tr>
-        </Thead>
-        <TokenInvalidError
-          isOpen={showTokenInvalidError}
-          onClose={handleCloseTokenInvalidError}
+    <Box marginTop="5rem" maxHeight="500px">
+      <Flex justifyContent="space-between" alignItems="center">
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder="Buscar..."
+          value={searchTerm}
         />
-        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
-        <Tbody className="scrollable-content">
-          {productsCatalog.map((product) => (
-            <Tr key={product.list_id}>
-              <Td>{product.list_id}</Td>
-              <Td>{product.product_catalog_id}</Td>
-              <Td>
-                <Button
-                  aria-label="Eliminar"
-                  leftIcon={<Icon as={FaTrash} />}
-                  onClick={() =>
-                    handleCustomDeleteConfirmation(
-                      `http://localhost:8080/api/v1/lists/${product.list_id}/listProducts/${product.product_catalog_id}`,
-                      product.list_id
-                    )
-                  }
-                />
-                {editingRows.includes(product.list_id) && (
-                  <Button
-                    aria-label="Cancelar"
-                    leftIcon={<Icon as={FaTimes} />}
-                    onClick={() => handleCancel(product.list_id)}
-                  ></Button>
-                )}
-              </Td>
+      </Flex>
+      <Box maxHeight="500px" marginTop="1rem" overflowY="auto">
+        <Table variant="simple" className="table-container">
+          <Thead className="sticky-header">
+            <Tr>
+              <Th>ID Lista</Th>
+              <Th>Producto</Th>
+              <Th>Acciones</Th>
             </Tr>
-          ))}
-        </Tbody>
-      </Table>
+          </Thead>
+          <TokenInvalidError
+            isOpen={showTokenInvalidError}
+            onClose={handleCloseTokenInvalidError}
+          />
+          <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
+          <Tbody className="scrollable-content">
+            {filteredData.map((list) => (
+              <Tr key={list.list_id}>
+                <Td>{list.list_id}</Td>
+                <Td>{list.list_product}</Td>
+                <Td>
+                  {!editingRows.includes(list.list_id) && (
+                    <IconButton
+                      aria-label="Eliminar"
+                      icon={<Icon as={FaTrash} />}
+                      onClick={() =>
+                        handleCustomDeleteConfirmation(
+                          `http://localhost:8080/api/v1/lists/${list.list_id}/listProducts`,
+                          list.product_catalog_id
+                        )
+                      }
+                    />
+                  )}
+                  {editingRows.includes(list.list_id) && (
+                    <Button
+                      aria-label="Cancelar"
+                      leftIcon={<Icon as={FaTimes} />}
+                      onClick={() => handleCancel(list.list_id)}
+                    >
+                      {" "}
+                    </Button>
+                  )}
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
+      <FeedbackModal />
       {renderCustomDeleteConfirmationModal(
-        "¿Estás seguro de que deseas eliminar este mensaje?"
+        "¿Estás seguro de que deseas eliminar este producto de esta lista?"
       )}
     </Box>
   );

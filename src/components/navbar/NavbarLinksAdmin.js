@@ -13,22 +13,36 @@ import {
 // Custom Components
 import { Link } from "react-router-dom";
 import { ItemContent } from "components/menu/ItemContent";
-import { SearchBar } from "components/navbar/searchBar/SearchBar";
 import { SidebarResponsive } from "components/sidebar/Sidebar";
 import PropTypes from "prop-types";
 import React, { useContext } from "react";
-import {TokenContext} from "contexts/TokenContext";
+import { TokenContext } from "contexts/TokenContext";
 import { useHistory } from "react-router-dom";
 // Assets
 import { MdNotificationsNone } from "react-icons/md";
 import { FaEthereum } from "react-icons/fa";
 import routes from "routes.js";
+import { jwtDecode } from "jwt-decode";
 
 export default function HeaderLinks(props) {
   const { secondary } = props;
+  const { token } = useContext(TokenContext);
   const { logout } = useContext(TokenContext);
   const history = useHistory();
-  
+
+  const decoded = jwtDecode(token);
+
+  const userName = decoded && decoded.name ? decoded.name : "Usuario";
+
+  console.log("username", userName)
+
+  // Obtener las iniciales del usuario usando nombre y apellido
+  const splitName = userName.split(" ");
+  const firstNameInitial = splitName.length > 0 ? splitName[0][0] : "";
+  const lastNameInitial = splitName.length > 1 ? splitName[1][0] : "";
+  const userInitials = (firstNameInitial + lastNameInitial).toUpperCase();
+
+
   // Chakra Color Mode
   const navbarIcon = useColorModeValue("gray.400", "white");
   let menuBg = useColorModeValue("white", "navy.800");
@@ -44,7 +58,7 @@ export default function HeaderLinks(props) {
   );
 
   const handleLogout = () => {
-   logout();
+    logout();
     history.replace("/auth/login");
   };
 
@@ -58,11 +72,6 @@ export default function HeaderLinks(props) {
       boxShadow={shadow}
       overflow="hidden" // Evita que el contenido provoque desbordamiento
     >
-      <SearchBar
-        mb={secondary ? { base: "10px", md: "unset" } : "unset"}
-        me="10px"
-        borderRadius="30px"
-      />
       <Flex
         bg={ethBg}
         display={secondary ? "flex" : "none"}
@@ -163,15 +172,17 @@ export default function HeaderLinks(props) {
 
       <Menu>
         <MenuButton p="0px">
-          <Avatar
+        <Avatar
             _hover={{ cursor: "pointer" }}
             color="white"
-            name="Adela Parkson"
+            name={userName}
             bg="#11047A"
             size="sm"
             w="40px"
             h="40px"
-          />
+          >
+            {userInitials}
+          </Avatar>
         </MenuButton>
         <MenuList
           boxShadow={shadow}
@@ -182,7 +193,7 @@ export default function HeaderLinks(props) {
           border="none"
         >
           <Flex w="100%" mb="0px">
-            <Text
+          <Text
               ps="20px"
               pt="16px"
               pb="10px"
@@ -193,7 +204,7 @@ export default function HeaderLinks(props) {
               fontWeight="700"
               color={textColor}
             >
-              👋&nbsp; Hey, Adela
+              👋&nbsp; Hola, {userName}
             </Text>
           </Flex>
           <Flex flexDirection="column" p="10px">
@@ -207,14 +218,6 @@ export default function HeaderLinks(props) {
                 <Text fontSize="sm">Profile Settings</Text>
               </MenuItem>
             </Link>
-            <MenuItem
-              _hover={{ bg: "none" }}
-              _focus={{ bg: "none" }}
-              borderRadius="8px"
-              px="14px"
-            >
-              <Text fontSize="sm">Newsletter Settings</Text>
-            </MenuItem>
             <MenuItem
               _hover={{ bg: "none" }}
               _focus={{ bg: "none" }}

@@ -63,8 +63,7 @@ export default function Auth() {
                 {getRoutes(routes)}
                 <Redirect
                   from='/auth'
-                  to='/auth/sign-in
-                  '
+                  to='/auth/sign-in'
                 />
               </Switch>
             </Box>

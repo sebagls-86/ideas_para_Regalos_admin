@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
+import useFeedbackModal from "../modals/feedbackModal";
 import {
   Button,
   Modal,
@@ -11,20 +12,27 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
-const fetchData = async (apiEndpoint, token, setData, setOriginalData, setShowErrorModal, setShowTokenInvalidError, history) => {
+const fetchData = async (
+  apiEndpoint,
+  token,
+  setData,
+  setOriginalData,
+  setShowErrorModal,
+  setShowTokenInvalidError,
+  history
+) => {
   try {
     const requestOptions = {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        
       },
     };
-    
+
     const response = await fetch(apiEndpoint, requestOptions);
 
-    console.log("response", response)
+    console.log("response", response);
 
     if (response.status === 400) {
       setShowTokenInvalidError(true);
@@ -64,57 +72,111 @@ function useDataFetcher(apiEndpoint, token) {
   const [data, setData] = useState([]);
   const [originalData, setOriginalData] = useState([]);
   const [editingRows, setEditingRows] = useState([]);
+  const [editingData, setEditingData] = useState({});
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showTokenInvalidError, setShowTokenInvalidError] = useState(false);
+  const { openFeedbackModal, FeedbackModal: FeedbackModalComponent } = useFeedbackModal();
   const history = useHistory();
+
+  const reloadData = async () => {
+    fetchData(
+      apiEndpoint,
+      token,
+      setData,
+      setOriginalData,
+      setShowErrorModal,
+      setShowTokenInvalidError,
+      history
+    );
+  };
+
 
   const handleEdit = (itemId) => {
     setEditingRows([...editingRows, itemId]);
   };
 
-
   const handleCancel = (itemId) => {
-    const updatedData = originalData.map((originalItem) => ({ ...originalItem }));
+    const updatedData = originalData.map((originalItem) => ({
+      ...originalItem,
+    }));
     setData(updatedData);
-    setEditingRows(editingRows.filter((row) => row !== itemId));
+
+    setEditingRows((prevEditingRows) =>
+      prevEditingRows.filter((row) => row !== itemId)
+    );
+
+    setEditingData((prevEditingData) => {
+      const newEditingData = { ...prevEditingData };
+      delete newEditingData[itemId];
+      return newEditingData;
+    });
   };
 
-  const handleSave = async (itemId, field, value, index) => {
+  const formatToDDMMYYYY = (date) => {
+    if (!date) {
+      return "";
+    }
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const handleSave = async (entity, itemId, formData, requestType = 'json') => {
     try {
-      const updatedData = data.map((item, i) => {
-        if (item.id === itemId) {
-          return { ...item, [field]: value };
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+  
+      let requestBody;
+  
+      if (formData.date) {
+        formData.date = formatToDDMMYYYY(formData.date);
+      }
+  
+      if (requestType === 'formData') {
+        const formDataWithToken = new FormData();
+  
+        for (const key in formData) {
+          if (formData.hasOwnProperty(key)) {
+            if (key === 'image' || key === 'avatar' || key === 'banner') {
+              if (formData[key]) {
+                formDataWithToken.append(key, formData[key]);
+              }
+            } else {
+              formDataWithToken.append(key, formData[key]);
+            }
+          }
         }
-        return item;
-      });
-
-      setData(updatedData);
-      setEditingRows(editingRows.filter((row) => row !== itemId));
-
-      const response = await fetch(`http://localhost:8080/api/v1/${apiEndpoint}/${itemId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ [field]: value }),
-      });
-
-      if (response.status === 403) {
-        setShowErrorModal(true);
-        throw new Error("Forbidden");
+  
+        console.log(formDataWithToken);
+        requestBody = formDataWithToken;
+      } else {
+        headers['Content-Type'] = 'application/json';
+        requestBody = JSON.stringify(formData);
       }
+  
+      const response = await fetch(`http://localhost:8080/api/v1/${entity}/${itemId}`, {
+        method: 'PATCH',
+        headers: headers,
+        body: requestBody,
+      });
 
-      const updatedOriginalData = [...originalData];
-      updatedOriginalData.splice(index, 1);
-      setOriginalData(updatedOriginalData);
+      if (response.ok) {
+        setEditingRows((prevEditingRows) => prevEditingRows.filter((row) => row !== itemId));
+        openFeedbackModal("Operación realizada");
+        console.log("Operación realizada");
+        reloadData();
+        } else {
+        setShowErrorModal(true);
+        console.error(`${response.statusText}`);
+      }
     } catch (error) {
-      console.error("Error saving data:", error);
-      if (error.message === "Forbidden") {
-        setShowErrorModal(true);
-      }
+     openFeedbackModal("Error al realizar la operación");
+      setShowErrorModal(true);
+      console.error(error.message);
     }
   };
 
@@ -156,14 +218,14 @@ function useDataFetcher(apiEndpoint, token) {
 
   const handleCustomDelete = async (customDeleteUrl, itemId) => {
     try {
-      const response = await fetch(customDeleteUrl, {
+      const response = await fetch(`${customDeleteUrl}/${itemId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (response.status === 403) {
         setShowErrorModal(true);
         throw new Error("Forbidden");
@@ -175,7 +237,6 @@ function useDataFetcher(apiEndpoint, token) {
       console.error("Error deleting data:", error);
       if (error.message === "Forbidden") {
         setShowErrorModal(true);
-       
       }
     }
   };
@@ -191,7 +252,6 @@ function useDataFetcher(apiEndpoint, token) {
     setShowDeleteConfirmation(false);
     setDeleteConfirmationId(null);
   };
-
 
   const handleDeleteCancel = () => {
     setShowDeleteConfirmation(false);
@@ -212,9 +272,7 @@ function useDataFetcher(apiEndpoint, token) {
       <ModalContent>
         <ModalHeader>Confirmar eliminación</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          {bodyContent}
-        </ModalBody>
+        <ModalBody>{bodyContent}</ModalBody>
         <ModalFooter>
           <Button colorScheme="red" mr={3} onClick={handleDeleteConfirm}>
             Eliminar
@@ -233,9 +291,7 @@ function useDataFetcher(apiEndpoint, token) {
       <ModalContent>
         <ModalHeader>Confirmar eliminación</ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          {bodyContent}
-        </ModalBody>
+        <ModalBody>{bodyContent}</ModalBody>
         <ModalFooter>
           <Button colorScheme="red" mr={3} onClick={handleCustomDeleteConfirm}>
             Eliminar
@@ -248,14 +304,34 @@ function useDataFetcher(apiEndpoint, token) {
     </Modal>
   );
 
+  const updateEditingData = (itemId, newData) => {
+    setEditingData((prevEditingData) => ({
+      ...prevEditingData,
+      [itemId]: { ...newData },
+    }));
+  };
+
   useEffect(() => {
     if (!token) {
       history.push("/auth/login");
       return;
     }
-    fetchData(apiEndpoint, token, setData, setOriginalData, setShowErrorModal, setShowTokenInvalidError, history);
-  }, [apiEndpoint, token, history, setShowErrorModal, setShowTokenInvalidError]);
-
+    fetchData(
+      apiEndpoint,
+      token,
+      setData,
+      setOriginalData,
+      setShowErrorModal,
+      setShowTokenInvalidError,
+      history
+    );
+  }, [
+    apiEndpoint,
+    token,
+    history,
+    setShowErrorModal,
+    setShowTokenInvalidError,
+  ]);
 
   return {
     data,
@@ -264,6 +340,10 @@ function useDataFetcher(apiEndpoint, token) {
     deleteConfirmationId,
     showTokenInvalidError,
     showErrorModal,
+    editingData,
+    setEditingData,
+    updateEditingData,
+    setShowErrorModal,
     handleEdit,
     handleCancel,
     handleSave,
@@ -278,6 +358,8 @@ function useDataFetcher(apiEndpoint, token) {
     handleCloseTokenInvalidError,
     renderDeleteConfirmationModal,
     renderCustomDeleteConfirmationModal,
+    reloadData,
+    FeedbackModal: () => <FeedbackModalComponent />,
   };
 }
 

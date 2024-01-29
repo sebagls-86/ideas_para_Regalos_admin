@@ -1,8 +1,10 @@
 import React, { useContext, useState } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
-import TokenInvalidError from "../../../../components/modalError/modalTokenInvalidError";
-import useDataFetcher from "../../../../components/fetchData/useDataFetcher";
-import ErrorModal from "../../../../components/modalError/modalError";
+import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
+import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
+import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
+import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
+import ErrorModal from "../../../../components/modals/modalError";
 import {
   Box,
   Table,
@@ -11,6 +13,7 @@ import {
   Tr,
   Th,
   Td,
+  Flex,
   IconButton,
   Icon,
   Button,
@@ -21,11 +24,11 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
-import { FaEdit, FaCheck, FaTrash, FaTimes, FaComments } from "react-icons/fa";
+import { FaTrash, FaTimes, FaComments } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function ListsDataFetcher() {
-  const apiEndpoint = "http://localhost:8080/api/v1/lists";
+ const apiEndpoint = "http://localhost:8080/api/v1/lists";
   const token = useContext(TokenContext).token;
   const [selectedListProducts, setSelectedListProducts] = useState(null);
   const [listNames, setListNames] = useState({});
@@ -36,14 +39,38 @@ function ListsDataFetcher() {
     editingRows,
     showTokenInvalidError,
     showErrorModal,
-    handleEdit,
-    handleSave,
-    handleCancel,
+   handleCancel,
     handleDeleteConfirmation,
     handleCloseTokenInvalidError,
     handleCloseErrorModal,
     renderDeleteConfirmationModal,
   } = useDataFetcher(apiEndpoint, token);
+
+  const customFilter = (list, searchTerm) => {
+    const matchId = list.list_id
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const listTypeMatch = list.list_type
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const nameMatch = list.list_name
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const userIdMatch = list.user_id
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    return matchId || listTypeMatch || nameMatch || userIdMatch;
+  };
+
+  const { searchTerm, handleSearch, filteredData } = useCustomFilter(
+    lists,
+    customFilter
+  );
 
   const handleViewProducts = async (listId) => {
     try {
@@ -57,14 +84,14 @@ function ListsDataFetcher() {
           },
         }
       );
-  
+
       if (response.ok) {
         const data = await response.json();
         setSelectedListProducts({
           list_id: data.data.list_id,
           list_name: data.data.list_name || "Nombre no disponible",
         });
-  
+
         setListProducts({ ...listProducts, [listId]: [data.data] });
         setListNames({ ...listNames, [listId]: data.data.list_name });
       } else {
@@ -81,102 +108,70 @@ function ListsDataFetcher() {
   };
 
   return (
-    <Box marginTop="10rem" maxHeight="500px" overflowY="auto">
-      <Table variant="simple" className="table-container">
-        <Thead className="sticky-header">
-          <Tr>
-            <Th>ID</Th>
-            <Th>Tipo</Th>
-            <Th>Nombre</Th>
-            <Th>Usuario ID</Th>
-            <Th>Productos</Th>
-            <Th>Fecha de Creación</Th>
-            <Th>Acciones</Th>
-          </Tr>
-        </Thead>
-        <TokenInvalidError
-          isOpen={showTokenInvalidError}
-          onClose={handleCloseTokenInvalidError}
+    <Box marginTop="5rem" maxHeight="500px">
+      <Flex justifyContent="space-between" alignItems="center">
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder="Buscar..."
+          value={searchTerm}
         />
-        <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
-        <Tbody className="scrollable-content">
-          {lists.map((list) => (
-            <Tr key={list.list_id}>
-              <Td>{list.list_id}</Td>
-              <Td>
-                {editingRows.includes(list.list_id) ? (
-                  <input
-                    value={list.list_type}
-                    onChange={(e) => handleEdit(list.list_id)}
-                  />
-                ) : (
-                  list.list_type
-                )}
-              </Td>
-              <Td>
-                {editingRows.includes(list.list_id) ? (
-                  <input
-                    value={list.list_name}
-                    onChange={(e) => handleEdit(list.list_id)}
-                  />
-                ) : (
-                  list.list_name
-                )}
-              </Td>
-              <Td>{list.user_id}</Td>
-              <Td>
-                <IconButton
-                  aria-label="Ver Productos"
-                  icon={<Icon as={FaComments} />}
-                  onClick={() => handleViewProducts(list.list_id)}
-                />
-              </Td>
-              <Td>{list.created_at}</Td>
-              <Td>
-                <IconButton
-                  aria-label={
-                    editingRows.includes(list.list_id)
-                      ? "Guardar"
-                      : "Editar"
-                  }
-                  icon={
-                    <Icon
-                      as={
-                        editingRows.includes(list.list_id)
-                          ? FaCheck
-                          : FaEdit
-                      }
-                    />
-                  }
-                  onClick={() =>
-                    editingRows.includes(list.list_id)
-                      ? handleSave(list.list_id, "list name", list.list_name)
-                      : handleEdit(list.list_id)
-                  }
-                />
-                {!editingRows.includes(list.list_id) && (
-                  <IconButton
-                    aria-label="Eliminar"
-                    icon={<Icon as={FaTrash} />}
-                    onClick={() =>
-                      handleDeleteConfirmation(list.list_id)
-                    }
-                  />
-                )}
-                {editingRows.includes(list.list_id) && (
-                  <Button
-                    aria-label="Cancelar"
-                    leftIcon={<Icon as={FaTimes} />}
-                    onClick={() => handleCancel(list.list_id)}
-                  >
-                    {" "}
-                  </Button>
-                )}
-              </Td>
+      </Flex>
+      <Box maxHeight="500px" marginTop="1rem" overflowY="auto">
+        <Table variant="simple" className="table-container">
+          <Thead className="sticky-header">
+            <Tr>
+              <Th>ID</Th>
+              <Th>Tipo</Th>
+              <Th>Nombre</Th>
+              <Th>Usuario ID</Th>
+              <Th>Productos</Th>
+              <Th>Fecha de Creación</Th>
+              <Th>Acciones</Th>
             </Tr>
-          ))}
-        </Tbody>
-      </Table>
+          </Thead>
+          <TokenInvalidError
+            isOpen={showTokenInvalidError}
+            onClose={handleCloseTokenInvalidError}
+          />
+          <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
+          <Tbody className="scrollable-content">
+            {filteredData.map((list) => (
+              <Tr key={list.list_id}>
+                <Td>{list.list_id}</Td>
+                <Td>{list.list_type}</Td>
+                <Td>{list.list_name}</Td>
+                <Td>{list.user_id}</Td>
+                <Td>
+                  <IconButton
+                    aria-label="Ver Productos"
+                    icon={<Icon as={FaComments} />}
+                    onClick={() => handleViewProducts(list.list_id)}
+                  />
+                </Td>
+                <Td>{list.created_at}</Td>
+                <Td>
+                  {!editingRows.includes(list.list_id) && (
+                    <IconButton
+                      aria-label="Eliminar"
+                      icon={<Icon as={FaTrash} />}
+                      onClick={() => handleDeleteConfirmation(list.list_id)}
+                    />
+                  )}
+                  {editingRows.includes(list.list_id) && (
+                    <Button
+                      aria-label="Cancelar"
+                      leftIcon={<Icon as={FaTimes} />}
+                      onClick={() => handleCancel(list.list_id)}
+                    >
+                      {" "}
+                    </Button>
+                  )}
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </Box>
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar esta lista?"
       )}

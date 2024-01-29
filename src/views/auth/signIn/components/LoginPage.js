@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useState, useContext, useEffect } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
 import { NavLink, useHistory } from "react-router-dom";
@@ -14,23 +13,27 @@ import {
   Input,
   InputGroup,
   InputRightElement,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
   Text,
   useColorMode,
   useColorModeValue,
 } from "@chakra-ui/react";
 // Custom components
-import { HSeparator } from "components/separator/Separator";
 import DefaultAuth from "layouts/auth/Default";
 // Assets
 import illustration from "assets/img/logoIdeasParaRegalos.png";
-import { FcGoogle } from "react-icons/fc";
 import { MdOutlineRemoveRedEye } from "react-icons/md";
 import { RiEyeCloseLine } from "react-icons/ri";
 import { jwtDecode } from "jwt-decode";
 
 function SignIn() {
   // Chakra color mode
-  const { setToken } = useContext(TokenContext);
   const history = useHistory();
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === "dark";
@@ -38,6 +41,7 @@ function SignIn() {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [forceUpdate, setForceUpdate] = useState(false);
+  const [showServerErrorModal, setShowServerErrorModal] = useState(false);
 
   const textColor = useColorModeValue(
     isDarkMode ? "white" : "navy.700",
@@ -52,22 +56,7 @@ function SignIn() {
     isDarkMode ? "brand.300" : "brand.500",
     "brand.400"
   );
-  const googleBg = useColorModeValue(
-    isDarkMode ? "gray.700" : "secondaryGray.300",
-    "whiteAlpha.200"
-  );
-  const googleText = useColorModeValue(
-    isDarkMode ? "white" : "navy.700",
-    "white"
-  );
-  const googleHover = useColorModeValue(
-    isDarkMode ? { bg: "gray.600" } : { bg: "gray.200" },
-    isDarkMode ? { bg: "whiteAlpha.300" } : { bg: "whiteAlpha.300" }
-  );
-  const googleActive = useColorModeValue(
-    isDarkMode ? { bg: "gray.700" } : { bg: "secondaryGray.300" },
-    isDarkMode ? { bg: "whiteAlpha.200" } : { bg: "whiteAlpha.200" }
-  );
+  
   const [show, setShow] = React.useState(false);
   const handleClick = () => setShow(!show);
 
@@ -105,8 +94,20 @@ function SignIn() {
       }
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
-      throw error;
+      setErrorMessage("Hubo un problema al procesar la solicitud.");
+
+      // Muestra el modal de error del servidor
+      setShowServerErrorModal(true);
     }
+  };
+
+  const handleCloseServerErrorModal = () => {
+    setShowServerErrorModal(false);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    handleSignIn();
   };
 
   useEffect(() => {
@@ -121,6 +122,7 @@ function SignIn() {
         justifyContent="center"
         flexDirection="column"
       >
+      <form onSubmit={handleFormSubmit}>
         <Box
           maxW={{ base: "100%", md: "420px" }}
           w="100%"
@@ -144,30 +146,6 @@ function SignIn() {
             </Text>
           </Box>
           <Flex direction="column">
-            <Button
-              fontSize="sm"
-              me="0px"
-              mb="26px"
-              py="15px"
-              h="50px"
-              borderRadius="16px"
-              bg={googleBg}
-              color={googleText}
-              fontWeight="500"
-              _hover={googleHover}
-              _active={googleActive}
-              _focus={googleActive}
-            >
-              <Icon as={FcGoogle} w="20px" h="20px" me="10px" />
-              Sign in with Google
-            </Button>
-            <Flex align="center" mb="25px">
-              <HSeparator />
-              <Text color={isDarkMode ? "gray.300" : "gray.400"} mx="14px">
-                or
-              </Text>
-              <HSeparator />
-            </Flex>
             <FormControl>
               <FormLabel
                 display="flex"
@@ -247,14 +225,30 @@ function SignIn() {
                 w="100%"
                 h="50"
                 mb="24px"
-                onClick={handleSignIn}
+                type="submit"
               >
                 Sign In
               </Button>
             </FormControl>
           </Flex>
         </Box>
+        </form>
       </Flex>
+      <Modal isOpen={showServerErrorModal} onClose={handleCloseServerErrorModal}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Error de servidor</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              En este momento, el servidor no se encuentra disponible. Por favor, inténtelo de nuevo más tarde.
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" onClick={handleCloseServerErrorModal}>
+                Cerrar
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
     </DefaultAuth>
   );
 }

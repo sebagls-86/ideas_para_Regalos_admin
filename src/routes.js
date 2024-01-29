@@ -29,6 +29,7 @@ import Interests from "views/admin/interests";
 import ProductsCatalog from "views/admin/productsCatalog";
 import ListProducts from "views/admin/listProducts";
 import Profile from "views/admin/profile";
+import Forgot from "views/auth/forgot";
 
 const routes = [
   {
@@ -69,7 +70,7 @@ const routes = [
   {
     name: "Events Type",
     layout: "/admin",
-    path: "/events-type",
+    path: "/event-types",
     icon: <Icon as={FaPencilAlt} width='20px' height='20px' color='inherit' />,
     component: EventTypes,
   },
@@ -109,6 +110,13 @@ const routes = [
     component: Lists,
   },
   {
+    name: "List Products",
+    layout: "/admin",
+    path: "/list-products",
+    icon: <Icon as={AiOutlineUnorderedList} width='20px' height='20px' color='inherit' />,
+    component: ListProducts,
+  },
+  {
     name: "List Types",
     layout: "/admin",
     path: "/list-types",
@@ -136,13 +144,7 @@ const routes = [
     icon: <Icon as={AiOutlineTag} width='20px' height='20px' color='inherit' />,
     component: Interests,
   },
-  {
-    name: "List Products",
-    layout: "/admin",
-    path: "/list-products",
-    icon: <Icon as={AiOutlineUnorderedList} width='20px' height='20px' color='inherit' />,
-    component: ListProducts,
-  },
+ 
   {
     name: "Profile",
     layout: "/admin",
@@ -155,6 +157,14 @@ const routes = [
     layout: "/auth",
     path: "/sign-in",
     component: Login,
+    hidden: true,
+  },
+  {
+    name: "Forgot",
+    layout: "/auth",
+    path: "/forgot-password",
+    component: Forgot,
+    hidden: true,
   },
  ];
 

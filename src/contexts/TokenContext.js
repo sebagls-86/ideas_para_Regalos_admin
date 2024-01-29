@@ -3,11 +3,7 @@ import React, { createContext, useEffect, useState, useCallback } from 'react';
 export const TokenContext = createContext();
 
 export const TokenProvider = ({ children }) => {
-  const [token, setToken] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [lastVisitedRoute, setLastVisitedRoute] = useState('/');
-  const [loading, setLoading] = useState(true); // Initialize loading state
-
+  // Mover la definición de checkAuth antes de su uso
   const checkAuth = useCallback(() => {
     return new Promise((resolve, reject) => {
       try {
@@ -27,7 +23,12 @@ export const TokenProvider = ({ children }) => {
         reject(error); // Reject the promise in case of an error
       }
     });
-  }, []);
+  }, []); // No dependencias necesarias aquí
+
+  const [token, setToken] = useState('');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [lastVisitedRoute, setLastVisitedRoute] = useState('/');
+  const [loading, setLoading] = useState(true); // Initialize loading state
 
   const updateToken = (newToken) => {
     try {
@@ -55,6 +56,7 @@ export const TokenProvider = ({ children }) => {
   };
 
   const updateLastVisitedRoute = useCallback((route) => {
+    console.log("Última ruta visitada:", route);
     setLastVisitedRoute(route);
   }, []);
 
@@ -76,9 +78,8 @@ export const TokenProvider = ({ children }) => {
     return <div>Cargando...</div>;
   }
 
-
   return (
-    <TokenContext.Provider value={{ token, updateToken, isAuthenticated, logout, lastVisitedRoute, updateLastVisitedRoute }}>
+    <TokenContext.Provider value={{ token, updateToken, isAuthenticated, logout, lastVisitedRoute, updateLastVisitedRoute, checkAuth }}>
       {children}
     </TokenContext.Provider>
   );

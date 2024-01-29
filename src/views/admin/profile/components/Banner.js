@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
-import { Avatar, Box, Flex, Text, useColorModeValue } from "@chakra-ui/react";
+import { Avatar, Box, Text, useColorModeValue } from "@chakra-ui/react";
 import Card from "components/card/Card.js";
 import { jwtDecode } from "jwt-decode";
 
@@ -15,10 +15,13 @@ export default function Banner() {
 const absoluteAvatarURL = `${baseURL}${avatarURL}`;
 const absoluteBannerURL = `${baseURL}${bannerURL}`;
 
+const decoded = jwtDecode(token);
+const userId = decoded.user_id;
+const role = decoded.role;
+
   useEffect(() => {
     const fetchUserData = async () => {
-      const decoded = jwtDecode(token);
-      const userId = decoded.user_id;
+     
       if (token) {
         try {
           const response = await fetch(
@@ -55,7 +58,7 @@ const absoluteBannerURL = `${baseURL}${bannerURL}`;
   return (
     <Card mb={{ base: "0px", lg: "20px" }} align="center">
       <Box
-       bg={`url(${absoluteBannerURL})`}  
+        bg={`url(${absoluteBannerURL})`}  
         bgSize="cover"
         borderRadius="16px"
         h="131px"
@@ -71,37 +74,17 @@ const absoluteBannerURL = `${baseURL}${bannerURL}`;
         borderColor={borderColor}
       />
       <Text color={textColorPrimary} fontWeight="bold" fontSize="xl" mt="10px">
-        {userData?.name}
+        {`${userData?.name} ${userData?.last_name}`}
       </Text>
       <Text color={textColorSecondary} fontSize="sm">
         {userData?.job}
       </Text>
-      <Flex w="max-content" mx="auto" mt="26px">
-        <Flex mx="auto" me="60px" align="center" direction="column">
-          <Text color={textColorPrimary} fontSize="2xl" fontWeight="700">
-            {userData?.posts || 0}
-          </Text>
-          <Text color={textColorSecondary} fontSize="sm" fontWeight="400">
-            Posts
-          </Text>
-        </Flex>
-        <Flex mx="auto" me="60px" align="center" direction="column">
-          <Text color={textColorPrimary} fontSize="2xl" fontWeight="700">
-            {userData?.followers || 0}
-          </Text>
-          <Text color={textColorSecondary} fontSize="sm" fontWeight="400">
-            Followers
-          </Text>
-        </Flex>
-        <Flex mx="auto" align="center" direction="column">
-          <Text color={textColorPrimary} fontSize="2xl" fontWeight="700">
-            {userData?.following || 0}
-          </Text>
-          <Text color={textColorSecondary} fontSize="sm" fontWeight="400">
-            Following
-          </Text>
-        </Flex>
-      </Flex>
+      <Text color={textColorSecondary} fontSize="sm">
+        {`Email: ${userData?.email}`}
+      </Text>
+      <Text color={textColorSecondary} fontSize="sm">
+        {`Role ID: ${role}`}
+      </Text>
     </Card>
   );
 }

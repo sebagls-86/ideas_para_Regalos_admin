@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
@@ -14,6 +14,13 @@ import {
   Tr,
   Th,
   Td,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Image,
   Flex,
   Input,
   IconButton,
@@ -76,23 +83,64 @@ function MessagesDataFetcher() {
     customFilter
   );
 
-  const handleEditChange = (e, fieldName, productCatalogId) => {
+  const handleEditChange = (e, fieldName, forumMessageId, imageIndex) => {
     let newValue;
-  
+
     if (e.target.type === "file") {
       newValue = e.target.files[0];
+
+      // Actualizar temporalmente la imagen seleccionada
+      setTemporaryImages((prevTemporaryImages) => ({
+        ...prevTemporaryImages,
+        [forumMessageId]: {
+          ...(prevTemporaryImages[forumMessageId] || {}),
+          [imageIndex]: URL.createObjectURL(newValue),
+        },
+      }));
     } else {
       newValue = e.target.value;
     }
-  
-    setEditingData((prevEditingData) => ({
-      ...prevEditingData,
-      [productCatalogId]: {
-        ...prevEditingData[productCatalogId],
-        [fieldName]: fieldName === "images" ? [newValue] : newValue,
-        // ^ Si el campo es 'images', asigna un array con el nuevo valor
-      },
-    }));
+
+    setEditingData((prevEditingData) => {
+      const currentData = prevEditingData[forumMessageId] || {};
+      const updatedImages = Array.isArray(currentData[fieldName])
+        ? [...currentData[fieldName]]
+        : [];
+
+      // Actualizar las imágenes solo en la vista (sin enviar al formulario)
+      updatedImages[imageIndex] = newValue;
+
+      const updatedData = {
+        ...prevEditingData,
+        [forumMessageId]: {
+          ...currentData,
+          [fieldName]: updatedImages,
+        },
+      };
+
+      return updatedData;
+    });
+  };
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+  const [temporaryImages, setTemporaryImages] = useState({});
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setSelectedImage(null);
+    setImageModalOpen(false);
+  };
+
+  const handleEditImageClick = (forumMessageId, imageIndex) => {
+    const fileInput = document.getElementById(
+      `image-input-${forumMessageId}-${imageIndex}`
+    );
+    fileInput && fileInput.click();
   };
 
   return (
@@ -147,19 +195,57 @@ function MessagesDataFetcher() {
                 <Td>{message.user_id}</Td>
                 <Td>{message.forum_id}</Td>
                 <Td>
-                  {editingRows.includes(message.message_id) ? (
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleEditChange(e, "image", message.message_id)
-                      }
-                      minWidth="100px"
-                      color="white"
-                    />
-                  ) : (
-                    message.images
-                  )}
+                  {Array.isArray(message.images) &&
+                    message.images.map((imageUrl, index) => (
+                      <Td key={index}>
+                        {editingRows.includes(message.message_id) ? (
+                          <>
+                            <Input
+                              type="file"
+                              accept="image/*"
+                              id={`image-input-${message.message_id}-${index}`}
+                              style={{ display: "none" }}
+                              onChange={(e) =>
+                                handleEditChange(
+                                  e,
+                                  "images",
+                                  message.message_id,
+                                  index
+                                )
+                              }
+                            />
+                            <Image
+                              src={
+                                temporaryImages[message.message_id]?.[index] ||
+                                `http://localhost:8080${imageUrl}`
+                              }
+                              alt={`Imagen ${index + 1}`}
+                              maxH="50px"
+                              maxW="50px"
+                              objectFit="cover"
+                              onClick={() =>
+                                handleEditImageClick(message.message_id, index)
+                              }
+                              cursor="pointer"
+                            />
+                          </>
+                        ) : (
+                          <Image
+                            src={`http://localhost:8080${imageUrl}`}
+                            alt={`Imagen ${index + 1}`}
+                            maxH="50px"
+                            maxW="50px"
+                            objectFit="cover"
+                            onClick={() =>
+                              handleImageClick(
+                                `http://localhost:8080${imageUrl}`
+                              )
+                            }
+                            cursor="pointer"
+                          />
+                        )}
+                      </Td>
+                    ))}
                 </Td>
                 <Td>{new Date(message.date).toLocaleString()}</Td>
                 <Td>{mapEditedValue(message.edited)}</Td>
@@ -184,7 +270,8 @@ function MessagesDataFetcher() {
                         ? handleSave(
                             entity,
                             message.message_id,
-                            editingData[message.message_id]
+                            editingData[message.message_id],
+                            "formData"
                           )
                         : handleEdit(message.message_id)
                     }
@@ -219,6 +306,30 @@ function MessagesDataFetcher() {
           feedbackMessage={feedbackMessagePatch}
         />
       )}
+      <Modal
+        isOpen={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        size="xl"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedImage && (
+              <Image
+                src={selectedImage}
+                alt="Imagen seleccionada"
+                maxH="80vh"
+                maxW="80vw"
+                objectFit="contain"
+              />
+            )}
+          </ModalBody>
+          <ModalFooter>
+            {/* Puedes agregar botones de acciones adicionales aquí */}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar este mensaje?"
       )}

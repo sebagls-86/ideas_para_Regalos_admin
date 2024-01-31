@@ -45,7 +45,7 @@ const role = decoded.role;
     };
 
     fetchUserData();
-  }, [token]);
+  }, [token, userId]);
 
   // Chakra Color Mode
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");

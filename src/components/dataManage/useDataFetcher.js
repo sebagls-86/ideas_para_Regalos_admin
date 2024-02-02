@@ -77,7 +77,8 @@ function useDataFetcher(apiEndpoint, token) {
   const [deleteConfirmationId, setDeleteConfirmationId] = useState(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [showTokenInvalidError, setShowTokenInvalidError] = useState(false);
-  const { openFeedbackModal, FeedbackModal: FeedbackModalComponent } = useFeedbackModal();
+  const { openFeedbackModal, FeedbackModal: FeedbackModalComponent } =
+    useFeedbackModal();
   const history = useHistory();
 
   const reloadData = async () => {
@@ -91,7 +92,6 @@ function useDataFetcher(apiEndpoint, token) {
       history
     );
   };
-
 
   const handleEdit = (itemId) => {
     setEditingRows([...editingRows, itemId]);
@@ -124,24 +124,33 @@ function useDataFetcher(apiEndpoint, token) {
     return `${day}/${month}/${year}`;
   };
 
-  const handleSave = async (entity, itemId, formData, requestType = 'json') => {
+  const handleSave = async (entity, itemId, formData, requestType = "json") => {
     try {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
-  
+
+      if (formData === undefined) {
+        handleCancel(itemId);
+        return;
+      }
+
       let requestBody;
-  
+
       if (formData.date) {
         formData.date = formatToDDMMYYYY(formData.date);
       }
-  
-      if (requestType === 'formData') {
+
+      if (requestType === "formData") {
         const formDataWithToken = new FormData();
-  
         for (const key in formData) {
           if (formData.hasOwnProperty(key)) {
-            if (key === 'image' || key === 'avatar' || key === 'banner') {
+            if (
+              key === "image" ||
+              key === "images" ||
+              key === "avatar" ||
+              key === "banner"
+            ) {
               if (formData[key]) {
                 formDataWithToken.append(key, formData[key]);
               }
@@ -150,31 +159,36 @@ function useDataFetcher(apiEndpoint, token) {
             }
           }
         }
-  
-        console.log(formDataWithToken);
+
+        console.log("Después del bucle:", formDataWithToken);
         requestBody = formDataWithToken;
       } else {
-        headers['Content-Type'] = 'application/json';
+        headers["Content-Type"] = "application/json";
         requestBody = JSON.stringify(formData);
       }
-  
-      const response = await fetch(`http://localhost:8080/api/v1/${entity}/${itemId}`, {
-        method: 'PATCH',
-        headers: headers,
-        body: requestBody,
-      });
+
+      const response = await fetch(
+        `http://localhost:8080/api/v1/${entity}/${itemId}`,
+        {
+          method: "PATCH",
+          headers: headers,
+          body: requestBody,
+        }
+      );
 
       if (response.ok) {
-        setEditingRows((prevEditingRows) => prevEditingRows.filter((row) => row !== itemId));
+        setEditingRows((prevEditingRows) =>
+          prevEditingRows.filter((row) => row !== itemId)
+        );
         openFeedbackModal("Operación realizada");
         console.log("Operación realizada");
         reloadData();
-        } else {
+      } else {
         setShowErrorModal(true);
         console.error(`${response.statusText}`);
       }
     } catch (error) {
-     openFeedbackModal("Error al realizar la operación");
+      openFeedbackModal("Error al realizar la operación");
       setShowErrorModal(true);
       console.error(error.message);
     }
@@ -189,6 +203,11 @@ function useDataFetcher(apiEndpoint, token) {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (response.ok) {
+        reloadData();
+        openFeedbackModal("Operación realizada");
+      }
 
       if (response.status === 403) {
         setShowErrorModal(true);

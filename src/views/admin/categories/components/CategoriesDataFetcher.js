@@ -15,6 +15,7 @@ import {
   Tr,
   Th,
   Td,
+  Image,
   Flex,
   Modal,
   ModalOverlay,
@@ -80,8 +81,6 @@ function CategoriesDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "Categoria creada con éxito",
-    "Error al crear categoria",
     reloadData,
     setShowErrorModal
   );
@@ -157,16 +156,20 @@ function CategoriesDataFetcher() {
     const isFormValid = validateNewCategoriesForm();
 
     if (isFormValid) {
-      postData(newCategoriesData);
+      postData(newCategoriesData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
       console.log("Formulario inválido");
     }
   };
 
+  const [imagePreview, setImagePreview] = useState("");
+
+
   const handleEditChange = (e, fieldName, categoryId) => {
-    const newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
-  
+    const newValue =
+      e.target.type === "file" ? e.target.files[0] : e.target.value;
+
     setEditingData((prevEditingData) => ({
       ...prevEditingData,
       [categoryId]: {
@@ -174,6 +177,26 @@ function CategoriesDataFetcher() {
         [fieldName]: newValue,
       },
     }));
+
+    if (e.target.type === "file") {
+      const previewURL = URL.createObjectURL(e.target.files[0]);
+      if (fieldName === "image") {
+        setImagePreview(previewURL);
+      }
+    }
+  };
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setSelectedImage(null);
+    setImageModalOpen(false);
   };
 
   return (
@@ -279,17 +302,48 @@ function CategoriesDataFetcher() {
                 </Td>
                 <Td>
                   {editingRows.includes(category.category_id) ? (
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleEditChange(e, "image", category.category_id)
-                      }
-                      minWidth="100px"
-                      color="white"
-                    />
+                    <div>
+                      <label htmlFor={`image-input-${category.category_id}`}>
+                        <Input
+                          id={`image-input-${category.category_id}`}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) =>
+                            handleEditChange(e, "image", category.category_id)
+                          }
+                        />
+                        <Image
+                          src={
+                            imagePreview ||
+                            `http://localhost:8080${category.image}`
+                          }
+                          alt="Image Preview"
+                          maxH="50px"
+                          maxW="50px"
+                          objectFit="cover"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document
+                              .getElementById(`image-input-${category.category_id}`)
+                              .click();
+                          }}
+                          cursor="pointer"
+                        />
+                      </label>
+                    </div>
                   ) : (
-                    category.image
+                    <Image
+                      src={`http://localhost:8080${category.image}`}
+                      alt="Avatar"
+                      maxH="50px"
+                      maxW="50px"
+                      objectFit="cover"
+                      onClick={() =>
+                        handleImageClick(`http://localhost:8080${category.image}`)
+                      }
+                      cursor="pointer"
+                    />
                   )}
                 </Td>
                 <Td>
@@ -352,6 +406,28 @@ function CategoriesDataFetcher() {
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar esta categoría?"
       )}
+      <Modal
+        isOpen={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        size="xl"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedImage && (
+              <Image
+                src={selectedImage}
+                alt="Imagen seleccionada"
+                maxH="80vh"
+                maxW="80vw"
+                objectFit="contain"
+              />
+            )}
+          </ModalBody>
+          <ModalFooter></ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

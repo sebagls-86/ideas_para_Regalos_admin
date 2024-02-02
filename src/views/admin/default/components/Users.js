@@ -1,9 +1,8 @@
 import React, { useContext, useMemo, useState, useEffect } from "react";
 import { TokenContext } from "contexts/TokenContext";
-import { Flex, Table, Text, useColorModeValue } from "@chakra-ui/react";
+import { Box, Flex, Table, Text, useColorModeValue } from "@chakra-ui/react";
 import { useGlobalFilter, usePagination, useSortBy, useTable } from "react-table";
 import Card from "components/card/Card";
-import Menu from "components/menu/MainMenu";
 
 export default function Users(props) {
   const { columnsData, tableData } = props;
@@ -12,7 +11,7 @@ export default function Users(props) {
   useEffect(() => {
     const fetchUserCount = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/v1/users/userscount");
+        const response = await fetch("http://localhost:8080/api/v1/users/users-count");
         const data = await response.json();
         const totalUsers = data.data;
 
@@ -53,22 +52,21 @@ export default function Users(props) {
   const textColor = useColorModeValue("secondaryGray.900", "white");
   
   return (
-    <Card
-      direction='column'
-      w='100%'
-      px='25px'
-    >
-      <Flex justify='space-between' align='center' mb='16px'>
+    <Card direction='column' w='100%' px='25px'>
+    <Flex direction='column' mb='16px'>
+      <Box>
         <Text color={textColor} fontSize='22px' fontWeight='700' lineHeight='100%'>
-        Total de usuarios
+          Total de usuarios
         </Text>
-        <Text color={textColor} fontSize='18px' fontWeight='700' lineHeight='100%'>
+      </Box>
+      <Box>
+        <Text color={textColor} mt='10' align= 'center' fontSize='100px' fontWeight='700' lineHeight='100%'>
           {currentCount}
         </Text>
-        <Menu />
-      </Flex>
-      <Table {...getTableProps()} variant='simple' color='gray.500' mb='24px'>
-      </Table>
-    </Card>
+      </Box>
+    </Flex>
+    <Table {...getTableProps()} variant='simple' color='gray.500' mb='24px'>
+    </Table>
+  </Card>
   );
 }

@@ -69,7 +69,7 @@ export default function ChangePassword(props) {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Reemplaza 'tuToken' con la variable que contiene tu token
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestBody),
       });

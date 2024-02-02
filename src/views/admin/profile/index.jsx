@@ -2,7 +2,7 @@
 import { Box, Grid } from "@chakra-ui/react";
 
 // Custom components
-import Banner from "views/admin/profile/components/Banner";
+import Profile from "views/admin/profile/components/Profile";
 import ChangePassword from "views/admin/profile/components/ChangePassword";
 
 // Assets
@@ -13,9 +13,8 @@ import React from "react";
 export default function Overview() {
   return (
     <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
-      {/* Banner Component */}
-      <Banner
-        gridArea='1 / 1 / 2 / 4'  // Ajusta las áreas de la cuadrícula para abarcar las tres columnas
+       <Profile
+        gridArea='1 / 1 / 2 / 4'
         banner={banner}
         avatar={avatar}
         name='Adela Parkson'
@@ -36,7 +35,7 @@ export default function Overview() {
         }}
         gap={{ base: "20px", xl: "20px" }}>
         <ChangePassword
-          gridArea={{ base: "2 / 1 / 3 / 2", lg: "1 / 1 / 2 / 2" }} 
+           gridArea={{ base: "2 / 1 / 4 / 4", lg: "1 / 1 / 2 / 4" }}
           used={25.6}
           total={50}
         />

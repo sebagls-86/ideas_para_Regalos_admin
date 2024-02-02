@@ -128,16 +128,19 @@ function ProfilesDataFetcher() {
   }, []);
 
   const handleEditChange = (value, fieldName, eventId) => {
-    const numericValue = fieldName === 'age_range_id' || 'relationship_id' ? parseInt(value, 10) : value;
-   
-     setEditingData((prevEditingData) => ({
-       ...prevEditingData,
-       [eventId]: {
-         ...prevEditingData[eventId],
-         [fieldName]: numericValue,
-       },
-     }));
-   };
+    const numericValue =
+      fieldName === "age_range_id" || fieldName === "relationship_id"
+        ? parseInt(value, 10)
+        : value;
+
+    setEditingData((prevEditingData) => ({
+      ...prevEditingData,
+      [eventId]: {
+        ...prevEditingData[eventId],
+        [fieldName]: numericValue,
+      },
+    }));
+  };
 
   return (
     <Box marginTop="5rem" maxHeight="500px">
@@ -216,8 +219,12 @@ function ProfilesDataFetcher() {
                   {editingRows.includes(profile.profile_id) ? (
                     <Select
                       value={
-                        editingData[profile.profile_id]?.age_range_id ||
-                        profile.age_range
+                        editingData[profile.profile_id]?.age_range_id !==
+                        undefined
+                          ? editingData[profile.profile_id].age_range_id
+                          : ageRangeOptions.find(
+                              (option) => option.name === profile.age_range
+                            )?.age_range_id || ""
                       }
                       onChange={(e) =>
                         handleEditChange(
@@ -226,7 +233,7 @@ function ProfilesDataFetcher() {
                           profile.profile_id
                         )
                       }
-                      style={{width: '100px'}}
+                      style={{ width: "100px" }}
                     >
                       {ageRangeOptions.map((option) => (
                         <option
@@ -245,8 +252,14 @@ function ProfilesDataFetcher() {
                   {editingRows.includes(profile.profile_id) ? (
                     <Select
                       value={
-                        editingData[profile.profile_id]?.relationship_id ||
-                        profile.relationship
+                        editingData[profile.profile_id]?.relationship_id !==
+                        undefined
+                          ? editingData[profile.profile_id].relationship_id
+                          : relationshipOptions.find(
+                              (option) =>
+                                option.relationship_name ===
+                                profile.relationship
+                            )?.relationship_id || ""
                       }
                       onChange={(e) =>
                         handleEditChange(

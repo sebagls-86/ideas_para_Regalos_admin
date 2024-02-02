@@ -14,8 +14,10 @@ import {
   Tbody,
   Tr,
   Th,
+  Image,
   Td,
   Flex,
+  Text,
   Select,
   Modal,
   ModalOverlay,
@@ -33,6 +35,10 @@ import {
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
+
+function mapStatusValue(value) {
+  return value === 1 ? "Activo" : "Inactivo";
+}
 
 function ProductsCatalogDataFetcher() {
   const entity = "productsCatalog";
@@ -183,25 +189,84 @@ function ProductsCatalogDataFetcher() {
   const handleCreateProductCatalog = async () => {
     const isFormValid = validateNewProductCatalogForm();
 
+    if (
+      newProductCatalogData.image &&
+      newProductCatalogData.image.length > 5
+    ) {
+      openFeedbackModal("Solo se permiten hasta 5 imágenes");
+      console.log("Solo se permiten hasta 5 imágenes");
+      return;
+    }
+
     if (isFormValid) {
-      postData(newProductCatalogData);
+      postData(newProductCatalogData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
       console.log("Formulario inválido");
     }
   };
 
-  const handleEditChange = (e, fieldName, productCatalogId) => {
-    const newValue =
-      e.target.type === "file" ? e.target.files[0] : e.target.value;
+  const [imagesPreview, setImagesPreview] = useState("");
 
-    setEditingData((prevEditingData) => ({
-      ...prevEditingData,
-      [productCatalogId]: {
-        ...prevEditingData[productCatalogId],
-        [fieldName]: newValue,
-      },
-    }));
+  const handleEditChange = (e, fieldName, productId) => {
+    if (!productId) {
+      console.error("eventTypeId is not defined");
+      return;
+    }
+
+    const newValue =
+      e?.target?.type === "file" ? e.target.files[0] : e?.target?.value;
+
+    if (newValue !== undefined) {
+      setEditingData((prevEditingData) => ({
+        ...prevEditingData,
+        [productId]: {
+          ...(prevEditingData[productId] || {}),
+          [fieldName]: newValue,
+        },
+      }));
+
+      if (e?.target?.type === "file") {
+        const previewURL = URL.createObjectURL(e.target.files[0]);
+        if (fieldName === "images") {
+          setImagesPreview(previewURL);
+        }
+      }
+    }
+  };
+
+  const handleStatuSave = async (productId) => {
+    const editedStatus = editingData[productId]?.status;
+    const isStatusComplete = editedStatus !== undefined && editedStatus !== null;
+    const areOtherFieldsEdited = Object.keys(editingData[productId] || {}).some(
+      (field) => field !== "status"
+    );
+  
+    const statusToSend = isStatusComplete
+      ? parseInt(editedStatus, 10)
+      : editedStatus;
+  
+    if (isStatusComplete || areOtherFieldsEdited) {
+      const updatedData = {
+        ...editingData[productId],
+        ...(statusToSend !== undefined && { status: statusToSend }), // Agregar status solo si no es undefined
+      };
+  
+      await handleSave(entity, productId, updatedData, "formData");
+    }
+  };
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setSelectedImage(null);
+    setImageModalOpen(false);
   };
 
   return (
@@ -254,7 +319,7 @@ function ProductsCatalogDataFetcher() {
               <FormLabel>Status</FormLabel>
               <Select
                 name="status"
-                value={newProductCatalogData.scheduled ? "1" : "0"}
+                value={newProductCatalogData.status ? "1" : "0"}
                 onChange={(e) =>
                   handleNewProductCatalogChange(e.target.value, "status")
                 }
@@ -264,7 +329,7 @@ function ProductsCatalogDataFetcher() {
                 <option value="1">Activo</option>
               </Select>
               <div style={{ color: "red" }}>
-                {newProductCatalogErrors.scheduled}
+                {newProductCatalogErrors.status}
               </div>
             </FormControl>
             <FormControl>
@@ -337,47 +402,80 @@ function ProductsCatalogDataFetcher() {
                 </Td>
                 <Td>
                   {editingRows.includes(product.product_catalog_id) ? (
-                    <select
+                    <Select
                       value={
-                        editingData[product.product_catalog_id] ||
-                        product.status.toString()
+                        editingData[product.product_catalog_id]?.status ||
+                        product.status
                       }
-                      onChange={(e) => {
+                      onChange={(e) =>
                         handleEditChange(
                           e,
                           "status",
                           product.product_catalog_id
-                        );
-                        setEditingData({
-                          ...editingData,
-                          [product.product_catalog_id]:
-                            product.product_catalog_id,
-                        });
-                      }}
-                      style={{ color: "black" }}
-                    >
+                        )
+                      }
+                      >
                       <option value="1">Activo</option>
                       <option value="0">Inactivo</option>
-                    </select>
-                  ) : product.status === 1 ? (
-                    "Activo"
+                    </Select>
                   ) : (
-                    "Inactivo"
+                    mapStatusValue(product.status)
                   )}
                 </Td>
                 <Td>
                   {editingRows.includes(product.product_catalog_id) ? (
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleEditChange(e, "image", product.product_catalog_id)
-                      }
-                      minWidth="100px"
-                      color="white"
-                    />
+                    <div>
+                      <label
+                        htmlFor={`images-input-${product.product_catalog_id}`}
+                      >
+                        <Input
+                          id={`images-input-${product.product_catalog_id}`}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) =>
+                            handleEditChange(
+                              e,
+                              "images",
+                              product.product_catalog_id
+                            )
+                          }
+                        />
+                        <Image
+                          src={
+                            imagesPreview ||
+                            `http://localhost:8080${product.images}`
+                          }
+                          alt="Images Preview"
+                          maxH="50px"
+                          maxW="50px"
+                          objectFit="cover"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document
+                              .getElementById(
+                                `images-input-${product.product_catalog_id}`
+                              )
+                              .click();
+                          }}
+                          cursor="pointer"
+                        />
+                      </label>
+                    </div>
                   ) : (
-                    product.images
+                    <Image
+                      src={`http://localhost:8080${product.images}`}
+                      alt="Images"
+                      maxH="50px"
+                      maxW="50px"
+                      objectFit="cover"
+                      onClick={() =>
+                        handleImageClick(
+                          `http://localhost:8080${product.images}`
+                        )
+                      }
+                      cursor="pointer"
+                    />
                   )}
                 </Td>
                 <Td>
@@ -398,11 +496,7 @@ function ProductsCatalogDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(product.product_catalog_id)
-                        ? handleSave(
-                            entity,
-                            product.product_catalog_id,
-                            editingData[product.product_catalog_id]
-                          )
+                        ? handleStatuSave(product.product_catalog_id)
                         : handleEdit(product.product_catalog_id)
                     }
                   />
@@ -438,6 +532,28 @@ function ProductsCatalogDataFetcher() {
           feedbackMessage={feedbackMessagePatch}
         />
       )}
+      <Modal
+        isOpen={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        size="xl"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedImage && (
+              <Image
+                src={selectedImage}
+                alt="Imagen seleccionada"
+                maxH="80vh"
+                maxW="80vw"
+                objectFit="contain"
+              />
+            )}
+          </ModalBody>
+          <ModalFooter></ModalFooter>
+        </ModalContent>
+      </Modal>
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar este producto?"
       )}

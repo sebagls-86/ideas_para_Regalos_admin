@@ -14,6 +14,7 @@ import { AiOutlineTag, AiOutlineUnorderedList } from "react-icons/ai";
 import Login from "views/auth/signIn";
 import MainDashboard from "views/admin/default";
 import Users from "views/admin/users";
+import AdminUsers from "views/admin/users/components/AdminUsersDataFetcher";
 import AgeRange from "views/admin/ageRange";
 import Categories from "views/admin/categories";
 import Events from "views/admin/events";
@@ -45,6 +46,13 @@ const routes = [
     path: "/users",
     icon: <Icon as={FaUser} width='20px' height='20px' color='inherit' />,
     component: Users,
+  },
+  {
+    name: "Admin Users",
+    layout: "/admin",
+    path: "/admin-users",
+    icon: <Icon as={FaUser} width='20px' height='20px' color='inherit' />,
+    component: AdminUsers,
   },
   {
     name: "Age Range",

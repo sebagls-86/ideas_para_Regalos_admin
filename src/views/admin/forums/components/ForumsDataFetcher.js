@@ -11,10 +11,12 @@ import {
   Table,
   Thead,
   Tbody,
+  Text,
   Tr,
   Th,
   Td,
   Flex,
+  Select,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -29,6 +31,10 @@ import {
 } from "@chakra-ui/react";
 import { FaEdit, FaCheck, FaTrash, FaTimes, FaComments } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
+
+function mapStatusValue(value) {
+  return value === 1 ? "Activo" : "Inactivo";
+}
 
 function ForumsDataFetcher() {
   const entity = "forums";
@@ -100,6 +106,27 @@ function ForumsDataFetcher() {
     }));
   };
 
+  const handleStatuSave = async (forumId) => {
+    const editedStatus = editingData[forumId]?.status;
+    const isStatusComplete =
+      editedStatus !== undefined && editedStatus !== null;
+    const areOtherFieldsEdited = Object.keys(editingData[forumId] || {}).some(
+      (field) => field !== "status"
+    );
+
+    const statusToSend = isStatusComplete
+      ? parseInt(editedStatus, 10)
+      : editedStatus;
+
+    if (isStatusComplete || areOtherFieldsEdited) {
+      // Si status está completo o hay otros campos editados, enviar a handleSave estándar
+      await handleSave(entity, forumId, {
+        ...editingData[forumId],
+        status: statusToSend,
+      });
+    }
+  };
+
   return (
     <Box marginTop="5rem" maxHeight="500px">
       <Flex justifyContent="space-between" alignItems="center">
@@ -118,6 +145,8 @@ function ForumsDataFetcher() {
               <Th>Título</Th>
               <Th>Descripción</Th>
               <Th>Mensajes</Th>
+              <Th>Evento</Th>
+              <Th>Estado</Th>
               <Th>Fecha de Creación</Th>
               <Th>Likes</Th>
               <Th>Acciones</Th>
@@ -171,6 +200,24 @@ function ForumsDataFetcher() {
                     onClick={() => handleViewMessages(forum.forum_id)}
                   />
                 </Td>
+                <Td>{forum.event}</Td>
+                <Td>
+                  {editingRows.includes(forum.forum_id) ? (
+                    <Select
+                      value={
+                        editingData[forum.forum_id]?.status || forum.status
+                      }
+                      onChange={(e) =>
+                        handleEditChange(e, "status", forum.forum_id)
+                      }
+                    >
+                      <option value="1">Activo</option>
+                      <option value="0">Inactivo</option>
+                    </Select>
+                  ) : (
+                    mapStatusValue(forum.status)
+                  )}
+                </Td>
                 <Td>{forum.created_at}</Td>
                 <Td>{forum.likes}</Td>
                 <Td>
@@ -191,11 +238,7 @@ function ForumsDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(forum.forum_id)
-                        ? handleSave(
-                            entity,
-                            forum.forum_id,
-                            editingData[forum.forum_id]
-                          )
+                        ? handleStatuSave(forum.forum_id)
                         : handleEdit(forum.forum_id)
                     }
                   />
@@ -228,13 +271,35 @@ function ForumsDataFetcher() {
             <ModalBody>
               {selectedForum && selectedForum.messages ? (
                 selectedForum.messages.map((message) => (
-                  <div key={message.message_id}>
-                    <p>Usuario: {message.user_name}</p>
-                    <p>Mensaje: {message.message}</p>
-                  </div>
+                  <Box
+                    key={message.message_id}
+                    mb={4}
+                    p={4}
+                    borderRadius="md"
+                    boxShadow="md"
+                    backgroundColor="teal.100"
+                    color="teal.800"
+                  >
+                    <Text fontWeight="bold" fontSize="lg" color="teal.900">
+                      Usuario: {message.user_name}
+                    </Text>
+                    <Text mt={2} color="teal.800">
+                      {message.message}
+                    </Text>
+                  </Box>
                 ))
               ) : (
-                <p>No hay mensajes disponibles para este foro.</p>
+                <Box
+                  textAlign="center"
+                  p={4}
+                  borderRadius="md"
+                  backgroundColor="teal.100"
+                  color="teal.800"
+                >
+                  {" "}
+                  {/* Ajusta colores aquí también */}
+                  <Text>No hay mensajes disponibles para este foro.</Text>
+                </Box>
               )}
             </ModalBody>
             <ModalFooter>

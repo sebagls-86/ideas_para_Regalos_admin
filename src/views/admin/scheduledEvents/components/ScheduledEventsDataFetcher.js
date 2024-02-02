@@ -397,8 +397,7 @@ function ScheduledEventsDataFetcher() {
                         ? handleSave(
                             entity,
                             event.scheduled_event_id,
-                            editingData[event.scheduled_event_id],
-                            'formData'
+                            editingData[event.scheduled_event_id]
                           )
                         : handleEdit(event.scheduled_event_id)
                     }

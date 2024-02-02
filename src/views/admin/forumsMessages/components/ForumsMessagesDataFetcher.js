@@ -22,12 +22,10 @@ import {
   ModalFooter,
   Image,
   Flex,
-  Input,
   IconButton,
   Icon,
-  Button,
 } from "@chakra-ui/react";
-import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function mapEditedValue(value) {
@@ -35,7 +33,6 @@ function mapEditedValue(value) {
 }
 
 function MessagesDataFetcher() {
-  const entity = "messages";
   const apiEndpoint = "http://localhost:8080/api/v1/messages";
   const token = useContext(TokenContext).token;
 
@@ -43,17 +40,11 @@ function MessagesDataFetcher() {
 
   const {
     data: messages,
-    editingRows,
     showTokenInvalidError,
     showErrorModal,
-    editingData,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
-    setEditingData,
-    handleEdit,
-    handleCancel,
-    handleSave,
     handleDeleteConfirmation,
     handleCloseErrorModal,
     handleCloseTokenInvalidError,
@@ -83,48 +74,8 @@ function MessagesDataFetcher() {
     customFilter
   );
 
-  const handleEditChange = (e, fieldName, forumMessageId, imageIndex) => {
-    let newValue;
-
-    if (e.target.type === "file") {
-      newValue = e.target.files[0];
-
-      // Actualizar temporalmente la imagen seleccionada
-      setTemporaryImages((prevTemporaryImages) => ({
-        ...prevTemporaryImages,
-        [forumMessageId]: {
-          ...(prevTemporaryImages[forumMessageId] || {}),
-          [imageIndex]: URL.createObjectURL(newValue),
-        },
-      }));
-    } else {
-      newValue = e.target.value;
-    }
-
-    setEditingData((prevEditingData) => {
-      const currentData = prevEditingData[forumMessageId] || {};
-      const updatedImages = Array.isArray(currentData[fieldName])
-        ? [...currentData[fieldName]]
-        : [];
-
-      // Actualizar las imágenes solo en la vista (sin enviar al formulario)
-      updatedImages[imageIndex] = newValue;
-
-      const updatedData = {
-        ...prevEditingData,
-        [forumMessageId]: {
-          ...currentData,
-          [fieldName]: updatedImages,
-        },
-      };
-
-      return updatedData;
-    });
-  };
-
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
-  const [temporaryImages, setTemporaryImages] = useState({});
 
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
@@ -134,13 +85,6 @@ function MessagesDataFetcher() {
   const handleCloseImageModal = () => {
     setSelectedImage(null);
     setImageModalOpen(false);
-  };
-
-  const handleEditImageClick = (forumMessageId, imageIndex) => {
-    const fileInput = document.getElementById(
-      `image-input-${forumMessageId}-${imageIndex}`
-    );
-    fileInput && fileInput.click();
   };
 
   return (
@@ -175,123 +119,36 @@ function MessagesDataFetcher() {
             {filteredData.map((message) => (
               <Tr key={message.message_id}>
                 <Td>{message.message_id}</Td>
-                <Td>
-                  {editingRows.includes(message.message_id) ? (
-                    <Input
-                      value={
-                        editingData[message.message_id]?.message ||
-                        message.message
-                      }
-                      onChange={(e) =>
-                        handleEditChange(e, "message", message.message_id)
-                      }
-                      minWidth="100px"
-                      color="white"
-                    />
-                  ) : (
-                    message.message
-                  )}
-                </Td>
+                <Td>{message.message}</Td>
                 <Td>{message.user_id}</Td>
                 <Td>{message.forum_id}</Td>
                 <Td>
-                  {Array.isArray(message.images) &&
-                    message.images.map((imageUrl, index) => (
-                      <Td key={index}>
-                        {editingRows.includes(message.message_id) ? (
-                          <>
-                            <Input
-                              type="file"
-                              accept="image/*"
-                              id={`image-input-${message.message_id}-${index}`}
-                              style={{ display: "none" }}
-                              onChange={(e) =>
-                                handleEditChange(
-                                  e,
-                                  "images",
-                                  message.message_id,
-                                  index
-                                )
-                              }
-                            />
-                            <Image
-                              src={
-                                temporaryImages[message.message_id]?.[index] ||
-                                `http://localhost:8080${imageUrl}`
-                              }
-                              alt={`Imagen ${index + 1}`}
-                              maxH="50px"
-                              maxW="50px"
-                              objectFit="cover"
-                              onClick={() =>
-                                handleEditImageClick(message.message_id, index)
-                              }
-                              cursor="pointer"
-                            />
-                          </>
-                        ) : (
-                          <Image
-                            src={`http://localhost:8080${imageUrl}`}
-                            alt={`Imagen ${index + 1}`}
-                            maxH="50px"
-                            maxW="50px"
-                            objectFit="cover"
-                            onClick={() =>
-                              handleImageClick(
-                                `http://localhost:8080${imageUrl}`
-                              )
-                            }
-                            cursor="pointer"
-                          />
-                        )}
-                      </Td>
-                    ))}
+                  {(message.images || []).map((imageUrl, index) => (
+                    <Td key={index}>
+                      <Image
+                        src={`http://localhost:8080${imageUrl}`}
+                        alt={`Imagen ${index + 1}`}
+                        maxH="50px"
+                        maxW="50px"
+                        objectFit="cover"
+                        onClick={() =>
+                          handleImageClick(`http://localhost:8080${imageUrl}`)
+                        }
+                        cursor="pointer"
+                      />
+                    </Td>
+                  ))}
                 </Td>
                 <Td>{new Date(message.date).toLocaleString()}</Td>
                 <Td>{mapEditedValue(message.edited)}</Td>
                 <Td>
                   <IconButton
-                    aria-label={
-                      editingRows.includes(message.message_id)
-                        ? "Guardar"
-                        : "Editar"
-                    }
-                    icon={
-                      <Icon
-                        as={
-                          editingRows.includes(message.message_id)
-                            ? FaCheck
-                            : FaEdit
-                        }
-                      />
-                    }
+                    aria-label="Eliminar"
+                    icon={<Icon as={FaTrash} />}
                     onClick={() =>
-                      editingRows.includes(message.message_id)
-                        ? handleSave(
-                            entity,
-                            message.message_id,
-                            editingData[message.message_id],
-                            "formData"
-                          )
-                        : handleEdit(message.message_id)
+                      handleDeleteConfirmation(message.message_id)
                     }
                   />
-                  {!editingRows.includes(message.message_id) && (
-                    <IconButton
-                      aria-label="Eliminar"
-                      icon={<Icon as={FaTrash} />}
-                      onClick={() =>
-                        handleDeleteConfirmation(message.message_id)
-                      }
-                    />
-                  )}
-                  {editingRows.includes(message.message_id) && (
-                    <Button
-                      aria-label="Cancelar"
-                      leftIcon={<Icon as={FaTimes} />}
-                      onClick={() => handleCancel(message.message_id)}
-                    ></Button>
-                  )}
                 </Td>
               </Tr>
             ))}
@@ -326,8 +183,7 @@ function MessagesDataFetcher() {
             )}
           </ModalBody>
           <ModalFooter>
-            {/* Puedes agregar botones de acciones adicionales aquí */}
-          </ModalFooter>
+           </ModalFooter>
         </ModalContent>
       </Modal>
       {renderDeleteConfirmationModal(

@@ -231,11 +231,14 @@ function ListTypesDataFetcher() {
             onClose={handleCloseTokenInvalidError}
           />
           <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
-          <Tbody className="scrollable-content">
+          <Tbody
+            className="scrollable-content"
+            style={{ maxHeight: "calc(100vh - 11rem)", overflow: "auto" }}
+          >
             {filteredData.map((listtype) => (
               <Tr key={listtype.list_type_id}>
                 <Td>{listtype.list_type_id}</Td>
-                <Td>
+                <Td className="Td-input">
                   {editingRows.includes(listtype.list_type_id) ? (
                     <Input
                       value={
@@ -252,7 +255,7 @@ function ListTypesDataFetcher() {
                     listtype.list_type_name
                   )}
                 </Td>
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(listtype.list_type_id)

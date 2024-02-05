@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { TokenContext } from "../../../../contexts/TokenContext";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
@@ -17,8 +17,9 @@ import {
   Tr,
   Th,
   Td,
-  Image,
   Flex,
+  Image,
+  Select,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -36,9 +37,9 @@ import {
 import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
-function UsersDataFetcher() {
+function AdminUsersDataFetcher() {
   const entity = "users";
-  const apiEndpoint = "http://localhost:8080/api/v1/users";
+  const apiEndpoint = "http://localhost:8080/api/v1/users?admins=true";
   const { token } = useContext(TokenContext);
 
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
@@ -123,7 +124,7 @@ function UsersDataFetcher() {
     avatar: "",
     banner: "",
     isAdmin: false,
-    adminRole: "SuperAdmin",
+    adminRole: "1",
   });
 
   const handleCreateUserModalOpen = () => {
@@ -156,6 +157,14 @@ function UsersDataFetcher() {
     setNewUserData((prevData) => ({
       ...prevData,
       [name]: value,
+    }));
+  };
+
+  const handleAdminRoleChange = (e) => {
+    const selectedRole = e.target.value;
+    setNewUserData((prevData) => ({
+      ...prevData,
+      adminRole: selectedRole,
     }));
   };
 
@@ -254,14 +263,9 @@ function UsersDataFetcher() {
         formData.append("password", newUserData.password);
         formData.append("avatar", newUserData.avatar);
         formData.append("banner", newUserData.banner);
+        formData.append("admin_role", Number(newUserData.adminRole));
 
-        if (newUserData.isAdmin) {
-          formData.append("admin_role", Number(newUserData.adminRole));
-        }
-
-        const apiUrl = newUserData.isAdmin
-          ? `http://localhost:8080/api/v1/users/${newUserData.adminRole}`
-          : "http://localhost:8080/api/v1/users";
+        const apiUrl = `http://localhost:8080/api/v1/users/${newUserData.adminRole}`;
 
         console.log("Form Data:", formData);
 
@@ -305,30 +309,90 @@ function UsersDataFetcher() {
 
   const [avatarPreview, setAvatarPreview] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
+  const [editedRoles, setEditedRoles] = useState({});
 
   const handleEditChange = (e, fieldName, user_id) => {
-    const newValue =
-      e.target.type === "file" ? e.target.files[0] : e.target.value;
-
-    setEditingData((prevEditingData) => ({
-      ...prevEditingData,
-      [user_id]: {
-        ...prevEditingData[user_id],
-        [fieldName]: newValue,
-      },
-    }));
-
-    // Actualizar la vista previa por fuera del estado principal
-    if (e.target.type === "file") {
-      const previewURL = URL.createObjectURL(e.target.files[0]);
-      if (fieldName === "avatar") {
-        setAvatarPreview(previewURL);
-      } else if (fieldName === "banner") {
-        setBannerPreview(previewURL);
+    const newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
+  
+    if (fieldName === "admin_role") {
+      setEditedRoles((prevEditedRoles) => ({
+        ...prevEditedRoles,
+        [user_id]: newValue,
+      }));
+    } else {
+      setEditingData((prevEditingData) => ({
+        ...prevEditingData,
+        [user_id]: {
+          ...prevEditingData[user_id],
+          [fieldName]: newValue,
+        },
+      }));
+  
+      // Actualizar la vista previa por fuera del estado principal
+      if (e.target.type === "file") {
+        const previewURL = URL.createObjectURL(e.target.files[0]);
+        if (fieldName === "avatar") {
+          setAvatarPreview(previewURL);
+        } else if (fieldName === "banner") {
+          setBannerPreview(previewURL);
+        }
       }
     }
-
     console.log("Editing Data:", editingData);
+  };
+
+  useEffect(() => {
+    // Esta función se ejecutará cada vez que editingData se actualice
+    console.log("Editing Data (desde useEffect):", editingData);
+  }, [editingData]);
+
+  const handleSaveOrRoles = async (user_id) => {
+    const editedAdminRole = editedRoles[user_id];
+    const isAdminRoleComplete = editedAdminRole !== undefined && editedAdminRole !== null;
+    const areOtherFieldsEdited = Object.keys(editingData[user_id] || {}).some(
+      (field) => field !== "admin_role"
+    );
+  
+    if (isAdminRoleComplete) {
+      // Si admin_role está completo, enviar a otro endpoint
+      await handleSaveRoles(user_id);
+    } else if (areOtherFieldsEdited) {
+      // Si hay otros campos editados además de admin_role, enviar a handleSave estándar
+      await handleSave(entity, user_id, editingData[user_id], "formData");
+    }
+    // Si no se editó admin_role ni otros campos, no hacer nada
+  };
+
+  const handleSaveRoles = async (userId) => {
+    const roleValue = parseInt(editedRoles[userId], 10);
+    if (roleValue !== undefined) {
+      const apiUrl = `http://localhost:8080/api/v1/users/update-user-role`;
+  
+      try {
+        const response = await fetch(apiUrl, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            role_id: roleValue,
+          }),
+        });
+  
+        if (response.ok) {
+          openFeedbackModal("Rol actualizado con éxito");
+          reloadData();
+          handleCancel(userId)
+        } else {
+          // Manejar errores si es necesario
+          console.error("Error al actualizar el rol:", response.statusText);
+        }
+      } catch (error) {
+        openFeedbackModal("Error en la solicitud");
+      }
+    }
   };
 
   const convertToCorrectDateFormat = (backendDate) => {
@@ -348,6 +412,7 @@ function UsersDataFetcher() {
     setSelectedImage(null);
     setImageModalOpen(false);
   };
+
 
   return (
     <Box marginTop="5rem" height="100%">
@@ -479,6 +544,17 @@ function UsersDataFetcher() {
                 className="Td-input"
               />
             </FormControl>
+            <FormControl>
+              <FormLabel>Rol de Administrador</FormLabel>
+              <Select
+                value={newUserData.adminRole}
+                onChange={handleAdminRoleChange}
+              >
+                <option value="1">SuperAdmin</option>
+                <option value="2">Medium</option>
+                <option value="3">Soft</option>
+              </Select>
+            </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleCreateUser}>
@@ -502,6 +578,7 @@ function UsersDataFetcher() {
           <Thead className="sticky-header">
             <Tr>
               <Th>ID de Usuario</Th>
+              <Th>Role</Th>
               <Th>Nombre de Usuario</Th>
               <Th>Nombre</Th>
               <Th>Apellido</Th>
@@ -527,6 +604,24 @@ function UsersDataFetcher() {
                 <Td>{user.user_id}</Td>
                 <Td>
                   {editingRows.includes(user.user_id) ? (
+                    <Select
+                      value={
+                        editingData[user.user_id]?.admin_role || user.admin_role
+                      }
+                      onChange={(e) =>
+                        handleEditChange(e, "admin_role", user.user_id)
+                      }
+                    >
+                      <option value="1">SuperAdmin</option>
+                      <option value="2">Medium</option>
+                      <option value="3">Soft</option>
+                    </Select>
+                  ) : (
+                    user.user_role
+                  )}
+                </Td>
+                <Td>
+                  {editingRows.includes(user.user_id) ? (
                     <Input
                       value={
                         editingData[user.user_id]?.user_name || user.user_name
@@ -546,6 +641,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "name", user.user_id)
                       }
+                      color="white"
                     />
                   ) : (
                     user.name
@@ -704,12 +800,7 @@ function UsersDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(user.user_id)
-                        ? handleSave(
-                            entity,
-                            user.user_id,
-                            editingData[user.user_id],
-                            "formData"
-                          )
+                        ? handleSaveOrRoles(user.user_id)
                         : handleEdit(user.user_id)
                     }
                   />
@@ -742,7 +833,7 @@ function UsersDataFetcher() {
         />
       )}
       {renderDeleteConfirmationModal(
-        "¿Estás seguro de que deseas eliminar a este usuario?"
+        "¿Estás seguro de que deseas eliminar este producto?"
       )}
       <Modal
         isOpen={isImageModalOpen}
@@ -770,4 +861,4 @@ function UsersDataFetcher() {
   );
 }
 
-export default UsersDataFetcher;
+export default AdminUsersDataFetcher;

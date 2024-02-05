@@ -7,8 +7,7 @@ import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useDataPoster from "../../../../components/dataManage/useDataPoster";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
-import DatePicker from "react-datepicker";
-import 'react-datepicker/dist/react-datepicker.css';
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Box,
   Table,
@@ -18,6 +17,7 @@ import {
   Th,
   Td,
   Flex,
+  Image,
   Select,
   Modal,
   ModalOverlay,
@@ -90,14 +90,12 @@ function EventsTypeDataFetcher() {
     name: "",
     scheduled: false,
     image: null,
-    date: null,
   });
 
   const [newEventTypeErrors, setNewEventTypeErrors] = useState({
     name: "",
     scheduled: false,
     image: null,
-    date: "",
   });
 
   const handleNewEventTypeChange = (value, name) => {
@@ -130,13 +128,11 @@ function EventsTypeDataFetcher() {
       name: "",
       scheduled: false,
       image: null,
-      date: null,
     });
     setNewEventTypeErrors({
       name: "",
       scheduled: false,
       image: null,
-      date: null,
     });
   };
 
@@ -156,13 +152,6 @@ function EventsTypeDataFetcher() {
     }
 
     if (
-      newEventTypeData.scheduled !== true &&
-      newEventTypeData.scheduled !== false
-    ) {
-      errors.scheduled = "Marcar si es un evento calendarizado o no.";
-    }
-
-    if (
       !newEventTypeData.image ||
       !(newEventTypeData.image instanceof File) ||
       !newEventTypeData.image.name
@@ -177,61 +166,83 @@ function EventsTypeDataFetcher() {
 
   const handleCreateEventType = async () => {
     const isFormValid = validateNewEventTypeForm();
+    const scheduledValue = newEventTypeData.scheduled === true ? 1 : 0;
+
+    const updatedEventTypeData = {
+      ...newEventTypeData,
+      scheduled: scheduledValue,
+    };
 
     if (isFormValid) {
-      postData(newEventTypeData);
+      postData(updatedEventTypeData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
       console.log("Formulario inválido");
     }
   };
 
-  const [scheduledValue, setScheduledValue] = useState("0");
+  const [imagePreview, setImagePreview] = useState("");
 
-  const handleEditChange = (value, field, eventTypeId, e) => {
-    // Validación para fecha cuando "Programado" es "Sí"
-    if (field === "date" && scheduledValue === "1" && !value) {
-      // Si la fecha está vacía y "Programado" es "Sí", no actualizamos el estado
+  const handleEditChange = (e, fieldName, eventTypeId) => {
+    if (!eventTypeId) {
+      console.error("eventTypeId is not defined");
       return;
     }
-  
-    setEditingData((prevEditingData) => ({
-      ...prevEditingData,
-      [eventTypeId]: {
-        ...prevEditingData[eventTypeId],
-        [field]: field === "image" ? (e.target.type === "file" ? e.target.files[0] : null) : value,
-      },
-    }));
-  
-    // Actualiza el valor de "Programado" si se está editando ese campo
-    if (field === "scheduled") {
-      setScheduledValue(value);
-  
-      // Si se cambia a "No", limpia la fecha
-      if (value === "0") {
-        setEditingData((prevEditingData) => ({
-          ...prevEditingData,
-          [eventTypeId]: {
-            ...prevEditingData[eventTypeId],
-            date: null,
-          },
-        }));
-      } else if (value === "1" && !editingData[eventTypeId]?.date) {
-        // Si se cambia a "Sí" y la fecha está vacía, establece la fecha actual
-        setEditingData((prevEditingData) => ({
-          ...prevEditingData,
-          [eventTypeId]: {
-            ...prevEditingData[eventTypeId],
-            date: new Date(),
-          },
-        }));
+
+    const newValue =
+      e?.target?.type === "file" ? e.target.files[0] : e?.target?.value;
+
+    if (newValue !== undefined) {
+      setEditingData((prevEditingData) => ({
+        ...prevEditingData,
+        [eventTypeId]: {
+          ...(prevEditingData[eventTypeId] || {}),
+          [fieldName]: newValue,
+        },
+      }));
+
+      if (e?.target?.type === "file") {
+        const previewURL = URL.createObjectURL(e.target.files[0]);
+        if (fieldName === "image") {
+          setImagePreview(previewURL);
+        }
       }
     }
   };
 
-  const convertToCorrectDateFormat = (backendDate) => {
-    const [day, month, year] = backendDate.split("/");
-    return `${month}-${day}-${year}`;
+  const handleScheduledSave = async (eventTypeId) => {
+    const editedScheduled = editingData[eventTypeId]?.scheduled;
+    const isScheduledComplete =
+      editedScheduled !== undefined && editedScheduled !== null;
+    const areOtherFieldsEdited = Object.keys(editingData[eventTypeId] || {}).some(
+      (field) => field !== "scheduled"
+    );
+  
+    const scheduledToSend = isScheduledComplete
+      ? parseInt(editedScheduled, 10)
+      : editedScheduled;
+  
+    if (isScheduledComplete || areOtherFieldsEdited) {
+      const updatedData = {
+        ...editingData[eventTypeId],
+        ...(scheduledToSend !== undefined && { scheduled: scheduledToSend }),
+      };
+  
+      await handleSave(entity, eventTypeId, updatedData, "formData");
+    }
+  };
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setSelectedImage(null);
+    setImageModalOpen(false);
   };
 
   return (
@@ -295,22 +306,6 @@ function EventsTypeDataFetcher() {
               </Select>
               <div style={{ color: "red" }}>{newEventTypeErrors.scheduled}</div>
             </FormControl>
-            {newEventTypeData.scheduled && (
-              <FormControl>
-                <FormLabel>Fecha</FormLabel>
-                <DatePicker
-                  selected={newEventTypeData.date}
-                  onChange={(date) => handleNewEventTypeChange(date, "date")}
-                  dateFormat="dd-MM-yyyy"
-                  placeholderText="Seleccionar fecha"
-                  showYearDropdown
-                  scrollableYearDropdown
-                  yearDropdownItemNumber={15}
-                  className="useDataFetcher"
-                />
-                <div style={{ color: "red" }}>{newEventTypeErrors.date}</div>
-              </FormControl>
-            )}
             <FormControl>
               <FormLabel>Imagen</FormLabel>
               <Input
@@ -341,7 +336,6 @@ function EventsTypeDataFetcher() {
               <Th>Nombre</Th>
               <Th>Programado</Th>
               <Th>Imagen</Th>
-              <Th>Fecha</Th>
               <Th>Acciones</Th>
             </Tr>
           </Thead>
@@ -373,14 +367,13 @@ function EventsTypeDataFetcher() {
                 <Td>
                   {editingRows.includes(event.event_type_id) ? (
                     <Select
-                      value={editingData[event.event_type_id]?.scheduled || "0"}
+                      name="scheduled"
+                      value={
+                        editingData[event.event_type_id]?.scheduled ||
+                        event.scheduled
+                      }
                       onChange={(e) =>
-                        handleEditChange(
-                          e.target.value,
-                          "scheduled",
-                          event.event_type_id,
-                          e
-                        )
+                        handleEditChange(e, "scheduled", event.event_type_id)
                       }
                       minWidth="100px"
                       color="white"
@@ -394,43 +387,53 @@ function EventsTypeDataFetcher() {
                 </Td>
                 <Td>
                   {editingRows.includes(event.event_type_id) ? (
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleEditChange(e, "image", event.event_type_id, e)
-                      }
-                      minWidth="100px"
-                      color="white"
-                    />
+                    <div>
+                      <label htmlFor={`image-input-${event.event_type_id}`}>
+                        <Input
+                          id={`image-input-${event.event_type_id}`}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) =>
+                            handleEditChange(e, "image", event.event_type_id)
+                          }
+                        />
+                        <Image
+                          src={
+                            imagePreview ||
+                            `http://localhost:8080${event.image}`
+                          }
+                          alt="Image Preview"
+                          maxH="50px"
+                          maxW="50px"
+                          objectFit="cover"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document
+                              .getElementById(
+                                `image-input-${event.event_type_id}`
+                              )
+                              .click();
+                          }}
+                          cursor="pointer"
+                        />
+                      </label>
+                    </div>
                   ) : (
-                    event.image
+                    <Image
+                      src={`http://localhost:8080${event.image}`}
+                      alt="Avatar"
+                      maxH="50px"
+                      maxW="50px"
+                      objectFit="cover"
+                      onClick={() =>
+                        handleImageClick(`http://localhost:8080${event.image}`)
+                      }
+                      cursor="pointer"
+                    />
                   )}
                 </Td>
-                <Td>
-                  {editingRows.includes(event.event_type_id) ? (
-                    <DatePicker
-                      selected={
-                        editingData[event.event_type_id]?.date ||
-                        (event.date
-                          ? new Date(convertToCorrectDateFormat(event.date))
-                          : null)
-                      }
-                      onChange={(date) =>
-                        handleEditChange(date, "date", event.event_type_id)
-                      }
-                      dateFormat="dd-MM-yyyy"
-                      placeholderText="Seleccionar fecha"
-                      showYearDropdown
-                      scrollableYearDropdown
-                      yearDropdownItemNumber={15}
-                      className="date-picker"
-                      disabled={scheduledValue === "0"}
-                    />
-                  ) : (
-                    event.date
-                  )}
-                </Td>
+
                 <Td>
                   <IconButton
                     aria-label={
@@ -449,12 +452,7 @@ function EventsTypeDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(event.event_type_id)
-                        ? handleSave(
-                            entity,
-                            event.event_type_id,
-                            editingData[event.event_type_id],
-                            "formData"
-                          )
+                      ? handleScheduledSave(event.event_type_id)
                         : handleEdit(event.event_type_id)
                     }
                   />
@@ -491,6 +489,28 @@ function EventsTypeDataFetcher() {
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar este tipo de evento?"
       )}
+      <Modal
+        isOpen={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        size="xl"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedImage && (
+              <Image
+                src={selectedImage}
+                alt="Imagen seleccionada"
+                maxH="80vh"
+                maxW="80vw"
+                objectFit="contain"
+              />
+            )}
+          </ModalBody>
+          <ModalFooter></ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

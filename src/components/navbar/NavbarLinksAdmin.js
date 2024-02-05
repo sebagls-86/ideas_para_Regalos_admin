@@ -152,7 +152,6 @@ export default function HeaderLinks(props) {
               borderRadius="8px"
               mb="10px"
             >
-              <ItemContent info="Horizon UI Dashboard PRO" aName="Alicia" />
             </MenuItem>
             <MenuItem
               _hover={{ bg: "none" }}
@@ -161,10 +160,7 @@ export default function HeaderLinks(props) {
               borderRadius="8px"
               mb="10px"
             >
-              <ItemContent
-                info="Horizon Design System Free"
-                aName="Josh Henry"
-              />
+            
             </MenuItem>
           </Flex>
         </MenuList>

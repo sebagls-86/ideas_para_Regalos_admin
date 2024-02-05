@@ -109,15 +109,6 @@ function EventsDataFetcher() {
     }));
   };
 
-  const handleFileChange = (e, fieldName) => {
-    const file = e.target.files[0];
-
-    setNewEventsData((prevData) => ({
-      ...prevData,
-      [fieldName]: file,
-    }));
-  };
-
   const handleCreateEventsModalClose = () => {
     handleModalClose();
     setNewEventsData({
@@ -194,7 +185,7 @@ function EventsDataFetcher() {
         mb="24px"
         onClick={handleCreateEventsModalOpen}
       >
-        Crear Categoria
+        Crear Evento
       </Button>
     </Flex>
     {FBModal && (
@@ -220,18 +211,7 @@ function EventsDataFetcher() {
               color="white"
             />
             <div style={{ color: "red" }}>{newEventsErrors.name}</div>
-          </FormControl>
-          <FormControl>
-            <FormLabel>Imagen</FormLabel>
-            <Input
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={(e) => handleFileChange(e, "image")}
-              color="white"
-            />
-            <div style={{ color: "red" }}>{newEventsErrors.image}</div>
-          </FormControl>
+          </FormControl>å
         </ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={handleCreateEvents}>
@@ -249,7 +229,6 @@ function EventsDataFetcher() {
             <Tr>
               <Th>ID</Th>
               <Th>Nombre</Th>
-              <Th>Imagen</Th>
               <Th>Acciones</Th>
             </Tr>
           </Thead>
@@ -276,21 +255,6 @@ function EventsDataFetcher() {
                     />
                   ) : (
                     event.name
-                  )}
-                </Td>
-                <Td>
-                  {editingRows.includes(event.event_id) ? (
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        handleEditChange(e, "image", event.event_id)
-                      }
-                      minWidth="100px"
-                      color="white"
-                    />
-                  ) : (
-                    event.image
                   )}
                 </Td>
                 <Td>

@@ -25,6 +25,7 @@
 
 .Td-input {
   padding: 8px;
+  width: 100;
 }
 
 .date-picker {
@@ -34,11 +35,12 @@
 }
 
 .Td-actions {
+  width: 100%;
   display: flex;
   justify-content: space-around;
 }
 
-.Td-actions button {
+.custom-button {
   margin: 0;
   padding: 8px;
 }

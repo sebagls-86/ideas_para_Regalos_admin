@@ -7,6 +7,7 @@ import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import ErrorModal from "../../../../components/modals/modalError";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
+import useDarkMode from "../../../../assets/darkModeHook";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {
@@ -40,6 +41,7 @@ function UsersDataFetcher() {
   const entity = "users";
   const apiEndpoint = "http://localhost:8080/api/v1/users";
   const { token } = useContext(TokenContext);
+  const { isDarkMode } = useDarkMode();
 
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 
@@ -534,6 +536,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "user_name", user.user_id)
                       }
+                      color={isDarkMode ? "white" : "black"}
                     />
                   ) : (
                     user.user_name
@@ -546,6 +549,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "name", user.user_id)
                       }
+                      color={isDarkMode ? "white" : "black"}
                     />
                   ) : (
                     user.name
@@ -560,6 +564,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "last_name", user.user_id)
                       }
+                      color={isDarkMode ? "white" : "black"}
                     />
                   ) : (
                     user.last_name
@@ -572,6 +577,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "email", user.user_id)
                       }
+                      color={isDarkMode ? "white" : "black"}
                     />
                   ) : (
                     user.email

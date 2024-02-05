@@ -8,7 +8,6 @@ import "assets/css/App.css";
 import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
 import AuthLayout from "layouts/auth";
 import AdminLayout from "layouts/admin";
-import RtlLayout from "layouts/rtl";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "theme/theme";
 import { ThemeEditorProvider } from "@hypertheme-editor/chakra-ui";
@@ -56,7 +55,6 @@ const App = () => {
       <Router>
             <Switch>
               <Route path="/auth" component={AuthLayout} />
-              <Route path="/rtl" component={RtlLayout} />
               {isAuthenticated ? (
                 <PrivateRoute path="/admin" component={AdminLayout} />
               ) : (

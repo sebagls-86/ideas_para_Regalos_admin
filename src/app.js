@@ -5,7 +5,12 @@ import { TokenProvider } from "./contexts/TokenContext";
 import PrivateRoute from "./contexts/PrivateRoutes";
 import "assets/css/App.css";
 //import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
-import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Switch,
+  Redirect,
+} from "react-router-dom";
 import AuthLayout from "layouts/auth";
 import AdminLayout from "layouts/admin";
 import { ChakraProvider } from "@chakra-ui/react";
@@ -22,7 +27,8 @@ const override = css`
 `;
 
 const App = () => {
-  const { isAuthenticated, lastVisitedRoute, checkAuth } = useContext(TokenContext);
+  const { isAuthenticated, lastVisitedRoute, checkAuth } =
+    useContext(TokenContext);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,41 +37,51 @@ const App = () => {
         await checkAuth();
         setLoading(false);
       } catch (error) {
-        console.error('Error en checkAuth:', error);
+        console.error("Error en checkAuth:", error);
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [checkAuth]); 
+  }, [checkAuth]);
 
   if (loading) {
     return (
       <div className="cargando">
-        <ClipLoader color={"white"} loading={loading} css={override} size={150} />
+        <ClipLoader
+          color={"white"}
+          loading={loading}
+          css={override}
+          size={150}
+        />
       </div>
-  );
+    );
   }
 
   return (
     <TokenProvider>
-    <ChakraProvider theme={theme}>
-      <ThemeEditorProvider>
-      
-      <Router>
+      <ChakraProvider theme={theme}>
+        <ThemeEditorProvider>
+          <Router>
             <Switch>
               <Route path="/auth" component={AuthLayout} />
               {isAuthenticated ? (
-                <PrivateRoute path="/admin" component={AdminLayout} />
+                lastVisitedRoute === "/auth/login" ? (
+                  <Redirect to="/admin" />
+                ) : (
+                  <PrivateRoute path="/admin" component={AdminLayout} />
+                )
               ) : (
                 <Redirect to="/auth/login" />
               )}
-              <Route path="/" render={() => <Redirect to={lastVisitedRoute || "/admin"} />} />
+              <Route
+                path="/"
+                render={() => <Redirect to={lastVisitedRoute || "/admin"} />}
+              />
             </Switch>
           </Router>
-        
-      </ThemeEditorProvider>
-    </ChakraProvider>
+        </ThemeEditorProvider>
+      </ChakraProvider>
     </TokenProvider>
   );
 };

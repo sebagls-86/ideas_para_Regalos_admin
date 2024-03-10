@@ -39,7 +39,7 @@ option {
 
 
 /*input*/
-.css-dcyggm:focus, .css-d56560:focus, .css-jtwusv:focus{
+.css-dcyggm:focus, .css-d56560:focus, .css-1s2uju9:focus, .css-jtwusv:focus{
   border-color: var(--primary-dark) !important;
   box-shadow: 0 0 0 1px transparent !important;
 }
@@ -54,7 +54,7 @@ option {
   width: 250px !important;
   font-weight: bold !important;
 }
-.css-phsmdb{
+.css-qsw5o0, .css-phsmdb{
   background-color: var(--primary-dark)!important;
 }
 

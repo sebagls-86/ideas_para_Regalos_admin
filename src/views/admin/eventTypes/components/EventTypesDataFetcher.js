@@ -434,7 +434,7 @@ function EventsTypeDataFetcher() {
                   )}
                 </Td>
 
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(event.event_type_id)

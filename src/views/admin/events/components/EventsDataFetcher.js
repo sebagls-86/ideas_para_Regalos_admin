@@ -80,8 +80,8 @@ function EventsDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "Categoria creada con éxito",
-    "Error al crear categoria",
+    "Evento creada con éxito",
+    "Error al crear evento",
     reloadData,
     setShowErrorModal
   );
@@ -211,7 +211,7 @@ function EventsDataFetcher() {
               color="white"
             />
             <div style={{ color: "red" }}>{newEventsErrors.name}</div>
-          </FormControl>å
+          </FormControl>
         </ModalBody>
         <ModalFooter>
           <Button colorScheme="blue" mr={3} onClick={handleCreateEvents}>
@@ -316,7 +316,7 @@ function EventsDataFetcher() {
         />
       )}
       {renderDeleteConfirmationModal(
-        "¿Estás seguro de que deseas eliminar esta categoría?"
+        "¿Estás seguro de que deseas eliminar este evento?"
       )}
     </Box>
   );

@@ -376,7 +376,7 @@ function ScheduledEventsDataFetcher() {
                     event.date
                   )}
                 </Td>
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(event.scheduled_event_id)

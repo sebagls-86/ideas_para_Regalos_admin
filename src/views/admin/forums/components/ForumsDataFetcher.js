@@ -220,7 +220,7 @@ function ForumsDataFetcher() {
                 </Td>
                 <Td>{forum.created_at}</Td>
                 <Td>{forum.likes}</Td>
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(forum.forum_id)

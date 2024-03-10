@@ -2,7 +2,61 @@
 body {
   font-family: "DM Sans", sans-serif;
 }
-
 option {
   color: black;
 }
+:root{
+  --primary-dark: #008037;
+  --secondary-light: #FCF3A6;
+  .react-calendar__navigation__prev-button, .react-calendar__navigation__next-button,  .chakra-ui-dark .react-calendar__navigation__prev-button, .chakra-ui-dark .react-calendar__navigation__next-button {
+    background-color: var(--primary-dark) !important;
+  }
+  .react-calendar__tile--rangeEnd, .react-calendar__tile--rangeEnd:enabled:hover, .react-calendar__tile--rangeEnd:enabled:focus{
+    background-color: var(--primary-dark) !important;
+  }
+  .react-calendar{
+    width: 100% !important;
+  }
+
+}
+/*sign in button*/
+.css-1f1mtmi, .css-ld93uj {
+  background-color: var(--primary-dark) !important
+}
+
+/*left aside active*/
+.css-1ep1x53 {
+  color: var(--primary-dark) !important
+}
+.css-1sshid8, .css-j3id07 {
+  background-color: var(--primary-dark) !important
+}
+
+/*left aside icon*/
+.css-1qwssnn, .css-12lt4rz{
+  opacity: 50%;
+}
+
+
+/*input*/
+.css-dcyggm:focus, .css-d56560:focus, .css-1s2uju9:focus, .css-jtwusv:focus{
+  border-color: var(--primary-dark) !important;
+  box-shadow: 0 0 0 1px transparent !important;
+}
+/*cambiar pw btn*/
+.css-1tuqm5d, .css-3qoak4 {
+  background-color: var(--primary-dark) !important
+}
+
+/*crear button*/
+.css-13di61l , .css-14lgtmj{
+  background-color: var(--primary-dark)!important;
+  width: 250px !important;
+  font-weight: bold !important;
+}
+.css-qsw5o0, .css-phsmdb{
+  background-color: var(--primary-dark)!important;
+}
+
+
+

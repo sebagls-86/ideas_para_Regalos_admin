@@ -5,10 +5,11 @@ import { MdHome, MdForum} from "react-icons/md";
 import { BiSolidCategory, BiUserCircle } from "react-icons/bi";
 import { TbCalendarStats } from "react-icons/tb";
 import { BsFillCalendarEventFill } from "react-icons/bs";
-import { FaUser, FaPencilAlt, FaBullhorn, FaCalendarAlt,FaListOl, FaUserFriends, FaShoppingBag, FaIdBadge } from "react-icons/fa";
+import { FaUser,FaHeart,FaRulerHorizontal,FaUserCog, FaPencilAlt, FaBullhorn, FaCalendarAlt,FaListOl, FaUserFriends, FaShoppingBag, FaIdBadge } from "react-icons/fa";
 import { IoMdList } from "react-icons/io";
 import { AiOutlineTag, AiOutlineUnorderedList } from "react-icons/ai";
-
+import { FaGift } from "react-icons/fa6";
+import { TbCirclesRelation } from "react-icons/tb";
 
 // Admin Imports
 import Login from "views/auth/signIn";
@@ -51,14 +52,14 @@ const routes = [
     name: "Admin Users",
     layout: "/admin",
     path: "/admin-users",
-    icon: <Icon as={FaUser} width='20px' height='20px' color='inherit' />,
+    icon: <Icon as={FaUserCog} width='20px' height='20px' color='inherit' />,
     component: AdminUsers,
   },
   {
     name: "Age Range",
     layout: "/admin",
     path: "/age-range",
-    icon: <Icon as={TbCalendarStats} width='20px' height='20px' color='inherit' />,
+    icon: <Icon as={FaRulerHorizontal} width='20px' height='20px' color='inherit' />,
     component: AgeRange,
   },
   {
@@ -111,7 +112,7 @@ const routes = [
     component: Profiles,
   },
   {
-    name: "Lists",
+    name: "Wishlists",
     layout: "/admin",
     path: "/lists",
     icon: <Icon as={IoMdList} width='20px' height='20px' color='inherit' />,
@@ -121,7 +122,7 @@ const routes = [
     name: "List Products",
     layout: "/admin",
     path: "/list-products",
-    icon: <Icon as={AiOutlineUnorderedList} width='20px' height='20px' color='inherit' />,
+    icon: <Icon as={FaGift} width='20px' height='20px' color='inherit' />,
     component: ListProducts,
   },
   {
@@ -135,7 +136,7 @@ const routes = [
     name: "Relationships",
     layout: "/admin",
     path: "/relationships",
-    icon: <Icon as={FaUserFriends} width='20px' height='20px' color='inherit' />,
+    icon: <Icon as={TbCirclesRelation} width='20px' height='20px' color='inherit' />,
     component: Relationships,
   },
   {
@@ -149,12 +150,12 @@ const routes = [
     name: "Interests",
     layout: "/admin",
     path: "/interests",
-    icon: <Icon as={AiOutlineTag} width='20px' height='20px' color='inherit' />,
+    icon: <Icon as={FaHeart} width='20px' height='20px' color='inherit' />,
     component: Interests,
   },
  
   {
-    name: "Profile",
+    name: "My profile",
     layout: "/admin",
     path: "/profile",
     icon: <Icon as={FaIdBadge} width='20px' height='20px' color='inherit' />,

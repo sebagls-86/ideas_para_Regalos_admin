@@ -82,8 +82,8 @@ function RelationshipsDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "Categoria creada con éxito",
-    "Error al crear categoria",
+    "Relación creada con éxito",
+    "Error al crear relación",
     reloadData,
     setShowErrorModal
   );
@@ -177,7 +177,7 @@ function RelationshipsDataFetcher() {
           mb="24px"
           onClick={handleCreateRelationshipsModalOpen}
         >
-          Crear Categoria
+          Crear Relación
         </Button>
       </Flex>
       {FBModal && (
@@ -190,7 +190,7 @@ function RelationshipsDataFetcher() {
       <Modal isOpen={showModal} onClose={handleCreateRelationshipsModalClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Crear Relacion</ModalHeader>
+          <ModalHeader>Crear Relación</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -252,7 +252,7 @@ function RelationshipsDataFetcher() {
                     relationship.relationship_name
                   )}
                 </Td>
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(relationship.relationship_id)
@@ -309,7 +309,7 @@ function RelationshipsDataFetcher() {
         />
       )}
       {renderDeleteConfirmationModal(
-        "¿Estás seguro de que deseas eliminar esta relacion?"
+        "¿Estás seguro de que deseas eliminar esta relación?"
       )}
     </Box>
   );

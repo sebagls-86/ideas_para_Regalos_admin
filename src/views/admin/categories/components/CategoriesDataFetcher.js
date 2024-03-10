@@ -216,7 +216,7 @@ function CategoriesDataFetcher() {
           mb="24px"
           onClick={handleCreateCategoriesModalOpen}
         >
-          Crear Categoria
+          Crear Categoría
         </Button>
       </Flex>
       {FBModal && (
@@ -229,7 +229,7 @@ function CategoriesDataFetcher() {
       <Modal isOpen={showModal} onClose={handleCreateCategoriesModalClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Crear Categoria</ModalHeader>
+          <ModalHeader>Crear Categoría</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -346,7 +346,7 @@ function CategoriesDataFetcher() {
                     />
                   )}
                 </Td>
-                <Td>
+                <Td  className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(category.category_id)

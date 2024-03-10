@@ -89,8 +89,8 @@ function InterestsDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "interes creada con éxito",
-    "Error al crear interes",
+    "Interés creada con éxito",
+    "Error al crear interés",
     reloadData,
     setShowErrorModal
   );
@@ -186,7 +186,7 @@ function InterestsDataFetcher() {
           mb="24px"
           onClick={handleCreateinterestsModalOpen}
         >
-          Crear interes
+          Crear interés
         </Button>
       </Flex>
       {FBModal && (
@@ -199,7 +199,7 @@ function InterestsDataFetcher() {
       <Modal isOpen={showModal} onClose={handleCreateinterestsModalClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Crear interes</ModalHeader>
+          <ModalHeader>Crear interés</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -259,7 +259,7 @@ function InterestsDataFetcher() {
                     interest.interest
                   )}
                 </Td>
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(interest.interest_id)
@@ -316,7 +316,7 @@ function InterestsDataFetcher() {
         />
       )}
       {renderDeleteConfirmationModal(
-        "¿Estás seguro de que deseas eliminar esta categoría?"
+        "¿Estás seguro de que deseas eliminar este interés?"
       )}
     </Box>
   );

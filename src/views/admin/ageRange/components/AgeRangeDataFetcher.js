@@ -348,7 +348,7 @@ function AgeRangeDataFetcher() {
                     range.maximum_age
                   )}
                 </Td>
-                <Td width="100px">
+                <Td  className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(range.age_range_id)

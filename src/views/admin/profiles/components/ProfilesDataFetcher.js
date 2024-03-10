@@ -282,7 +282,7 @@ function ProfilesDataFetcher() {
                     profile.relationship
                   )}
                 </Td>
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(profile.profile_id)

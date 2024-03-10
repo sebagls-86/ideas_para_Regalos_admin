@@ -478,7 +478,7 @@ function ProductsCatalogDataFetcher() {
                     />
                   )}
                 </Td>
-                <Td>
+                <Td className="Td-actions">
                   <IconButton
                     aria-label={
                       editingRows.includes(product.product_catalog_id)

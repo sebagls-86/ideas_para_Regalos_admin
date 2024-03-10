@@ -82,8 +82,8 @@ function ListTypesDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "Categoria creada con éxito",
-    "Error al crear categoria",
+    "Tipo de lista creada con éxito",
+    "Error al crear tipo de lista",
     reloadData,
     setShowErrorModal
   );
@@ -177,7 +177,7 @@ function ListTypesDataFetcher() {
           mb="24px"
           onClick={handleCreateListTypesModalOpen}
         >
-          Crear Categoria
+          Crear List Type
         </Button>
       </Flex>
       {FBModal && (

@@ -833,7 +833,7 @@ function AdminUsersDataFetcher() {
         />
       )}
       {renderDeleteConfirmationModal(
-        "¿Estás seguro de que deseas eliminar este producto?"
+        "¿Estás seguro de que deseas eliminar este usuario?"
       )}
       <Modal
         isOpen={isImageModalOpen}

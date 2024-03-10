@@ -25,6 +25,7 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 import { FaTrash, FaTimes, FaComments } from "react-icons/fa";
+import { FaGift } from "react-icons/fa6";
 import "../../../../assets/css/Tables.css";
 
 function ListsDataFetcher() {
@@ -144,7 +145,7 @@ function ListsDataFetcher() {
                 <Td>
                   <IconButton
                     aria-label="Ver Productos"
-                    icon={<Icon as={FaComments} />}
+                    icon={<Icon as={FaGift} />}
                     onClick={() => handleViewProducts(list.list_id)}
                   />
                 </Td>

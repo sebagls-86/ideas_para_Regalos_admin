@@ -33,6 +33,9 @@ function ListProductsDataFetcher() {
     editingRows,
     showTokenInvalidError,
     showErrorModal,
+    showFeedbackModal,
+    FeedbackModal: FBModalPatch,
+    feedbackMessagePatch,
     handleCancel,
     handleCustomDeleteConfirmation,
     handleCloseTokenInvalidError,
@@ -82,28 +85,28 @@ function ListProductsDataFetcher() {
           />
           <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
           <Tbody className="scrollable-content">
-            {filteredData.map((list) => (
-              <Tr key={list.list_id}>
-                <Td>{list.list_id}</Td>
-                <Td>{list.list_product}</Td>
+            {filteredData.map((listProducts) => (
+              <Tr key={listProducts.list_id}>
+                <Td>{listProducts.list_id}</Td>
+                <Td>{listProducts.list_product}</Td>
                 <Td>
-                  {!editingRows.includes(list.list_id) && (
+                  {!editingRows.includes(listProducts.list_id) && (
                     <IconButton
                       aria-label="Eliminar"
                       icon={<Icon as={FaTrash} />}
                       onClick={() =>
                         handleCustomDeleteConfirmation(
-                          `http://localhost:8080/api/v1/lists/${list.list_id}/listProducts`,
-                          list.product_catalog_id
+                          `http://localhost:8080/api/v1/lists/${listProducts.list_id}/listProducts`,
+                          listProducts.list_product_id
                         )
                       }
                     />
                   )}
-                  {editingRows.includes(list.list_id) && (
+                  {editingRows.includes(listProducts.list_id) && (
                     <Button
                       aria-label="Cancelar"
                       leftIcon={<Icon as={FaTimes} />}
-                      onClick={() => handleCancel(list.list_id)}
+                      onClick={() => handleCancel(listProducts.list_id)}
                     >
                       {" "}
                     </Button>
@@ -115,6 +118,13 @@ function ListProductsDataFetcher() {
         </Table>
       </Box>
       <FeedbackModal />
+      {FBModalPatch && (
+        <FBModalPatch
+          isOpen={showFeedbackModal}
+          onClose={() => showFeedbackModal(false)}
+          feedbackMessage={feedbackMessagePatch}
+        />
+      )}
       {renderCustomDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar este producto de esta lista?"
       )}

@@ -82,18 +82,16 @@ function RelationshipsDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "Relación creada con éxito",
-    "Error al crear relación",
     reloadData,
     setShowErrorModal
   );
 
   const [newRelationshipsData, setNewRelationshipsData] = useState({
-    name: "",
+    relationship_name: "",
   });
 
   const [newRelationshipsErrors, setNewRelationshipsErrors] = useState({
-    name: "",
+    relationship_name: "",
   });
 
   const handleNewRelationshipsChange = (e) => {
@@ -112,10 +110,10 @@ function RelationshipsDataFetcher() {
   const handleCreateRelationshipsModalClose = () => {
     handleModalClose();
     setNewRelationshipsData({
-      name: "",
+      relationship_name: "",
     });
     setNewRelationshipsErrors({
-      name: "",
+      relationship_name: "",
     });
   };
 
@@ -125,11 +123,11 @@ function RelationshipsDataFetcher() {
 
   const validateNewRelationshipsForm = () => {
     const errors = {
-      name: "",
+      relationship_name: "",
     };
 
-    if (!newRelationshipsData.name) {
-      errors.name = "El nombre es obligatorio.";
+    if (!newRelationshipsData.relationship_name) {
+      errors.relationship_name = "El nombre es obligatorio.";
     }
 
     setNewRelationshipsErrors(errors);
@@ -197,7 +195,7 @@ function RelationshipsDataFetcher() {
               <FormLabel>Nombre</FormLabel>
               <Input
                 type="text"
-                name="name"
+                name="relationship_name"
                 value={newRelationshipsData.relationship_name}
                 onChange={handleNewRelationshipsChange}
                 color="white"

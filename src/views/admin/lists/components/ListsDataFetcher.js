@@ -5,6 +5,7 @@ import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import ErrorModal from "../../../../components/modals/modalError";
+import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import {
   Box,
   Table,
@@ -34,12 +35,15 @@ function ListsDataFetcher() {
   const [selectedListProducts, setSelectedListProducts] = useState(null);
   const [listNames, setListNames] = useState({});
   const [listProducts, setListProducts] = useState({});
+  const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 
   const {
     data: lists,
     editingRows,
     showTokenInvalidError,
     showErrorModal,
+    showFeedbackModal,
+    FeedbackModal: FBModalPatch,
    handleCancel,
     handleDeleteConfirmation,
     handleCloseTokenInvalidError,
@@ -173,8 +177,24 @@ function ListsDataFetcher() {
           </Tbody>
         </Table>
       </Box>
+      <FeedbackModal isOpen= {showFeedbackModal} onClose={() => showFeedbackModal(false)}/>
+      {FBModalPatch && (
+        <FBModalPatch
+          isOpen={showFeedbackModal}
+          onClose={() => showFeedbackModal(false)}
+          feedbackMessage=""
+        />
+      )}
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar esta lista?"
+      )}
+      <FeedbackModal isOpen= {showFeedbackModal} onClose={() => showFeedbackModal(false)}/>
+      {FBModalPatch && (
+        <FBModalPatch
+          isOpen={showFeedbackModal}
+          onClose={() => showFeedbackModal(false)}
+          feedbackMessage=""
+        />
       )}
       <Modal isOpen={selectedListProducts} onClose={handleCloseProducts}>
         <ModalOverlay />

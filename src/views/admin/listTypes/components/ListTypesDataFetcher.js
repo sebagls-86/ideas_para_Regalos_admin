@@ -82,18 +82,16 @@ function ListTypesDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "Tipo de lista creada con éxito",
-    "Error al crear tipo de lista",
     reloadData,
     setShowErrorModal
   );
 
   const [newListTypesData, setNewListTypesData] = useState({
-    name: "",
+    list_type_name: "",
   });
 
   const [newListTypesErrors, setNewListTypesErrors] = useState({
-    name: "",
+    list_type_name: "",
   });
 
   const handleNewListTypesChange = (e) => {
@@ -102,7 +100,7 @@ function ListTypesDataFetcher() {
       ...prevErrors,
       [name]: "",
     }));
-
+  
     setNewListTypesData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -112,10 +110,10 @@ function ListTypesDataFetcher() {
   const handleCreateListTypesModalClose = () => {
     handleModalClose();
     setNewListTypesData({
-      name: "",
+      list_type_name: "",
     });
     setNewListTypesErrors({
-      name: "",
+      list_type_name: "",
     });
   };
 
@@ -125,11 +123,11 @@ function ListTypesDataFetcher() {
 
   const validateNewListTypesForm = () => {
     const errors = {
-      name: "",
+      list_type_name: "",
     };
 
-    if (!newListTypesData.name) {
-      errors.name = "El nombre es obligatorio.";
+    if (!newListTypesData.list_type_name) {
+      errors.list_type_name = "El nombre es obligatorio.";
     }
 
     setNewListTypesErrors(errors);
@@ -197,7 +195,7 @@ function ListTypesDataFetcher() {
               <FormLabel>Nombre</FormLabel>
               <Input
                 type="text"
-                name="name"
+                name="list_type_name"
                 value={newListTypesData.list_type_name}
                 onChange={handleNewListTypesChange}
                 color="white"

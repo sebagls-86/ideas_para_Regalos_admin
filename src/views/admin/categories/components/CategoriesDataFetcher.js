@@ -78,12 +78,7 @@ function CategoriesDataFetcher() {
     handleModalOpen,
     handleModalClose,
     postData,
-  } = useDataPoster(
-    apiEndpoint,
-    token,
-    reloadData,
-    setShowErrorModal
-  );
+  } = useDataPoster(apiEndpoint, token, reloadData, setShowErrorModal);
 
   const [newCategoriesData, setNewCategoriesData] = useState({
     name: "",
@@ -164,7 +159,6 @@ function CategoriesDataFetcher() {
   };
 
   const [imagePreview, setImagePreview] = useState("");
-
 
   const handleEditChange = (e, fieldName, categoryId) => {
     const newValue =
@@ -325,7 +319,9 @@ function CategoriesDataFetcher() {
                           onClick={(e) => {
                             e.preventDefault();
                             document
-                              .getElementById(`image-input-${category.category_id}`)
+                              .getElementById(
+                                `image-input-${category.category_id}`
+                              )
                               .click();
                           }}
                           cursor="pointer"
@@ -340,7 +336,9 @@ function CategoriesDataFetcher() {
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
-                        handleImageClick(`http://localhost:8080${category.image}`)
+                        handleImageClick(
+                          `http://localhost:8080${category.image}`
+                        )
                       }
                       cursor="pointer"
                     />
@@ -368,7 +366,7 @@ function CategoriesDataFetcher() {
                             entity,
                             category.category_id,
                             editingData[category.category_id],
-                            'formData'
+                            "formData"
                           )
                         : handleEdit(category.category_id)
                     }

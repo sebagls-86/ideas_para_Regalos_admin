@@ -40,6 +40,10 @@ function mapStatusValue(value) {
   return value === 1 ? "Activo" : "Inactivo";
 }
 
+function mapFeaturedValue(value) {
+  return value === 1 ? "Si" : "No";
+}
+
 function ProductsCatalogDataFetcher() {
   const entity = "productsCatalog";
   const apiEndpoint = "http://localhost:8080/api/v1/productsCatalog";
@@ -99,30 +103,28 @@ function ProductsCatalogDataFetcher() {
 
   const [newProductCatalogData, setNewProductCatalogData] = useState({
     name: "",
-    scheduled: false,
-    image: null,
-    date: null,
+    status: false,
+    images: null,
+    featured: false,
   });
 
   const [newProductCatalogErrors, setNewProductCatalogErrors] = useState({
     name: "",
-    scheduled: false,
-    image: null,
-    date: "",
+    status: false,
+    images: null,
+    featured: false,
   });
 
-  const handleNewProductCatalogChange = (value, name) => {
+  const handleNewProductCatalogChange = (e) => {
+    const { value, name } = e.target;
     setNewProductCatalogErrors((prevErrors) => ({
       ...prevErrors,
       [name]: "",
     }));
 
-    const newValue =
-      name === "scheduled" ? value === "1" : name === "date" ? value : value;
-
     setNewProductCatalogData((prevData) => ({
       ...prevData,
-      [name]: newValue,
+      name: value,
     }));
   };
 
@@ -139,15 +141,15 @@ function ProductsCatalogDataFetcher() {
     handleModalClose();
     setNewProductCatalogData({
       name: "",
-      scheduled: false,
-      image: null,
-      date: null,
+      status: false,
+      images: null,
+      featured: false,
     });
     setNewProductCatalogErrors({
       name: "",
-      scheduled: false,
-      image: null,
-      date: null,
+      status: false,
+      images: null,
+      featured: false,
     });
   };
 
@@ -158,8 +160,9 @@ function ProductsCatalogDataFetcher() {
   const validateNewProductCatalogForm = () => {
     const errors = {
       name: "",
-      scheduled: "",
-      image: "",
+      status: "",
+      images: "",
+      featured: "",
     };
 
     if (!newProductCatalogData.name) {
@@ -167,18 +170,25 @@ function ProductsCatalogDataFetcher() {
     }
 
     if (
-      newProductCatalogData.scheduled !== true &&
-      newProductCatalogData.scheduled !== false
+      newProductCatalogData.status !== true &&
+      newProductCatalogData.status !== false
     ) {
-      errors.scheduled = "Marcar si es un evento calendarizado o no.";
+      errors.status = "Marcar si es un evento calendarizado o no.";
     }
 
     if (
-      !newProductCatalogData.image ||
-      !(newProductCatalogData.image instanceof File) ||
-      !newProductCatalogData.image.name
+      !newProductCatalogData.images ||
+      !(newProductCatalogData.images instanceof File) ||
+      !newProductCatalogData.images.name
     ) {
-      errors.image = "La carga de la imagen es obligatoria.";
+      errors.images = "La carga de la imagen es obligatoria.";
+    }
+
+    if (
+      newProductCatalogData.featured !== true &&
+      newProductCatalogData.featured !== false
+    ) {
+      errors.status = "Marcar si es un evento calendarizado o no.";
     }
 
     setNewProductCatalogErrors(errors);
@@ -189,10 +199,7 @@ function ProductsCatalogDataFetcher() {
   const handleCreateProductCatalog = async () => {
     const isFormValid = validateNewProductCatalogForm();
 
-    if (
-      newProductCatalogData.image &&
-      newProductCatalogData.image.length > 5
-    ) {
+    if (newProductCatalogData.images && newProductCatalogData.images.length > 5) {
       openFeedbackModal("Solo se permiten hasta 5 imágenes");
       console.log("Solo se permiten hasta 5 imágenes");
       return;
@@ -237,21 +244,22 @@ function ProductsCatalogDataFetcher() {
 
   const handleStatuSave = async (productId) => {
     const editedStatus = editingData[productId]?.status;
-    const isStatusComplete = editedStatus !== undefined && editedStatus !== null;
+    const isStatusComplete =
+      editedStatus !== undefined && editedStatus !== null;
     const areOtherFieldsEdited = Object.keys(editingData[productId] || {}).some(
       (field) => field !== "status"
     );
-  
+
     const statusToSend = isStatusComplete
       ? parseInt(editedStatus, 10)
       : editedStatus;
-  
+
     if (isStatusComplete || areOtherFieldsEdited) {
       const updatedData = {
         ...editingData[productId],
         ...(statusToSend !== undefined && { status: statusToSend }), // Agregar status solo si no es undefined
       };
-  
+
       await handleSave(entity, productId, updatedData, "formData");
     }
   };
@@ -308,9 +316,7 @@ function ProductsCatalogDataFetcher() {
                 type="text"
                 name="name"
                 value={newProductCatalogData.name}
-                onChange={(e) =>
-                  handleNewProductCatalogChange(e.target.value, "name")
-                }
+                onChange={handleNewProductCatalogChange}
                 color="white"
               />
               <div style={{ color: "red" }}>{newProductCatalogErrors.name}</div>
@@ -320,9 +326,7 @@ function ProductsCatalogDataFetcher() {
               <Select
                 name="status"
                 value={newProductCatalogData.status ? "1" : "0"}
-                onChange={(e) =>
-                  handleNewProductCatalogChange(e.target.value, "status")
-                }
+                onChange={handleNewProductCatalogChange}
                 color="white"
               >
                 <option value="0">Inactivo</option>
@@ -333,12 +337,27 @@ function ProductsCatalogDataFetcher() {
               </div>
             </FormControl>
             <FormControl>
+              <FormLabel>Destacado</FormLabel>
+              <Select
+                name="featured"
+                value={newProductCatalogData.featured ? "1" : "0"}
+                onChange={handleNewProductCatalogChange}
+                color="white"
+              >
+                <option value="0">No</option>
+                <option value="1">Si</option>
+              </Select>
+              <div style={{ color: "red" }}>
+                {newProductCatalogErrors.featured}
+              </div>
+            </FormControl>
+            <FormControl>
               <FormLabel>Imagen</FormLabel>
               <Input
                 type="file"
-                name="image"
+                name="images"
                 accept="image/*"
-                onChange={(e) => handleFileChange(e, "image")}
+                onChange={(e) => handleFileChange(e, "images")}
                 color="white"
               />
               <div style={{ color: "red" }}>
@@ -370,6 +389,7 @@ function ProductsCatalogDataFetcher() {
               <Th>ID</Th>
               <Th>Nombre</Th>
               <Th>Estado</Th>
+              <Th>Destacado</Th>
               <Th>Imágenes</Th>
               <Th>Acciones</Th>
             </Tr>
@@ -414,12 +434,34 @@ function ProductsCatalogDataFetcher() {
                           product.product_catalog_id
                         )
                       }
-                      >
+                    >
                       <option value="1">Activo</option>
                       <option value="0">Inactivo</option>
                     </Select>
                   ) : (
                     mapStatusValue(product.status)
+                  )}
+                </Td>
+                <Td>
+                  {editingRows.includes(product.product_catalog_id) ? (
+                    <Select
+                      value={
+                        editingData[product.product_catalog_id]?.featured ||
+                        product.featured
+                      }
+                      onChange={(e) =>
+                        handleEditChange(
+                          e,
+                          "featured",
+                          product.product_catalog_id
+                        )
+                      }
+                    >
+                      <option value="1">Si</option>
+                      <option value="0">No</option>
+                    </Select>
+                  ) : (
+                    mapFeaturedValue(product.featured)
                   )}
                 </Td>
                 <Td>

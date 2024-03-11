@@ -74,10 +74,10 @@ const App = () => {
               ) : (
                 <Redirect to="/auth/login" />
               )}
-              <Route
+              {/* <Route
                 path="/"
                 render={() => <Redirect to={lastVisitedRoute || "/admin"} />}
-              />
+              /> */}
             </Switch>
           </Router>
         </ThemeEditorProvider>

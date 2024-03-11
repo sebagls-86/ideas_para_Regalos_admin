@@ -89,18 +89,16 @@ function InterestsDataFetcher() {
   } = useDataPoster(
     apiEndpoint,
     token,
-    "Interés creada con éxito",
-    "Error al crear interés",
     reloadData,
     setShowErrorModal
   );
 
   const [newInterestsData, setnewInterestsData] = useState({
-    name: "",
+    interest: "",
   });
 
   const [newInterestsErrors, setnewInterestsErrors] = useState({
-    name: "",
+    interest: "",
   });
 
   const handlenewInterestsChange = (e) => {
@@ -119,12 +117,10 @@ function InterestsDataFetcher() {
   const handleCreateinterestsModalClose = () => {
     handleModalClose();
     setnewInterestsData({
-      name: "",
-      image: "",
+      interest: "",
     });
     setnewInterestsErrors({
-      name: "",
-      image: "",
+      interest: "",
     });
   };
 
@@ -134,11 +130,11 @@ function InterestsDataFetcher() {
 
   const validatenewInterestsForm = () => {
     const errors = {
-      name: "",
+      interest: "",
     };
 
-    if (!newInterestsData.name) {
-      errors.name = "El nombre es obligatorio.";
+    if (!newInterestsData.interest) {
+      errors.interest = "El nombre es obligatorio.";
     }
 
     setnewInterestsErrors(errors);
@@ -206,12 +202,12 @@ function InterestsDataFetcher() {
               <FormLabel>Nombre</FormLabel>
               <Input
                 type="text"
-                name="name"
-                value={newInterestsData.name}
+                name="interest"
+                value={newInterestsData.interest}
                 onChange={handlenewInterestsChange}
                 color="white"
               />
-              <div style={{ color: "red" }}>{newInterestsErrors.name}</div>
+              <div style={{ color: "red" }}>{newInterestsErrors.interest}</div>
             </FormControl>
           </ModalBody>
           <ModalFooter>

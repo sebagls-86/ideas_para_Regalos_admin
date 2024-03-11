@@ -205,8 +205,8 @@ function useDataFetcher(apiEndpoint, token) {
       });
 
       if (response.ok) {
-        reloadData();
         openFeedbackModal("Operación realizada");
+        reloadData();
       }
 
       if (response.status === 403) {
@@ -244,6 +244,11 @@ function useDataFetcher(apiEndpoint, token) {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (response.ok) {
+        openFeedbackModal("Operación realizada");
+        reloadData();
+      }
 
       if (response.status === 403) {
         setShowErrorModal(true);

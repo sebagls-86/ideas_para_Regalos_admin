@@ -8,7 +8,7 @@ import useDataPoster from "../../../../components/dataManage/useDataPoster";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import DatePicker from "react-datepicker";
-import 'react-datepicker/dist/react-datepicker.css';
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Box,
   Table,
@@ -203,8 +203,9 @@ function ScheduledEventsDataFetcher() {
   }, []);
 
   const handleEditChange = (value, fieldName, eventId) => {
-   const numericValue = fieldName === 'event_type_id' ? parseInt(value, 10) : value;
-  
+    const numericValue =
+      fieldName === "event_type_id" ? parseInt(value, 10) : value;
+
     setEditingData((prevEditingData) => ({
       ...prevEditingData,
       [eventId]: {
@@ -215,7 +216,7 @@ function ScheduledEventsDataFetcher() {
   };
 
   const convertToCorrectDateFormat = (backendDate) => {
-    const [day, month, year] = backendDate.split('/');
+    const [day, month, year] = backendDate.split("/");
     return `${month}-${day}-${year}`;
   };
 
@@ -338,18 +339,22 @@ function ScheduledEventsDataFetcher() {
                         handleEditChange(
                           e.target.value,
                           "event_type_id",
-                          event.scheduled_event_id,
+                          event.scheduled_event_id
                         )
                       }
                     >
-                      {eventOptions.map((option) => (
-                        <option
-                          key={option.event_type_id}
-                          value={option.event_type_id}
-                        >
-                          {option.event_type_name}
-                        </option>
-                      ))}
+                      {eventOptions ? (
+                        eventOptions.map((option) => (
+                          <option
+                            key={option.event_type_id}
+                            value={option.event_type_id}
+                          >
+                            {option.event_type_name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No hay opciones disponibles</option>
+                      )}
                     </Select>
                   ) : (
                     event.event_type_name

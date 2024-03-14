@@ -261,17 +261,26 @@ function ScheduledEventsDataFetcher() {
                   handleNewScheduledEventChange(e.target.value, "event_type_id")
                 }
               >
-                <option value="" disabled>
-                  Seleccionar evento
-                </option>
-                {eventOptions.map((option) => (
-                  <option
-                    key={option.event_type_id}
-                    value={option.event_type_id}
-                  >
-                    {option.event_type_name}
+                {eventOptions ? (
+                  Array.isArray(eventOptions) && eventOptions.length > 0 ? (
+                    eventOptions.map((option) => (
+                      <option
+                        key={option.event_type_id}
+                        value={option.event_type_id}
+                      >
+                        {option.event_type_name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No hay opciones disponibles
+                    </option>
+                  )
+                ) : (
+                  <option value="" disabled>
+                    Cargando opciones...
                   </option>
-                ))}
+                )}
               </Select>
               <div style={{ color: "red" }}>
                 {newScheduledEventErrors.event_type_id}

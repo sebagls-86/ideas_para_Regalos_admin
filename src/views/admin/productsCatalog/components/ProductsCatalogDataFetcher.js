@@ -47,6 +47,8 @@ function mapFeaturedValue(value) {
 function ProductsCatalogDataFetcher() {
   const entity = "productsCatalog";
   const apiEndpoint = "http://localhost:8080/api/v1/productsCatalog";
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
   const token = useContext(TokenContext).token;
 
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
@@ -199,7 +201,10 @@ function ProductsCatalogDataFetcher() {
   const handleCreateProductCatalog = async () => {
     const isFormValid = validateNewProductCatalogForm();
 
-    if (newProductCatalogData.images && newProductCatalogData.images.length > 5) {
+    if (
+      newProductCatalogData.images &&
+      newProductCatalogData.images.length > 5
+    ) {
       openFeedbackModal("Solo se permiten hasta 5 imágenes");
       console.log("Solo se permiten hasta 5 imágenes");
       return;
@@ -264,8 +269,21 @@ function ProductsCatalogDataFetcher() {
     }
   };
 
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isImageModalOpen, setImageModalOpen] = useState(false);
+  const handleStatusChange = (e) => {
+    const { value } = e.target;
+    setNewProductCatalogData((prevData) => ({
+      ...prevData,
+      status: value === "1" ? true : false,
+    }));
+  };
+
+  const handleFeaturedChange = (e) => {
+    const { value } = e.target;
+    setNewProductCatalogData((prevData) => ({
+      ...prevData,
+      featured: value === "1" ? true : false,
+    }));
+  };
 
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
@@ -307,7 +325,7 @@ function ProductsCatalogDataFetcher() {
       <Modal isOpen={showModal} onClose={handleCreateProductCatalogModalClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Crear Tipo de Evento</ModalHeader>
+          <ModalHeader>Agregar nuevo producto</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl>
@@ -326,7 +344,7 @@ function ProductsCatalogDataFetcher() {
               <Select
                 name="status"
                 value={newProductCatalogData.status ? "1" : "0"}
-                onChange={handleNewProductCatalogChange}
+                onChange={handleStatusChange}
                 color="white"
               >
                 <option value="0">Inactivo</option>
@@ -341,7 +359,7 @@ function ProductsCatalogDataFetcher() {
               <Select
                 name="featured"
                 value={newProductCatalogData.featured ? "1" : "0"}
-                onChange={handleNewProductCatalogChange}
+                onChange={handleFeaturedChange}
                 color="white"
               >
                 <option value="0">No</option>

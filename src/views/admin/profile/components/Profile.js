@@ -1,24 +1,20 @@
-import React, { useContext, useEffect, useState } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useEffect, useState } from "react";
 import { useColorModeValue, Text } from "@chakra-ui/react";
 import Card from "components/card/Card.js";
-import { jwtDecode } from "jwt-decode";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileBanner from "./ProfileBanner";
+import { useHistory } from "react-router-dom";
+import useFeedbackModal from "components/modals/feedbackModal";
 
 const Banner = () => {
-  const { token } = useContext(TokenContext);
+  const token = localStorage.getItem("token");
   const [userData, setUserData] = useState(null);
-
-  const baseURL = "http://localhost:8080";
-  const avatarURL = userData?.avatar;
-  const bannerURL = userData?.banner;
-
-  const absoluteAvatarURL = `${baseURL}${avatarURL}`;
-  const absoluteBannerURL = `${baseURL}${bannerURL}`;
-
-  const decoded = jwtDecode(token);
-  const userId = decoded.user_id;
+  const userInfoString = localStorage.getItem("userInfo");
+  const userInfo = JSON.parse(userInfoString);
+  const userId = userInfo.data.user_id;
+  const history = useHistory();
+  const { openFeedbackModal, FeedbackModal: FeedbackModalComponent } =
+  useFeedbackModal();
 
   const textColorPrimary = useColorModeValue("secondaryGray.900", "white");
 
@@ -38,10 +34,10 @@ const Banner = () => {
             const data = await response.json();
             setUserData(data?.data);
           } else {
-            console.error("Failed to fetch user data");
+            openFeedbackModal("Error en la solicitud");
           }
         } catch (error) {
-          console.error("Error fetching user data:", error);
+          history.replace("/error");
         }
       }
     };
@@ -71,8 +67,7 @@ const Banner = () => {
         window.location.reload();
       }
     } catch (error) {
-      window.location.reload();
-      console.error("Error en la solicitud PATCH para el avatar:", error);
+      history.replace("/error");
     }
   };
 
@@ -106,11 +101,12 @@ const Banner = () => {
   return (
     <Card mb={{ base: "0px", lg: "20px" }} align="center">
       <ProfileBanner
-        bannerURL={absoluteBannerURL}
+        bannerURL={userData?.banner}
         onConfirm={handleBannerConfirm}
       />
+       <FeedbackModalComponent />
       <ProfileAvatar
-        avatarURL={absoluteAvatarURL}
+        avatarURL={userData?.avatar}
         onConfirm={handleAvatarConfirm}
       />
       <Text color={textColorPrimary} fontWeight="bold" fontSize="xl" mt="10px">

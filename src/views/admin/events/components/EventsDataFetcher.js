@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
@@ -36,7 +35,7 @@ import "../../../../assets/css/Tables.css";
 function EventsDataFetcher() {
   const entity = "events";
   const apiEndpoint = "http://localhost:8080/api/v1/events";
-  const token = useContext(TokenContext).token;
+  const token = localStorage.getItem("token");
 
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 

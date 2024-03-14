@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -43,7 +42,7 @@ function mapScheduledValue(value) {
 function EventsTypeDataFetcher() {
   const entity = "eventTypes";
   const apiEndpoint = "http://localhost:8080/api/v1/eventTypes";
-  const token = useContext(TokenContext).token;
+  const token = localStorage.getItem("token");
 
   const {
     data: eventTypes,

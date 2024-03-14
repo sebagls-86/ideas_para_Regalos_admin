@@ -1,5 +1,4 @@
-import React, { useContext, useMemo, useState, useEffect } from "react";
-import { TokenContext } from "contexts/TokenContext";
+import React, { useMemo, useState, useEffect } from "react";
 import { Box, Flex, Table, Text, useColorModeValue } from "@chakra-ui/react";
 import { useGlobalFilter, usePagination, useSortBy, useTable } from "react-table";
 import Card from "components/card/Card";
@@ -28,8 +27,6 @@ export default function Users(props) {
     fetchUserCount();
   }, []);
 
-  const { token } = useContext(TokenContext);
-  console.log("token", token);
   const columns = useMemo(() => columnsData, [columnsData]);
   const data = useMemo(() => tableData, [tableData]);
 

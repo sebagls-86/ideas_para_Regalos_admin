@@ -6,10 +6,10 @@ const PermissionErrorModal = ({ isOpen, onClose }) => {
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Error de permisos</ModalHeader>
+        <ModalHeader>Error</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          Ups, parece que no tienes permiso para realizar esta acción.
+          Ups, hubo un error en la solicitud. Puedes reintentar o contactar al administrador.
         </ModalBody>
         <ModalFooter>
         <Button colorScheme="blue" mr={3} onClick={onClose}>

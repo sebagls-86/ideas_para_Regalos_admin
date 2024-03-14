@@ -12,6 +12,7 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
+
 const fetchData = async (
   apiEndpoint,
   token,
@@ -36,12 +37,6 @@ const fetchData = async (
 
     if (response.status === 400) {
       setShowTokenInvalidError(true);
-      setTimeout(() => {
-        localStorage.removeItem("token");
-        setData([]);
-        setOriginalData([]);
-        history.push("/auth/login");
-      }, 0);
       throw new Error("Bad Request");
     }
 
@@ -57,10 +52,6 @@ const fetchData = async (
     console.error("Error fetching data:", error);
     if (error.message === "Bad Request") {
       setShowTokenInvalidError(true);
-      localStorage.removeItem("token");
-      setData([]);
-      setOriginalData([]);
-      history.push("/auth/login");
     } else {
       console.log("Error message:", error.message);
       setShowErrorModal(true);
@@ -217,7 +208,6 @@ function useDataFetcher(apiEndpoint, token) {
       const updatedData = data.filter((item) => item.id !== itemId);
       setData(updatedData);
     } catch (error) {
-      console.error("Error deleting data:", error);
       if (error.message === "Forbidden") {
         setShowErrorModal(true);
       }
@@ -337,7 +327,7 @@ function useDataFetcher(apiEndpoint, token) {
 
   useEffect(() => {
     if (!token) {
-      history.push("/auth/login");
+      //history.push("/auth/login");
       return;
     }
     fetchData(

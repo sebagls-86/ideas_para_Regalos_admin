@@ -1,88 +1,53 @@
 // App.js
-import React, { useContext, useState, useEffect } from "react";
-import { TokenContext } from "./contexts/TokenContext";
-import { TokenProvider } from "./contexts/TokenContext";
-import PrivateRoute from "./contexts/PrivateRoutes";
-import "assets/css/App.css";
-//import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
-import {
-  BrowserRouter as Router,
-  Route,
-  Switch,
-  Redirect,
-} from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
 import AuthLayout from "layouts/auth";
 import AdminLayout from "layouts/admin";
+import ErrorLayout from "views/error/ErrorPage";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "theme/theme";
 import { ThemeEditorProvider } from "@hypertheme-editor/chakra-ui";
-import { css } from "@emotion/react";
-import { ClipLoader } from "react-spinners";
-import "./assets/css/Spinner.css";
-
-const override = css`
-  display: block;
-  margin: 0 auto;
-  border-color: white;
-`;
+import { useAuth0 } from "@auth0/auth0-react";
 
 const App = () => {
-  const { isAuthenticated, lastVisitedRoute, checkAuth } =
-    useContext(TokenContext);
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth0();
+  const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await checkAuth();
-        setLoading(false);
-      } catch (error) {
-        console.error("Error en checkAuth:", error);
-        setLoading(false);
+  console.log("isAuthenticated", isAuthenticated);
+  console.log("token", token);
+
+  // Componente de enrutamiento protegido para rutas de administrador
+  const AdminRoute = ({ component: Component, path, ...rest }) => (
+    <Route
+      {...rest}
+      render={(props) =>
+        (isAuthenticated && path === "/admin/default") || token ? (
+          <Component {...props} />
+        ) : (
+          <Redirect to="/auth" />
+        )
       }
-    };
-
-    fetchData();
-  }, [checkAuth]);
-
-  if (loading) {
-    return (
-      <div className="cargando">
-        <ClipLoader
-          color={"white"}
-          loading={loading}
-          css={override}
-          size={150}
-        />
-      </div>
-    );
-  }
+    />
+  );
 
   return (
-    <TokenProvider>
-      <ChakraProvider theme={theme}>
-        <ThemeEditorProvider>
-          <Router>
-            <Switch>
-              <Route path="/auth" component={AuthLayout} />
-              {isAuthenticated ? (
-                lastVisitedRoute === "/auth/login" ? (
-                  <Redirect to="/admin" />
-                ) : (
-                  <PrivateRoute path="/admin" component={AdminLayout} />
-                )
-              ) : (
-                <Redirect to="/auth/login" />
-              )}
-              {/* <Route
-                path="/"
-                render={() => <Redirect to={lastVisitedRoute || "/admin"} />}
-              /> */}
-            </Switch>
-          </Router>
-        </ThemeEditorProvider>
-      </ChakraProvider>
-    </TokenProvider>
+    <ChakraProvider theme={theme}>
+      <ThemeEditorProvider>
+        <Router>
+          <Switch>
+            {/* Rutas de autenticación */}
+            <Route path="/auth" component={AuthLayout} />
+            {/* Ruta de inicio de sesión */}
+            <Route path="/admin/default" component={AdminLayout} />
+            {/* Rutas protegidas de administrador */}
+            <AdminRoute path="/admin" component={AdminLayout} />
+            <AdminRoute path="/error" component={ErrorLayout} />
+            {/* Redirección por defecto */}
+            <Redirect to="/auth" />
+          </Switch>
+        </Router>
+      </ThemeEditorProvider>
+    </ChakraProvider>
   );
 };
 

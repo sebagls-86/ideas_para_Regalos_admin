@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -34,9 +33,9 @@ import { FaEdit, FaCheck, FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function AgeRangeDataFetcher() {
-  const entity = "ageRanges";
-  const apiEndpoint = "http://localhost:8080/api/v1/ageRanges";
-  const token = useContext(TokenContext).token;
+  const entity = "age-ranges";
+  const apiEndpoint = "http://localhost:8080/api/v1/age-ranges";
+  const token = localStorage.getItem("token");
 
   const {
     data: ageRanges,

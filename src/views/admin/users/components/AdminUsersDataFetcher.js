@@ -1,8 +1,6 @@
-import React, { useContext, useState, useEffect } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useState, useEffect } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
-import useDataPoster from "../../../../components/dataManage/useDataPoster";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import ErrorModal from "../../../../components/modals/modalError";
@@ -19,16 +17,12 @@ import {
   Td,
   Flex,
   Image,
-  Select,
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-  FormControl,
-  FormLabel,
   IconButton,
   Icon,
   Input,
@@ -36,11 +30,15 @@ import {
 } from "@chakra-ui/react";
 import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
+import useDarkMode from "../../../../assets/darkModeHook";
+import { useHistory } from "react-router-dom";
 
 function AdminUsersDataFetcher() {
   const entity = "users";
   const apiEndpoint = "http://localhost:8080/api/v1/users?admins=true";
-  const { token } = useContext(TokenContext);
+  const token = localStorage.getItem("token");
+  const { isDarkMode } = useDarkMode();
+  const history = useHistory();
 
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 
@@ -54,7 +52,6 @@ function AdminUsersDataFetcher() {
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
     setEditingData,
-    setShowErrorModal,
     handleEdit,
     handleCancel,
     handleSave,
@@ -106,207 +103,6 @@ function AdminUsersDataFetcher() {
     customFilter
   );
 
-  const {
-    showModal,
-    FeedbackModal: FBModal,
-    feedbackMessage,
-    handleModalOpen,
-    handleModalClose,
-  } = useDataPoster(apiEndpoint, token, reloadData, setShowErrorModal);
-
-  const [newUserData, setNewUserData] = useState({
-    user_name: "",
-    name: "",
-    last_name: "",
-    birth_date: "",
-    email: "",
-    password: "",
-    avatar: "",
-    banner: "",
-    isAdmin: false,
-    adminRole: "1",
-  });
-
-  const handleCreateUserModalOpen = () => {
-    handleModalOpen();
-  };
-
-  const handleCreateUserModalClose = () => {
-    handleModalClose();
-    setNewUserData({
-      user_name: "",
-      name: "",
-      last_name: "",
-      birth_date: "",
-      email: "",
-      password: "",
-      avatar: "",
-      banner: "",
-      isAdmin: false,
-      adminRole: "SuperAdmin",
-    });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setErrorMessages((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-
-    setNewUserData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleAdminRoleChange = (e) => {
-    const selectedRole = e.target.value;
-    setNewUserData((prevData) => ({
-      ...prevData,
-      adminRole: selectedRole,
-    }));
-  };
-
-  const handleFileChange = (e, fieldName) => {
-    const file = e.target.files[0];
-
-    setNewUserData((prevData) => ({
-      ...prevData,
-      [fieldName]: file,
-    }));
-  };
-
-  const handleDateChange = (date, fieldName) => {
-    setNewUserData((prevData) => ({
-      ...prevData,
-      [fieldName]: date,
-    }));
-  };
-
-  const formatToDDMMYYYY = (date) => {
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const [errorMessages, setErrorMessages] = useState({
-    user_name: "",
-    name: "",
-    last_name: "",
-    birth_date: "",
-    email: "",
-    password: "",
-  });
-
-  const validateForm = () => {
-    const errors = {
-      user_name: "",
-      name: "",
-      last_name: "",
-      birth_date: "",
-      email: "",
-      password: "",
-    };
-
-    const firstNameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ'´-]{1,29}$/;
-    const usernameRegex = /^[a-zA-Z0-9_]{4,16}$/;
-    const lastNameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ'´-]{1,29}$/;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const dateRegex =
-      /^([0-9]{4})\/(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])$/;
-    const passwordRegex = [/.{8,}/, /[a-z]/, /[A-Z]/, /\d/, /[^\\s<>"´']+/];
-
-    if (!newUserData.user_name || !usernameRegex.test(newUserData.user_name)) {
-      errors.user_name =
-        "El nombre de usuario no cumple con el formato válido.";
-    }
-
-    if (!newUserData.name || !firstNameRegex.test(newUserData.name)) {
-      errors.name = "El nombre no cumple con el formato válido.";
-    }
-
-    if (!newUserData.last_name || !lastNameRegex.test(newUserData.last_name)) {
-      errors.last_name = "El apellido no cumple con el formato válido.";
-    }
-
-    if (!newUserData.email || !emailRegex.test(newUserData.email)) {
-      errors.email = "El correo electrónico no cumple con el formato válido.";
-    }
-
-    if (
-      !newUserData.password ||
-      !passwordRegex.every((pattern) => newUserData.password.match(pattern))
-    ) {
-      errors.password = "La contraseña no cumple con el formato válido.";
-    }
-
-    setErrorMessages(errors);
-
-    return Object.values(errors).every((error) => error === "");
-  };
-
-  const handleCreateUser = async () => {
-    const isFormValid = validateForm();
-
-    if (isFormValid) {
-      if (newUserData.birth_date instanceof Date) {
-        const formattedDate = formatToDDMMYYYY(newUserData.birth_date);
-
-        const formData = new FormData();
-        formData.append("user_name", newUserData.user_name);
-        formData.append("name", newUserData.name);
-        formData.append("last_name", newUserData.last_name);
-        formData.append("birth_date", formattedDate);
-        formData.append("email", newUserData.email);
-        formData.append("password", newUserData.password);
-        formData.append("avatar", newUserData.avatar);
-        formData.append("banner", newUserData.banner);
-        formData.append("admin_role", Number(newUserData.adminRole));
-
-        const apiUrl = `http://localhost:8080/api/v1/users/${newUserData.adminRole}`;
-
-        console.log("Form Data:", formData);
-
-        try {
-          const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          });
-
-          if (response.ok) {
-            handleCreateUserModalClose();
-            openFeedbackModal("Usuario creado con éxito");
-            reloadData();
-          } else {
-            if (response.status === 403) {
-              setShowErrorModal(true);
-            } else if (response.status === 400) {
-              openFeedbackModal("Ocurrió un problema. Loguéate nuevamente.");
-            } else if (response.status === 500) {
-              openFeedbackModal(
-                `Error al crear usuario: ${response.statusText}`
-              );
-            } else {
-              openFeedbackModal(
-                `Error al crear usuario: ${response.statusText}`
-              );
-              console.error("Error al crear usuario:", response.statusText);
-            }
-          }
-        } catch (error) {
-          openFeedbackModal("Error en la solicitud");
-        }
-      }
-    } else {
-      console.log("Formulario inválido");
-    }
-  };
-
   const [avatarPreview, setAvatarPreview] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
   const [editedRoles, setEditedRoles] = useState({});
@@ -314,10 +110,13 @@ function AdminUsersDataFetcher() {
   const handleEditChange = (e, fieldName, user_id) => {
     const newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
   
-    if (fieldName === "admin_role") {
-      setEditedRoles((prevEditedRoles) => ({
-        ...prevEditedRoles,
-        [user_id]: newValue,
+    if (fieldName === "user_role") {
+      setEditingData((prevEditingData) => ({
+        ...prevEditingData,
+        [user_id]: {
+          ...prevEditingData[user_id],
+          [fieldName]: newValue,
+        },
       }));
     } else {
       setEditingData((prevEditingData) => ({
@@ -328,7 +127,6 @@ function AdminUsersDataFetcher() {
         },
       }));
   
-      // Actualizar la vista previa por fuera del estado principal
       if (e.target.type === "file") {
         const previewURL = URL.createObjectURL(e.target.files[0]);
         if (fieldName === "avatar") {
@@ -342,7 +140,6 @@ function AdminUsersDataFetcher() {
   };
 
   useEffect(() => {
-    // Esta función se ejecutará cada vez que editingData se actualice
     console.log("Editing Data (desde useEffect):", editingData);
   }, [editingData]);
 
@@ -350,17 +147,28 @@ function AdminUsersDataFetcher() {
     const editedAdminRole = editedRoles[user_id];
     const isAdminRoleComplete = editedAdminRole !== undefined && editedAdminRole !== null;
     const areOtherFieldsEdited = Object.keys(editingData[user_id] || {}).some(
-      (field) => field !== "admin_role"
+      (field) => field !== "user_role"
     );
   
     if (isAdminRoleComplete) {
-      // Si admin_role está completo, enviar a otro endpoint
       await handleSaveRoles(user_id);
     } else if (areOtherFieldsEdited) {
-      // Si hay otros campos editados además de admin_role, enviar a handleSave estándar
-      await handleSave(entity, user_id, editingData[user_id], "formData");
+      // Formatear la fecha antes de llamar a handleSave
+      const formattedEditingData = { ...editingData[user_id] };
+      if (formattedEditingData.birth_date) {
+        formattedEditingData.birth_date = formatToDDMMYYYY(
+          formattedEditingData.birth_date
+        );
+      }
+      await handleSave(entity, user_id, formattedEditingData, "formData");
     }
-    // Si no se editó admin_role ni otros campos, no hacer nada
+  };
+
+  const formatToDDMMYYYY = (date) => {
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const handleSaveRoles = async (userId) => {
@@ -386,13 +194,22 @@ function AdminUsersDataFetcher() {
           reloadData();
           handleCancel(userId)
         } else {
-          // Manejar errores si es necesario
+          openFeedbackModal("Error en la solicitud");
           console.error("Error al actualizar el rol:", response.statusText);
         }
       } catch (error) {
-        openFeedbackModal("Error en la solicitud");
-      }
+        history.push("/error");}
     }
+  };
+
+  const handleDateChange = (date, fieldName, user_id) => {
+    setEditingData((prevEditingData) => ({
+      ...prevEditingData,
+      [user_id]: {
+        ...prevEditingData[user_id],
+        [fieldName]: date,
+      },
+    }));
   };
 
   const convertToCorrectDateFormat = (backendDate) => {
@@ -422,157 +239,9 @@ function AdminUsersDataFetcher() {
           placeholder="Buscar..."
           value={searchTerm}
         />
-
-        <Button
-          fontSize="sm"
-          variant="brand"
-          fontWeight="500"
-          w="25%"
-          h="50"
-          mb="24px"
-          onClick={handleCreateUserModalOpen}
-        >
-          Crear Usuario
-        </Button>
+        
       </Flex>
-      <Modal isOpen={showModal} onClose={handleCreateUserModalClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Crear Usuario</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Nombre de Usuario</FormLabel>
-              <Input
-                type="text"
-                name="user_name"
-                value={newUserData.user_name}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.user_name}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Nombre</FormLabel>
-              <Input
-                type="text"
-                name="name"
-                value={newUserData.name}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.name}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Apellido</FormLabel>
-              <Input
-                type="text"
-                name="last_name"
-                value={newUserData.last_name}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.last_name}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Fecha de Nacimiento</FormLabel>
-              <DatePicker
-                selected={newUserData.birth_date}
-                onChange={(date) => handleDateChange(date, "birth_date")}
-                dateFormat="dd-MM-yyy"
-                placeholderText="Seleccionar fecha"
-                showYearDropdown
-                scrollableYearDropdown
-                yearDropdownItemNumber={15}
-                className="date-picker"
-              />
-              <div style={{ color: "red" }}>{errorMessages.birth_date}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Email</FormLabel>
-              <Input
-                type="text"
-                name="email"
-                value={newUserData.email}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.email}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Password</FormLabel>
-              <Input
-                type="password"
-                name="password"
-                value={newUserData.password}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.password}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Avatar</FormLabel>
-              <Input
-                type="file"
-                name="avatar"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, "avatar")}
-                color="white"
-                className="Td-input"
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Banner</FormLabel>
-              <Input
-                type="file"
-                name="banner"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, "banner")}
-                color="white"
-                className="Td-input"
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Rol de Administrador</FormLabel>
-              <Select
-                value={newUserData.adminRole}
-                onChange={handleAdminRoleChange}
-              >
-                <option value="1">SuperAdmin</option>
-                <option value="2">Medium</option>
-                <option value="3">Soft</option>
-              </Select>
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleCreateUser}>
-              Crear
-            </Button>
-            <Button variant="ghost" onClick={handleCreateUserModalClose}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      {FBModal && (
-        <FBModal
-          isOpen={showModal}
-          onClose={handleCreateUserModalClose}
-          feedbackMessage={feedbackMessage}
-        />
-      )}
+      
       <Box maxHeight="500px" overflowY="auto">
         <Table variant="simple" className="table-container">
           <Thead className="sticky-header">
@@ -604,20 +273,28 @@ function AdminUsersDataFetcher() {
                 <Td>{user.user_id}</Td>
                 <Td>
                   {editingRows.includes(user.user_id) ? (
-                    <Select
+                    <select
                       value={
-                        editingData[user.user_id]?.admin_role || user.admin_role
+                        editingData[user.user_id]?.user_role || user.user_role
                       }
                       onChange={(e) =>
-                        handleEditChange(e, "admin_role", user.user_id)
+                        handleEditChange(e, "user_role", user.user_id)
                       }
+                      style={{ color: isDarkMode ? "black" : "white" }}
                     >
                       <option value="1">SuperAdmin</option>
                       <option value="2">Medium</option>
                       <option value="3">Soft</option>
-                    </Select>
+                      <option value="4">User</option>
+                    </select>
                   ) : (
-                    user.user_role
+                    user.user_role === 1
+                      ? "SuperAdmin"
+                      : user.user_role === 2
+                      ? "Medium"
+                      : user.user_role === 3
+                      ? "Soft"
+                      : "User"
                   )}
                 </Td>
                 <Td>
@@ -678,10 +355,18 @@ function AdminUsersDataFetcher() {
                     <DatePicker
                       selected={
                         editingData[user.user_id]?.birth_date ||
-                        new Date(convertToCorrectDateFormat(user.birth_date))
+                        (user.birth_date
+                          ? new Date(
+                              convertToCorrectDateFormat(user.birth_date)
+                            )
+                          : "")
                       }
                       onChange={(date) =>
-                        handleEditChange(date, "birth_date", user.user_id)
+                        handleDateChange(
+                          date,
+                          "birth_date",
+                          user.user_id
+                        )
                       }
                       dateFormat="dd-MM-yyyy"
                       placeholderText="Seleccionar fecha"
@@ -690,8 +375,10 @@ function AdminUsersDataFetcher() {
                       yearDropdownItemNumber={15}
                       className="date-picker"
                     />
-                  ) : (
+                  ) : user.birth_date ? (
                     user.birth_date
+                  ) : (
+                    ""
                   )}
                 </Td>
                 <Td>

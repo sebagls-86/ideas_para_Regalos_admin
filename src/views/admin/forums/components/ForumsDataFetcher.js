@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -40,7 +39,7 @@ function ForumsDataFetcher() {
   const entity = "forums";
   const apiEndpoint = "http://localhost:8080/api/v1/forums";
   const [selectedForum, setSelectedForum] = useState(null);
-  const token = useContext(TokenContext).token;
+  const token = localStorage.getItem("token");
 
   const { FeedbackModal } = useFeedbackModal();
 

@@ -13,6 +13,7 @@ import { TbCirclesRelation } from "react-icons/tb";
 
 // Admin Imports
 import Login from "views/auth/signIn";
+import ErrorPage from "views/error/ErrorPage";
 import MainDashboard from "views/admin/default";
 import Users from "views/admin/users";
 import AdminUsers from "views/admin/users/components/AdminUsersDataFetcher";
@@ -169,10 +170,10 @@ const routes = [
     hidden: true,
   },
   {
-    name: "Forgot",
-    layout: "/auth",
-    path: "/forgot-password",
-    component: Forgot,
+    name: "Error",
+    layout: "/error",
+    path: "/error",
+    component: ErrorPage,
     hidden: true,
   },
  ];

@@ -57,7 +57,7 @@ function ForgotPassword() {
       if (response.ok) {
         setModalContent("Vas a recibir un email con los pasos a seguir");
         setModalIsOpen(true);
-        history.push("/auth/login");
+        //history.push("/auth/login");
       } else if (response.status === 404) {
         setModalContent("No se encontró el email");
         setModalIsOpen(true);

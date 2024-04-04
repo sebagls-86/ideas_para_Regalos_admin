@@ -1,9 +1,9 @@
-import React, { useContext } from "react";
+import React from "react";
 import { Route, Redirect } from "react-router-dom";
-import { TokenContext } from "contexts/TokenContext";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const { isAuthenticated, updateLastVisitedRoute } = useContext(TokenContext);
+  const { isAuthenticated, user, isLoading } = useAuth0();
 
   console.log("isAuthenticated private route", isAuthenticated);
 
@@ -14,7 +14,6 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
         if (isAuthenticated) {
           return <Component {...props} />;
         } else {
-         updateLastVisitedRoute(props.location.pathname);
           return <Redirect to="/auth/login" />;
         }
       }}

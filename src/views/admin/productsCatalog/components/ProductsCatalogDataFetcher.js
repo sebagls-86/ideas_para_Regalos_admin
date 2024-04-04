@@ -1,5 +1,4 @@
-import React, { useContext, useState } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -17,7 +16,6 @@ import {
   Image,
   Td,
   Flex,
-  Text,
   Select,
   Modal,
   ModalOverlay,
@@ -45,12 +43,11 @@ function mapFeaturedValue(value) {
 }
 
 function ProductsCatalogDataFetcher() {
-  const entity = "productsCatalog";
-  const apiEndpoint = "http://localhost:8080/api/v1/productsCatalog";
+  const entity = "products-catalog";
+  const apiEndpoint = "http://localhost:8080/api/v1/products-catalog";
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
-  const token = useContext(TokenContext).token;
-
+  const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 
   const {

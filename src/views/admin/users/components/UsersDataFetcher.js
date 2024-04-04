@@ -1,8 +1,6 @@
 import React, { useContext, useState } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
-import useDataPoster from "../../../../components/dataManage/useDataPoster";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import ErrorModal from "../../../../components/modals/modalError";
@@ -10,6 +8,7 @@ import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import useDarkMode from "../../../../assets/darkModeHook";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useHistory } from "react-router-dom";
 import {
   Box,
   Table,
@@ -23,12 +22,9 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-  FormControl,
-  FormLabel,
   IconButton,
   Icon,
   Input,
@@ -40,10 +36,15 @@ import "../../../../assets/css/Tables.css";
 function UsersDataFetcher() {
   const entity = "users";
   const apiEndpoint = "http://localhost:8080/api/v1/users";
-  const { token } = useContext(TokenContext);
   const { isDarkMode } = useDarkMode();
-
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+  const [editedRoles, setEditedRoles] = useState({});
+  const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [bannerPreview, setBannerPreview] = useState("");
+  const history = useHistory();
 
   const {
     data: users,
@@ -55,7 +56,6 @@ function UsersDataFetcher() {
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
     setEditingData,
-    setShowErrorModal,
     handleEdit,
     handleCancel,
     handleSave,
@@ -107,73 +107,50 @@ function UsersDataFetcher() {
     customFilter
   );
 
-  const {
-    showModal,
-    FeedbackModal: FBModal,
-    feedbackMessage,
-    handleModalOpen,
-    handleModalClose,
-  } = useDataPoster(apiEndpoint, token, reloadData, setShowErrorModal);
-
-  const [newUserData, setNewUserData] = useState({
-    user_name: "",
-    name: "",
-    last_name: "",
-    birth_date: "",
-    email: "",
-    password: "",
-    avatar: "",
-    banner: "",
-    isAdmin: false,
-    adminRole: "SuperAdmin",
-  });
-
-  const handleCreateUserModalOpen = () => {
-    handleModalOpen();
-  };
-
-  const handleCreateUserModalClose = () => {
-    handleModalClose();
-    setNewUserData({
-      user_name: "",
-      name: "",
-      last_name: "",
-      birth_date: "",
-      email: "",
-      password: "",
-      avatar: "",
-      banner: "",
-      isAdmin: false,
-      adminRole: "SuperAdmin",
-    });
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setErrorMessages((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
+  const handleEditChange = (e, fieldName, user_id) => {
+    let newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
+  
+   
+    // Actualizar el estado de edición
+    setEditingData((prevEditingData) => ({
+      ...prevEditingData,
+      [user_id]: {
+        ...prevEditingData[user_id],
+        [fieldName]: newValue,
+      },
     }));
-
-    setNewUserData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+  
+    // Actualizar vista previa si es una imagen
+    if (e.target.type === "file") {
+      const previewURL = URL.createObjectURL(newValue);
+      if (fieldName === "avatar") {
+        setAvatarPreview(previewURL);
+      } else if (fieldName === "banner") {
+        setBannerPreview(previewURL);
+      }
+    }
+  
+    // Actualizar user_role si el campo es user_role
+    if (fieldName === "user_role") {
+      setEditingData((prevEditingData) => ({
+        ...prevEditingData,
+        [user_id]: {
+          ...prevEditingData[user_id],
+          [fieldName]: newValue,
+        },
+      }));
+    }
+  
+    console.log("Editing Data:", editingData);
   };
 
-  const handleFileChange = (e, fieldName) => {
-    const file = e.target.files[0];
-
-    setNewUserData((prevData) => ({
-      ...prevData,
-      [fieldName]: file,
-    }));
-  };
-
-  const handleDateChange = (date, fieldName) => {
-    setNewUserData((prevData) => ({
-      ...prevData,
-      [fieldName]: date,
+  const handleDateChange = (date, fieldName, user_id) => {
+    setEditingData((prevEditingData) => ({
+      ...prevEditingData,
+      [user_id]: {
+        ...prevEditingData[user_id],
+        [fieldName]: date,
+      },
     }));
   };
 
@@ -184,162 +161,10 @@ function UsersDataFetcher() {
     return `${day}/${month}/${year}`;
   };
 
-  const [errorMessages, setErrorMessages] = useState({
-    user_name: "",
-    name: "",
-    last_name: "",
-    birth_date: "",
-    email: "",
-    password: "",
-  });
-
-  const validateForm = () => {
-    const errors = {
-      user_name: "",
-      name: "",
-      last_name: "",
-      birth_date: "",
-      email: "",
-      password: "",
-    };
-
-    const firstNameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ'´-]{1,29}$/;
-    const usernameRegex = /^[a-zA-Z0-9_]{4,16}$/;
-    const lastNameRegex = /^[a-zA-ZÀ-ÖØ-öø-ÿ][a-zA-ZÀ-ÖØ-öø-ÿ'´-]{1,29}$/;
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const dateRegex =
-      /^([0-9]{4})\/(0[1-9]|1[0-2])\/(0[1-9]|[1-2][0-9]|3[0-1])$/;
-    const passwordRegex = [/.{8,}/, /[a-z]/, /[A-Z]/, /\d/, /[^\\s<>"´']+/];
-
-    if (!newUserData.user_name || !usernameRegex.test(newUserData.user_name)) {
-      errors.user_name =
-        "El nombre de usuario no cumple con el formato válido.";
-    }
-
-    if (!newUserData.name || !firstNameRegex.test(newUserData.name)) {
-      errors.name = "El nombre no cumple con el formato válido.";
-    }
-
-    if (!newUserData.last_name || !lastNameRegex.test(newUserData.last_name)) {
-      errors.last_name = "El apellido no cumple con el formato válido.";
-    }
-
-    if (!newUserData.email || !emailRegex.test(newUserData.email)) {
-      errors.email = "El correo electrónico no cumple con el formato válido.";
-    }
-
-    if (
-      !newUserData.password ||
-      !passwordRegex.every((pattern) => newUserData.password.match(pattern))
-    ) {
-      errors.password = "La contraseña no cumple con el formato válido.";
-    }
-
-    setErrorMessages(errors);
-
-    return Object.values(errors).every((error) => error === "");
-  };
-
-  const handleCreateUser = async () => {
-    const isFormValid = validateForm();
-
-    if (isFormValid) {
-      if (newUserData.birth_date instanceof Date) {
-        const formattedDate = formatToDDMMYYYY(newUserData.birth_date);
-
-        const formData = new FormData();
-        formData.append("user_name", newUserData.user_name);
-        formData.append("name", newUserData.name);
-        formData.append("last_name", newUserData.last_name);
-        formData.append("birth_date", formattedDate);
-        formData.append("email", newUserData.email);
-        formData.append("password", newUserData.password);
-        formData.append("avatar", newUserData.avatar);
-        formData.append("banner", newUserData.banner);
-
-        if (newUserData.isAdmin) {
-          formData.append("admin_role", Number(newUserData.adminRole));
-        }
-
-        const apiUrl = newUserData.isAdmin
-          ? `http://localhost:8080/api/v1/users/${newUserData.adminRole}`
-          : "http://localhost:8080/api/v1/users";
-
-        console.log("Form Data:", formData);
-
-        try {
-          const response = await fetch(apiUrl, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            body: formData,
-          });
-
-          if (response.ok) {
-            handleCreateUserModalClose();
-            openFeedbackModal("Usuario creado con éxito");
-            reloadData();
-          } else {
-            if (response.status === 403) {
-              setShowErrorModal(true);
-            } else if (response.status === 400) {
-              openFeedbackModal("Ocurrió un problema. Loguéate nuevamente.");
-            } else if (response.status === 500) {
-              openFeedbackModal(
-                `Error al crear usuario: ${response.statusText}`
-              );
-            } else {
-              openFeedbackModal(
-                `Error al crear usuario: ${response.statusText}`
-              );
-              console.error("Error al crear usuario:", response.statusText);
-            }
-          }
-        } catch (error) {
-          openFeedbackModal("Error en la solicitud");
-        }
-      }
-    } else {
-      console.log("Formulario inválido");
-    }
-  };
-
-  const [avatarPreview, setAvatarPreview] = useState("");
-  const [bannerPreview, setBannerPreview] = useState("");
-
-  const handleEditChange = (e, fieldName, user_id) => {
-    const newValue =
-      e.target.type === "file" ? e.target.files[0] : e.target.value;
-
-    setEditingData((prevEditingData) => ({
-      ...prevEditingData,
-      [user_id]: {
-        ...prevEditingData[user_id],
-        [fieldName]: newValue,
-      },
-    }));
-
-    // Actualizar la vista previa por fuera del estado principal
-    if (e.target.type === "file") {
-      const previewURL = URL.createObjectURL(e.target.files[0]);
-      if (fieldName === "avatar") {
-        setAvatarPreview(previewURL);
-      } else if (fieldName === "banner") {
-        setBannerPreview(previewURL);
-      }
-    }
-
-    console.log("Editing Data:", editingData);
-  };
-
   const convertToCorrectDateFormat = (backendDate) => {
     const [day, month, year] = backendDate.split("/");
     return `${month}-${day}-${year}`;
   };
-
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [isImageModalOpen, setImageModalOpen] = useState(false);
 
   const handleImageClick = (imageUrl) => {
     setSelectedImage(imageUrl);
@@ -351,6 +176,65 @@ function UsersDataFetcher() {
     setImageModalOpen(false);
   };
 
+  const handleSaveOrRoles = async (user_id) => {
+    const editedAdminRole = editedRoles[user_id];
+    const isAdminRoleComplete =
+      editedAdminRole !== undefined && editedAdminRole !== null;
+    const areOtherFieldsEdited = Object.keys(editingData[user_id] || {}).some(
+      (field) => field !== "user_role"
+    );
+  
+    if (isAdminRoleComplete) {
+      await handleSaveRoles(user_id);
+    } else if (areOtherFieldsEdited) {
+      // Formatear la fecha antes de llamar a handleSave
+      const formattedEditingData = { ...editingData[user_id] };
+      if (formattedEditingData.birth_date) {
+        formattedEditingData.birth_date = formatToDDMMYYYY(
+          formattedEditingData.birth_date
+        );
+      }
+      await handleSave(entity, user_id, formattedEditingData, "formData");
+    }
+  };
+
+  const handleSaveRoles = async (userId) => {
+    const roleValue = parseInt(editedRoles[userId], 10);
+    if (roleValue !== undefined) {
+      const apiUrl = `http://localhost:8080/api/v1/users/update-user-role`;
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            role_id: roleValue,
+          }),
+        });
+
+        if (response.ok) {
+          openFeedbackModal("Rol actualizado con éxito");
+          reloadData();
+          handleCancel(userId);
+        } else if (response.status === 403) {
+          openFeedbackModal("No tienes permisos para realizar esta acción");
+        } else if (response.status === 400) {
+          openFeedbackModal("Hubo un error en la solicitud. Contacte al administrador");
+          console.error("Error al actualizar el rol:", response.statusText);
+        } else {
+          openFeedbackModal("Error al actualizar el rol");
+          console.error("Error al actualizar el rol:", response.statusText);
+        }
+      } catch (error) {
+        history.replace("/error");
+       }
+    }
+  };
+
   return (
     <Box marginTop="5rem" height="100%">
       <Flex justifyContent="space-between" alignItems="center">
@@ -359,151 +243,15 @@ function UsersDataFetcher() {
           placeholder="Buscar..."
           value={searchTerm}
         />
-
-        <Button
-          fontSize="sm"
-          variant="brand"
-          fontWeight="500"
-          w="25%"
-          h="50"
-          mb="24px"
-          onClick={handleCreateUserModalOpen}
-        >
-          Crear Usuario
-        </Button>
       </Flex>
-      <Modal isOpen={showModal} onClose={handleCreateUserModalClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Crear Usuario</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>Nombre de Usuario</FormLabel>
-              <Input
-                type="text"
-                name="user_name"
-                value={newUserData.user_name}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.user_name}</div>
-            </FormControl>
 
-            <FormControl>
-              <FormLabel>Nombre</FormLabel>
-              <Input
-                type="text"
-                name="name"
-                value={newUserData.name}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.name}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Apellido</FormLabel>
-              <Input
-                type="text"
-                name="last_name"
-                value={newUserData.last_name}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.last_name}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Fecha de Nacimiento</FormLabel>
-              <DatePicker
-                selected={newUserData.birth_date}
-                onChange={(date) => handleDateChange(date, "birth_date")}
-                dateFormat="dd-MM-yyy"
-                placeholderText="Seleccionar fecha"
-                showYearDropdown
-                scrollableYearDropdown
-                yearDropdownItemNumber={15}
-                className="date-picker"
-              />
-              <div style={{ color: "red" }}>{errorMessages.birth_date}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Email</FormLabel>
-              <Input
-                type="text"
-                name="email"
-                value={newUserData.email}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.email}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Password</FormLabel>
-              <Input
-                type="password"
-                name="password"
-                value={newUserData.password}
-                onChange={handleInputChange}
-                color="white"
-                className="Td-input"
-              />
-              <div style={{ color: "red" }}>{errorMessages.password}</div>
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Avatar</FormLabel>
-              <Input
-                type="file"
-                name="avatar"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, "avatar")}
-                color="white"
-                className="Td-input"
-              />
-            </FormControl>
-
-            <FormControl>
-              <FormLabel>Banner</FormLabel>
-              <Input
-                type="file"
-                name="banner"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, "banner")}
-                color="white"
-                className="Td-input"
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleCreateUser}>
-              Crear
-            </Button>
-            <Button variant="ghost" onClick={handleCreateUserModalClose}>
-              Cancelar
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-      {FBModal && (
-        <FBModal
-          isOpen={showModal}
-          onClose={handleCreateUserModalClose}
-          feedbackMessage={feedbackMessage}
-        />
-      )}
       <Box maxHeight="500px" overflowY="auto">
         <Table variant="simple" className="table-container">
           <Thead className="sticky-header">
             <Tr>
               <Th>ID de Usuario</Th>
+              <Th>ID de Auth0</Th>
+              <Th>Rol</Th>
               <Th>Nombre de Usuario</Th>
               <Th>Nombre</Th>
               <Th>Apellido</Th>
@@ -527,6 +275,33 @@ function UsersDataFetcher() {
             {filteredData.map((user) => (
               <Tr key={user.user_id}>
                 <Td>{user.user_id}</Td>
+                <Td>{user.auth0_id}</Td>
+                <Td>
+                  {editingRows.includes(user.user_id) ? (
+                    <select
+                      value={
+                        editingData[user.user_id]?.user_role || user.user_role
+                      }
+                      onChange={(e) =>
+                        handleEditChange(e, "user_role", user.user_id)
+                      }
+                      style={{ color: isDarkMode ? "black" : "white" }}
+                    >
+                      <option value="1">SuperAdmin</option>
+                      <option value="2">Medium</option>
+                      <option value="3">Soft</option>
+                      <option value="4">User</option>
+                    </select>
+                  ) : user.user_role === 1 ? (
+                    "SuperAdmin"
+                  ) : user.user_role === 2 ? (
+                    "Medium"
+                  ) : user.user_role === 3 ? (
+                    "Soft"
+                  ) : (
+                    "User"
+                  )}
+                </Td>
                 <Td>
                   {editingRows.includes(user.user_id) ? (
                     <Input
@@ -570,28 +345,24 @@ function UsersDataFetcher() {
                     user.last_name
                   )}
                 </Td>
-                <Td>
-                  {editingRows.includes(user.user_id) ? (
-                    <Input
-                      value={editingData[user.user_id]?.email || user.email}
-                      onChange={(e) =>
-                        handleEditChange(e, "email", user.user_id)
-                      }
-                      color={isDarkMode ? "white" : "black"}
-                    />
-                  ) : (
-                    user.email
-                  )}
-                </Td>
+                <Td>{user.email}</Td>
                 <Td>
                   {editingRows.includes(user.user_id) ? (
                     <DatePicker
                       selected={
                         editingData[user.user_id]?.birth_date ||
-                        new Date(convertToCorrectDateFormat(user.birth_date))
+                        (user.birth_date
+                          ? new Date(
+                              convertToCorrectDateFormat(user.birth_date)
+                            )
+                          : "")
                       }
                       onChange={(date) =>
-                        handleEditChange(date, "birth_date", user.user_id)
+                        handleDateChange(
+                          date,
+                          "birth_date",
+                          user.user_id
+                        )
                       }
                       dateFormat="dd-MM-yyyy"
                       placeholderText="Seleccionar fecha"
@@ -600,8 +371,10 @@ function UsersDataFetcher() {
                       yearDropdownItemNumber={15}
                       className="date-picker"
                     />
-                  ) : (
+                  ) : user.birth_date ? (
                     user.birth_date
+                  ) : (
+                    ""
                   )}
                 </Td>
                 <Td>
@@ -618,10 +391,7 @@ function UsersDataFetcher() {
                           }
                         />
                         <Image
-                          src={
-                            avatarPreview ||
-                            `http://localhost:8080${user.avatar}`
-                          }
+                          src={avatarPreview || user.avatar}
                           alt="Avatar Preview"
                           maxH="50px"
                           maxW="50px"
@@ -638,14 +408,12 @@ function UsersDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`http://localhost:8080${user.avatar}`}
+                      src={user.avatar}
                       alt="Avatar"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
-                      onClick={() =>
-                        handleImageClick(`http://localhost:8080${user.avatar}`)
-                      }
+                      onClick={() => handleImageClick(user.avatar)}
                       cursor="pointer"
                     />
                   )}
@@ -664,10 +432,7 @@ function UsersDataFetcher() {
                           }
                         />
                         <Image
-                          src={
-                            bannerPreview ||
-                            `http://localhost:8080${user.banner}`
-                          }
+                          src={bannerPreview || user.banner}
                           alt="Banner Preview"
                           maxH="50px"
                           maxW="50px"
@@ -684,14 +449,12 @@ function UsersDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`http://localhost:8080${user.banner}`}
+                      src={user.banner}
                       alt="Banner"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
-                      onClick={() =>
-                        handleImageClick(`http://localhost:8080${user.banner}`)
-                      }
+                      onClick={() => handleImageClick(user.banner)}
                       cursor="pointer"
                     />
                   )}
@@ -710,12 +473,7 @@ function UsersDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(user.user_id)
-                        ? handleSave(
-                            entity,
-                            user.user_id,
-                            editingData[user.user_id],
-                            "formData"
-                          )
+                        ? handleSaveOrRoles(user.user_id)
                         : handleEdit(user.user_id)
                     }
                   />

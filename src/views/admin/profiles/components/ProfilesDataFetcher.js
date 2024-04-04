@@ -1,5 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
-import { TokenContext } from "../../../../contexts/TokenContext";
+import React, { useState, useEffect } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -27,8 +26,7 @@ import "../../../../assets/css/Tables.css";
 function ProfilesDataFetcher() {
   const entity = "profiles";
   const apiEndpoint = "http://localhost:8080/api/v1/profiles";
-  const token = useContext(TokenContext).token;
-
+  const token = localStorage.getItem("token");
   const {
     data: profiles,
     editingRows,
@@ -96,7 +94,7 @@ function ProfilesDataFetcher() {
   useEffect(() => {
     const fetchAgeRanges = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/v1/ageRanges");
+        const response = await fetch("http://localhost:8080/api/v1/age-ranges");
         const result = await response.json();
         const ageRanges = result.data || [];
         setAgeRangeOptions(ageRanges);

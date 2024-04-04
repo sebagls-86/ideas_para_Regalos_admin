@@ -3,7 +3,6 @@ import { Box, Grid } from "@chakra-ui/react";
 
 // Custom components
 import Profile from "views/admin/profile/components/Profile";
-import ChangePassword from "views/admin/profile/components/ChangePassword";
 
 // Assets
 import banner from "assets/img/auth/banner.png";
@@ -34,11 +33,6 @@ export default function Overview() {
           lg: "1fr",
         }}
         gap={{ base: "20px", xl: "20px" }}>
-        <ChangePassword
-           gridArea={{ base: "2 / 1 / 4 / 4", lg: "1 / 1 / 2 / 4" }}
-          used={25.6}
-          total={50}
-        />
       </Grid>
     </Box>
   );

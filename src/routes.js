@@ -2,14 +2,14 @@ import React from "react";
 
 import { Icon } from "@chakra-ui/react";
 import { MdHome, MdForum} from "react-icons/md";
-import { BiSolidCategory, BiUserCircle } from "react-icons/bi";
-import { TbCalendarStats } from "react-icons/tb";
+import { BiSolidCategory} from "react-icons/bi";
 import { BsFillCalendarEventFill } from "react-icons/bs";
 import { FaUser,FaHeart,FaRulerHorizontal,FaUserCog, FaPencilAlt, FaBullhorn, FaCalendarAlt,FaListOl, FaUserFriends, FaShoppingBag, FaIdBadge } from "react-icons/fa";
-import { IoMdList } from "react-icons/io";
-import { AiOutlineTag, AiOutlineUnorderedList } from "react-icons/ai";
 import { FaGift } from "react-icons/fa6";
 import { TbCirclesRelation } from "react-icons/tb";
+import { ImStarFull } from "react-icons/im";
+import { IoPeople } from "react-icons/io5";
+
 
 // Admin Imports
 import Login from "views/auth/signIn";
@@ -109,16 +109,17 @@ const routes = [
     name: "Profiles",
     layout: "/admin",
     path: "/profiles",
-    icon: <Icon as={BiUserCircle} width='20px' height='20px' color='inherit' />,
+    icon: <Icon as={IoPeople} width='20px' height='20px' color='inherit' />,
     component: Profiles,
   },
   {
     name: "Wishlists",
     layout: "/admin",
     path: "/lists",
-    icon: <Icon as={IoMdList} width='20px' height='20px' color='inherit' />,
+    icon: <Icon as={ImStarFull} width='20px' height='20px' color='inherit' />,
     component: Lists,
   },
+  
   {
     name: "List Products",
     layout: "/admin",
@@ -161,6 +162,7 @@ const routes = [
     path: "/profile",
     icon: <Icon as={FaIdBadge} width='20px' height='20px' color='inherit' />,
     component: Profile,
+    hidden: true,
   },
   {
     name: "Login",

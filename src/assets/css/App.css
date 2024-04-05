@@ -58,5 +58,15 @@ option {
   background-color: var(--primary-dark)!important;
 }
 
+/*bottom card*/
+.css-sl61el {
+  background-color: var(--primary-dark);
+}
+.css-1koc27h {
+  width: 95% !important;
+  height: 80%;
+  background: linear-gradient(135deg, var(--secondary-light) 0%, var(--primary-dark) 100%) !important;
+}
+
 
 

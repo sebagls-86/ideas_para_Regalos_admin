@@ -20,17 +20,19 @@ export default function Dashboard(props) {
     const [userInfo, setUserInfo] = useState(null);
     const [tokenExists, setTokenExists] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-	const storedToken = localStorage.getItem("token");
+	
 	const { isAuthenticated, logout, getAccessTokenWithPopup, getAccessTokenSilently } = useAuth0();
     const audience = configJson.audience;
     const API_URL = process.env.REACT_APP_API_URL;
 
+    console.log(process.env.NODE_ENV)
+
     useEffect(() => {
+        const storedToken = localStorage.getItem("token");
         const fetchTokenAndVerifyUser = async () => {
           try {
             if (
-              (storedToken === undefined || storedToken === null) &&
-              isAuthenticated
+              (storedToken === undefined || storedToken === null)
             ) {
               setIsLoading(true);
     
@@ -93,7 +95,6 @@ export default function Dashboard(props) {
         }
       }, [
         tokenExists,
-        storedToken,
         getAccessTokenWithPopup,
         getAccessTokenSilently,
         audience,
@@ -124,6 +125,10 @@ export default function Dashboard(props) {
     
           const verifyData = await verifyResponse.json();
           console.log("verifyData", verifyData);
+          if (verifyData.data.user_info <3 || verifyData.data.user_info >0){
+            throw new Error("Failed to verify user");
+          }
+
           localStorage.setItem("userInfo", JSON.stringify(verifyData));
           setUserInfo(verifyData);
         } catch (error) {

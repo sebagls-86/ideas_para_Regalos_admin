@@ -19,7 +19,8 @@ export default function Dashboard(props) {
     const [accessToken, setAccessToken] = useState('');
     const [userInfo, setUserInfo] = useState(null);
     const [tokenExists, setTokenExists] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(null);
+    const token = localStorage.getItem("token")
 	
 	const { isAuthenticated, logout, getAccessTokenWithPopup, getAccessTokenSilently } = useAuth0();
     const audience = configJson.audience;
@@ -63,11 +64,11 @@ export default function Dashboard(props) {
     
               const timeoutId = setTimeout(() => {
                 if (!verifyUserCompleted) {
-                  //localStorage.removeItem("token");
+                  localStorage.removeItem("token");
                   const userInfoFromStorage = localStorage.getItem("userInfo");
                   if (!userInfoFromStorage) {
                     setIsLoading(false);
-                  // logout();
+                   logout();
                   }
                 }
               }, 5000);
@@ -81,15 +82,15 @@ export default function Dashboard(props) {
               } catch (error) {
                 console.error("Error verifying user:", error.message);
                 setIsLoading(false);
-                //localStorage.removeItem("token");
-             //   logout();
+                localStorage.removeItem("token");
+                logout();
               }
             }
           } catch (error) {
             console.error("Error fetching token:", error.message);
             setIsLoading(false);
-            //localStorage.removeItem("token");
-         //  logout();
+            localStorage.removeItem("token");
+            logout();
           }
         };
     
@@ -133,6 +134,9 @@ export default function Dashboard(props) {
         }
       };
 
+      if (tokenExists && userInfo){
+        setIsLoading(false)
+      }
 
     const getRoute = () => {
         return window.location.pathname !== '/admin/full-screen-maps';

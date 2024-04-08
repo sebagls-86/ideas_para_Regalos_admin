@@ -68,6 +68,7 @@ export default function Dashboard(props) {
                   const userInfoFromStorage = localStorage.getItem("userInfo");
                   if (!userInfoFromStorage) {
                     setIsLoading(false);
+                    localStorage.removeItem("token")
                     logout();
                     }
                 }
@@ -81,11 +82,13 @@ export default function Dashboard(props) {
                 clearTimeout(timeoutId);
               } catch (error) {
                 setIsLoading(false);
+                localStorage.removeItem("token")
                 logout();
               }
             }
           } catch (error) {
             setIsLoading(false);
+            localStorage.removeItem("token")
             logout();
           }
         };

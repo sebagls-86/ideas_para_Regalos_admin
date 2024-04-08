@@ -9,7 +9,6 @@ import { Redirect, Route, Switch } from 'react-router-dom';
 import routes from 'routes.js';
 import { useAuth0 } from "@auth0/auth0-react";
 import configJson from "../../auth_config.json";
-import { useHistory } from "react-router-dom";
 
 // Custom Chakra theme
 export default function Dashboard(props) {
@@ -18,78 +17,120 @@ export default function Dashboard(props) {
     const [fixed] = useState(false);
     const [toggleSidebar, setToggleSidebar] = useState(false);
     const [accessToken, setAccessToken] = useState('');
+    const [userInfo, setUserInfo] = useState(null);
     const [tokenExists, setTokenExists] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-	const history = useHistory();
-	const { getAccessTokenWithPopup } = useAuth0();
+	const storedToken = localStorage.getItem("token");
+	const { isAuthenticated, logout, getAccessTokenWithPopup, getAccessTokenSilently } = useAuth0();
+    const audience = configJson.audience;
+    const API_URL = process.env.REACT_APP_API_URL;
 
     useEffect(() => {
-        const storedToken = localStorage.getItem("token");
-
         const fetchTokenAndVerifyUser = async () => {
-            try {
-                if (storedToken === undefined || storedToken === null) {
-                    const newAccessToken = await getAccessTokenWithPopup({
-                        authorizationParams: {
-                            audience: configJson.audience,
-                            scope: "read:current_user",
-                        },
-                    });
-
-                    console.log("access token", newAccessToken)
-
-                    setAccessToken(newAccessToken);
-                    localStorage.setItem("token", newAccessToken);
-                    await verifyUser(newAccessToken);
-                    setTokenExists(true);
-                }
-            } catch (error) {
-                console.error("Error during login or registration:", error.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (!storedToken && !tokenExists) {
-            fetchTokenAndVerifyUser();
-        } else {
-            setAccessToken(storedToken);
-            setTokenExists(true);
-            setIsLoading(false);
-        }
-    }, [tokenExists, getAccessTokenWithPopup]);
-
-   
-        const verifyUser = async (token) => {
-            try {
-                const verifyResponse = await fetch(
-                    `http://localhost:8080/api/v1/users/verify`,
-                    {
-                        method: "GET",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            Authorization: `Bearer ${token}`,
-                        },
+          try {
+            if (
+              (storedToken === undefined || storedToken === null) &&
+              isAuthenticated
+            ) {
+              setIsLoading(true);
+    
+              let newAccessToken;
+               if (process.env.NODE_ENV === "development") {
+                newAccessToken = await getAccessTokenWithPopup({
+                  authorizationParams: {
+                    audience: audience,
+                    scope: "read:current_user",
+                  },
+                });
+              } else {
+                newAccessToken = await getAccessTokenSilently({
+                  authorizationParams: {
+                    audience: audience,
+                    scope: "read:current_user",
+                  },
+                });
+    
+              console.log("newAccessToken", newAccessToken);
+              }
+    
+              setAccessToken(newAccessToken);
+              localStorage.setItem("token", newAccessToken);
+              setIsLoading(true);
+    
+              let verifyUserCompleted = false;
+    
+              // Start a timeout of 5 seconds
+              const timeoutId = setTimeout(() => {
+                if (!verifyUserCompleted) {
+                  localStorage.removeItem("token");
+                  const userInfoFromStorage = localStorage.getItem("userInfo");
+                  if (!userInfoFromStorage) {
+                    setIsLoading(false);
+                    logout();
                     }
-                );
-
-                if (!verifyResponse.ok) {
-                    throw new Error("Failed to verify user");
                 }
-
-                const verifyData = await verifyResponse.json();
-                console.log("verifyData", verifyData);
-
-				if (verifyData.data.user_role <=0 && verifyData.data.user_role <= 4) {
-				localStorage.removeItem("token");
-				localStorage.removeItem("userInfo");
-				history.replace("/auth/login");
-				}
-                localStorage.setItem("userInfo", JSON.stringify(verifyData));
-            } catch (error) {
-                console.error("Error verifying user:", error.message);
+              }, 5000);
+    
+              try {
+                await verifyUser(newAccessToken);
+                setTokenExists(true);
+                setIsLoading(false);
+                verifyUserCompleted = true;
+                clearTimeout(timeoutId);
+              } catch (error) {
+                setIsLoading(false);
+                logout();
+              }
             }
+          } catch (error) {
+            setIsLoading(false);
+            logout();
+          }
         };
+    
+        if (!tokenExists) {
+          fetchTokenAndVerifyUser();
+        }
+      }, [
+        tokenExists,
+        storedToken,
+        getAccessTokenWithPopup,
+        getAccessTokenSilently,
+        audience,
+        logout,
+        isAuthenticated,
+      ]);
+    
+      const verifyUser = async (token) => {
+        try {
+          const verifyResponse = await fetch(
+            `${API_URL}/users/verify`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+    
+          if (verifyResponse.status === 401) {
+            throw new Error("unauthorized user")
+          }
+    
+          if (!verifyResponse.ok) {
+            throw new Error("Failed to verify user");
+          }
+    
+          const verifyData = await verifyResponse.json();
+          console.log("verifyData", verifyData);
+          localStorage.setItem("userInfo", JSON.stringify(verifyData));
+          setUserInfo(verifyData);
+        } catch (error) {
+          console.error("Error verifying user:", error.message);
+          throw error;
+        }
+      };
 
 
     const getRoute = () => {

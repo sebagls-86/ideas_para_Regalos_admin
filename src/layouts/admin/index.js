@@ -82,6 +82,7 @@ export default function Dashboard(props) {
               } catch (error) {
                 console.error("Error verifying user:", error.message);
                 setIsLoading(false);
+                localStorage.removeItem("userInfo");
                 localStorage.removeItem("token");
                 logout();
               }
@@ -89,6 +90,7 @@ export default function Dashboard(props) {
           } catch (error) {
             console.error("Error fetching token:", error.message);
             setIsLoading(false);
+            localStorage.removeItem("userInfo");
             localStorage.removeItem("token");
             logout();
           }
@@ -134,9 +136,6 @@ export default function Dashboard(props) {
         }
       };
 
-      if (tokenExists && userInfo){
-        setIsLoading(false)
-      }
 
     const getRoute = () => {
         return window.location.pathname !== '/admin/full-screen-maps';

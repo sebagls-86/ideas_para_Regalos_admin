@@ -13,7 +13,7 @@ ReactDOM.render(
     <Auth0Provider
       domain={config.domain}
       clientId={config.clientId}
-      redirectUri={"http://localhost:3001/admin/default"}
+      redirectUri={"http://ideas-para-regalos-admin.vercel.app/admin/default"}
       audience={config.audience}
       scope="read:current_user update:current_user_metadata"
     >

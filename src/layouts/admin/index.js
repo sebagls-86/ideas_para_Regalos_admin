@@ -124,7 +124,8 @@ export default function Dashboard(props) {
     
           const verifyData = await verifyResponse.json();
           console.log("verifyData", verifyData);
-          if (verifyData.data.user_role <3 || verifyData.data.user_role <0){
+          console.log("role", verifyData.data.user_role)
+          if (verifyData.data.user_role < 1 || verifyData.data.user_role > 3){
             throw new Error("Failed to verify user");
           }
 

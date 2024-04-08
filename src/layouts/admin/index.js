@@ -25,19 +25,20 @@ export default function Dashboard(props) {
     const audience = configJson.audience;
     const API_URL = process.env.REACT_APP_API_URL;
 
+    console.log(API_URL)
+
     console.log(process.env.NODE_ENV)
 
     useEffect(() => {
-        const storedToken = localStorage.getItem("token");
         const fetchTokenAndVerifyUser = async () => {
           try {
-            if (
-              (storedToken === undefined || storedToken === null)
-            ) {
+            const storedToken = localStorage.getItem("token");
+            
+            if (!storedToken && isAuthenticated) {
               setIsLoading(true);
     
               let newAccessToken;
-               if (process.env.NODE_ENV === "development") {
+              if (process.env.NODE_ENV === "development") {
                 newAccessToken = await getAccessTokenWithPopup({
                   authorizationParams: {
                     audience: audience,
@@ -51,26 +52,23 @@ export default function Dashboard(props) {
                     scope: "read:current_user",
                   },
                 });
+              }
     
               console.log("newAccessToken", newAccessToken);
-              }
     
               setAccessToken(newAccessToken);
               localStorage.setItem("token", newAccessToken);
-              setIsLoading(true);
     
               let verifyUserCompleted = false;
     
-              // Start a timeout of 5 seconds
               const timeoutId = setTimeout(() => {
                 if (!verifyUserCompleted) {
-                  localStorage.removeItem("token");
+                  //localStorage.removeItem("token");
                   const userInfoFromStorage = localStorage.getItem("userInfo");
                   if (!userInfoFromStorage) {
                     setIsLoading(false);
-                    localStorage.removeItem("token")
-                    logout();
-                    }
+                  // logout();
+                  }
                 }
               }, 5000);
     
@@ -81,29 +79,24 @@ export default function Dashboard(props) {
                 verifyUserCompleted = true;
                 clearTimeout(timeoutId);
               } catch (error) {
+                console.error("Error verifying user:", error.message);
                 setIsLoading(false);
-                localStorage.removeItem("token")
-                logout();
+                //localStorage.removeItem("token");
+             //   logout();
               }
             }
           } catch (error) {
+            console.error("Error fetching token:", error.message);
             setIsLoading(false);
-            localStorage.removeItem("token")
-            logout();
+            //localStorage.removeItem("token");
+         //  logout();
           }
         };
     
         if (!tokenExists) {
           fetchTokenAndVerifyUser();
         }
-      }, [
-        tokenExists,
-        getAccessTokenWithPopup,
-        getAccessTokenSilently,
-        audience,
-        logout,
-        isAuthenticated,
-      ]);
+      }, [tokenExists, isAuthenticated]);
     
       const verifyUser = async (token) => {
         try {

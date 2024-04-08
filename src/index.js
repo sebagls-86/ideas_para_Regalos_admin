@@ -5,6 +5,7 @@ import App from 'app';
 import { getConfig } from "./config";
 import "../src/assets/css/App.css";
 
+
 const config = getConfig();
 
 ReactDOM.render(

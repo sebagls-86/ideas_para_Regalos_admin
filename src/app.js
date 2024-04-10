@@ -20,13 +20,17 @@ const App = () => {
   const AdminRoute = ({ component: Component, path, ...rest }) => (
     <Route
       {...rest}
-      render={(props) =>
-        (isAuthenticated && path === "/admin/default") || token ? (
-          <Component {...props} />
-        ) : (
-          <Redirect to="/auth" />
-        )
-      }
+      render={(props) => {
+        const isAuthenticated = localStorage.getItem("token") !== null;
+        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+        const userRole = userInfo && userInfo.data ? userInfo.data.user_role : null;
+  
+        if ((isAuthenticated && userRole >= 1 && userRole <= 3) || path.startsWith("/admin")) {
+          return <Component {...props} />;
+        } else {
+          return <Redirect to="/auth" />;
+        }
+      }}
     />
   );
 

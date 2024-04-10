@@ -4,7 +4,7 @@ import { Icon } from "@chakra-ui/react";
 import { MdHome, MdForum} from "react-icons/md";
 import { BiSolidCategory} from "react-icons/bi";
 import { BsFillCalendarEventFill } from "react-icons/bs";
-import { FaUser,FaHeart,FaRulerHorizontal,FaUserCog, FaPencilAlt, FaBullhorn, FaCalendarAlt,FaListOl, FaUserFriends, FaShoppingBag, FaIdBadge } from "react-icons/fa";
+import { FaUser,FaHeart,FaRulerHorizontal,FaUserCog, FaPencilAlt, FaBullhorn, FaCalendarAlt,FaListOl, FaShoppingBag, FaIdBadge } from "react-icons/fa";
 import { FaGift } from "react-icons/fa6";
 import { TbCirclesRelation } from "react-icons/tb";
 import { ImStarFull } from "react-icons/im";
@@ -32,7 +32,6 @@ import Interests from "views/admin/interests";
 import ProductsCatalog from "views/admin/productsCatalog";
 import ListProducts from "views/admin/listProducts";
 import Profile from "views/admin/profile";
-import Forgot from "views/auth/forgot";
 
 const routes = [
   {

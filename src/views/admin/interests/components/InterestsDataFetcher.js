@@ -6,6 +6,7 @@ import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import ErrorModal from "../../../../components/modals/modalError";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import useDataPoster from "../../../../components/dataManage/useDataPoster";
+import useDarkMode from "assets/darkModeHook";
 import {
   Box,
   Table,
@@ -37,6 +38,7 @@ function InterestsDataFetcher() {
   const apiEndpoint = "http://localhost:8080/api/v1/interests";
   const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: interests,
@@ -204,6 +206,7 @@ function InterestsDataFetcher() {
                 value={newInterestsData.interest}
                 onChange={handlenewInterestsChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>{newInterestsErrors.interest}</div>
             </FormControl>

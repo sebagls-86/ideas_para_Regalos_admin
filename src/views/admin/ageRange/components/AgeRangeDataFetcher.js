@@ -5,6 +5,7 @@ import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useDataPoster from "../../../../components/dataManage/useDataPoster";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
+import useDarkMode from "../../../../assets/darkModeHook";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import {
   Box,
@@ -36,6 +37,7 @@ function AgeRangeDataFetcher() {
   const entity = "age-ranges";
   const apiEndpoint = "http://localhost:8080/api/v1/age-ranges";
   const token = localStorage.getItem("token");
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: ageRanges,
@@ -223,6 +225,7 @@ function AgeRangeDataFetcher() {
                 value={newAgeRangeData.name}
                 onChange={handleNewAgeRangeChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>{newAgeRangeErrors.name}</div>
             </FormControl>
@@ -235,6 +238,7 @@ function AgeRangeDataFetcher() {
                 value={newAgeRangeData.minimum_age}
                 onChange={handleNewAgeRangeChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>
                 {newAgeRangeErrors.minimum_age}
@@ -249,6 +253,7 @@ function AgeRangeDataFetcher() {
                 value={newAgeRangeData.maximum_age}
                 onChange={handleNewAgeRangeChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>
                 {newAgeRangeErrors.maximum_age}

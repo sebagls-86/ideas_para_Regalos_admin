@@ -6,6 +6,7 @@ import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import ErrorModal from "../../../../components/modals/modalError";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import useDataPoster from "../../../../components/dataManage/useDataPoster";
+import useDarkMode from "assets/darkModeHook";
 import {
   Box,
   Table,
@@ -37,6 +38,7 @@ function RelationshipsDataFetcher() {
   const apiEndpoint = "http://localhost:8080/api/v1/relationships";
   const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: Relationships,
@@ -197,6 +199,7 @@ function RelationshipsDataFetcher() {
                 value={newRelationshipsData.relationship_name}
                 onChange={handleNewRelationshipsChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>
                 {newRelationshipsErrors.relationship_name}

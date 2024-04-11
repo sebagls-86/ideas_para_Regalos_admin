@@ -1,4 +1,3 @@
-// App.js
 import React from "react";
 import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
 import AuthLayout from "layouts/auth";
@@ -7,32 +6,16 @@ import ErrorLayout from "views/error/ErrorPage";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "theme/theme";
 import { ThemeEditorProvider } from "@hypertheme-editor/chakra-ui";
-import { useAuth0 } from "@auth0/auth0-react";
 
 const App = () => {
-  const { isAuthenticated } = useAuth0();
   const token = localStorage.getItem("token");
 
-  console.log("isAuthenticated", isAuthenticated);
-  console.log("token", token);
-
-  // Componente de enrutamiento protegido para rutas de administrador
-  const AdminRoute = ({ component: Component, path, ...rest }) => (
-    <Route
-      {...rest}
-      render={(props) => {
-        const isAuthenticated = localStorage.getItem("token") !== null;
-        const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-        const userRole = userInfo && userInfo.data ? userInfo.data.user_role : null;
-  
-        if ((isAuthenticated && userRole >= 1 && userRole <= 3) || path.startsWith("/admin")) {
-          return <Component {...props} />;
-        } else {
-          return <Redirect to="/auth" />;
-        }
-      }}
-    />
-  );
+  // Función para verificar si el usuario tiene los permisos adecuados
+  const hasRequiredPermissions = () => {
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    const userRole = userInfo && userInfo.data ? userInfo.data.user_role : null;
+    return token;
+  };
 
   return (
     <ChakraProvider theme={theme}>
@@ -41,13 +24,17 @@ const App = () => {
           <Switch>
             {/* Rutas de autenticación */}
             <Route path="/auth" component={AuthLayout} />
-            {/* Ruta de inicio de sesión */}
-            <Route path="/admin/default" component={AdminLayout} />
             {/* Rutas protegidas de administrador */}
-            <AdminRoute path="/admin" component={AdminLayout} />
-            <AdminRoute path="/error" component={ErrorLayout} />
+            <Route path="/admin/default">
+              {hasRequiredPermissions() ? <AdminLayout /> : <Redirect to="/auth/sign-in" />}
+            </Route>
+            {/* Otras rutas protegidas de administrador */}
+            <Route path="/admin">
+              {hasRequiredPermissions() ? <AdminLayout /> : <Redirect to="/auth/sign-in" />}
+            </Route>
+            <Route path="/error" component={ErrorLayout} />
             {/* Redirección por defecto */}
-            <Redirect to="/auth" />
+            <Redirect to="/auth/sign-in" />
           </Switch>
         </Router>
       </ThemeEditorProvider>

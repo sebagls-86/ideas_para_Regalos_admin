@@ -8,7 +8,7 @@ import "../src/assets/css/App.css";
 
 const config = getConfig();
 
-const redirectUri = process.env.NODE_ENV === 'production' ? 'https://ideas-para-regalos-admin.vercel.app/admin/default' : 'http://localhost:3000/admin/default';
+const redirectUri = process.env.NODE_ENV === 'production' ? 'https://ideas-para-regalos-admin.vercel.app/auth/sign-in' : 'http://localhost:3000/auth/sign-in';
 
 console.log(redirectUri)
 

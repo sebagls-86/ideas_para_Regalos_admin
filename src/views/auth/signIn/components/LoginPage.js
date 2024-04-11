@@ -129,10 +129,6 @@ function SignIn() {
         localStorage.removeItem("token");
         logout();
       }
-
-      console.log("token en segundo push", token);
-      console.log("info en segundo push", userInfo);
-      //history.push("/admin/default")
     };
 
     if (!tokenExists) {

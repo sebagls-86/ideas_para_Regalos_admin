@@ -20,12 +20,14 @@ import { useHistory } from "react-router-dom";
 import { MdNotificationsNone } from "react-icons/md";
 import { FaEthereum } from "react-icons/fa";
 import routes from "routes.js";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export default function HeaderLinks(props) {
   const { secondary } = props;
   const history = useHistory();
   const [userName, setUserName] = useState('');
   const [tokenAvailable, setTokenAvailable] = useState(false);
+  const { logout } = useAuth0();
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -45,6 +47,7 @@ export default function HeaderLinks(props) {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
     history.replace("/auth/login");
+    logout()
   };
 
   console.log("userName", userName)

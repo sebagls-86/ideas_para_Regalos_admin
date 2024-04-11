@@ -25,7 +25,6 @@ function SignIn() {
   const { colorMode } = useColorMode();
   const isDarkMode = colorMode === "dark";
   const [showServerErrorModal, setShowServerErrorModal] = useState(false);
-  const { loginWithRedirect } = useAuth0();
   const [accessToken, setAccessToken] = useState("");
   const [userInfo, setUserInfo] = useState(null);
   const [tokenExists, setTokenExists] = useState(false);
@@ -34,6 +33,7 @@ function SignIn() {
   const history = useHistory();
   const {
     isAuthenticated,
+    loginWithRedirect,
     logout,
     getAccessTokenWithPopup,
     getAccessTokenSilently,

@@ -7,6 +7,7 @@ import useDataPoster from "../../../../components/dataManage/useDataPoster";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import "react-datepicker/dist/react-datepicker.css";
+import useDarkMode from "assets/darkModeHook";
 import {
   Box,
   Table,
@@ -43,6 +44,7 @@ function EventsTypeDataFetcher() {
   const entity = "eventTypes";
   const apiEndpoint = "http://localhost:8080/api/v1/eventTypes";
   const token = localStorage.getItem("token");
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: eventTypes,
@@ -287,6 +289,7 @@ function EventsTypeDataFetcher() {
                   handleNewEventTypeChange(e.target.value, "name")
                 }
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>{newEventTypeErrors.name}</div>
             </FormControl>
@@ -299,6 +302,7 @@ function EventsTypeDataFetcher() {
                   handleNewEventTypeChange(e.target.value, "scheduled")
                 }
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               >
                 <option value="0">No</option>
                 <option value="1">Sí</option>
@@ -313,6 +317,7 @@ function EventsTypeDataFetcher() {
                 accept="image/*"
                 onChange={(e) => handleFileChange(e, "image")}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>{newEventTypeErrors.image}</div>
             </FormControl>

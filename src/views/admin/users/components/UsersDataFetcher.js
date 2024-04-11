@@ -242,6 +242,7 @@ function UsersDataFetcher() {
           onSearch={handleSearch}
           placeholder="Buscar..."
           value={searchTerm}
+          style={{ color: isDarkMode ? "red" : "red" }}
         />
       </Flex>
 

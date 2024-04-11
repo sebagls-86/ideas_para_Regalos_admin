@@ -6,6 +6,7 @@ import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useDataPoster from "../../../../components/dataManage/useDataPoster";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
+import useDarkMode from "assets/darkModeHook";
 import {
   Box,
   Table,
@@ -49,6 +50,7 @@ function ProductsCatalogDataFetcher() {
   const [isImageModalOpen, setImageModalOpen] = useState(false);
   const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
+  const { isDarkMode } = useDarkMode();
 
   const {
     data: productsCatalog,
@@ -333,6 +335,7 @@ function ProductsCatalogDataFetcher() {
                 value={newProductCatalogData.name}
                 onChange={handleNewProductCatalogChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>{newProductCatalogErrors.name}</div>
             </FormControl>
@@ -343,6 +346,7 @@ function ProductsCatalogDataFetcher() {
                 value={newProductCatalogData.status ? "1" : "0"}
                 onChange={handleStatusChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               >
                 <option value="0">Inactivo</option>
                 <option value="1">Activo</option>
@@ -358,6 +362,7 @@ function ProductsCatalogDataFetcher() {
                 value={newProductCatalogData.featured ? "1" : "0"}
                 onChange={handleFeaturedChange}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               >
                 <option value="0">No</option>
                 <option value="1">Si</option>
@@ -374,6 +379,7 @@ function ProductsCatalogDataFetcher() {
                 accept="image/*"
                 onChange={(e) => handleFileChange(e, "images")}
                 color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
               />
               <div style={{ color: "red" }}>
                 {newProductCatalogErrors.image}

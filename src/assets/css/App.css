@@ -59,8 +59,8 @@ option {
 }
 
 /*bottom card*/
-.css-sl61el {
-  background-color: var(--primary-dark);
+.css-ibmtgl, .css-sl61el {
+  background: var(--primary-dark) !important;
 }
 .css-1koc27h {
   width: 95% !important;
@@ -68,5 +68,28 @@ option {
   background: linear-gradient(135deg, var(--secondary-light) 0%, var(--primary-dark) 100%) !important;
 }
 
+/*searchbar spacing*/
+.css-1lekzkb{
+  height: 74px;
+}
+.css-18vrirn{
+  margin-top: 0 !important;
+}
 
+/*products catalog table*/
+.css-94ssnp{
+  margin-top: 0 !important;
+}
+.css-g31ddt{
+  max-height: 580px !important;
+}
+/*profiles table*/
+.css-18vrirn{
+  max-height: 580px !important;
+}
+
+/*searchbar*/
+.css-13sqgtr::placeholder{
+color: black !important;
+}
 

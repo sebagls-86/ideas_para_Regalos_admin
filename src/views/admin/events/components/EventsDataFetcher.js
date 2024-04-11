@@ -6,6 +6,7 @@ import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import ErrorModal from "../../../../components/modals/modalError";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import useDataPoster from "../../../../components/dataManage/useDataPoster";
+import useDarkMode from "../../../../assets/darkModeHook";
 import {
   Box,
   Table,
@@ -36,6 +37,7 @@ function EventsDataFetcher() {
   const entity = "events";
   const apiEndpoint = "http://localhost:8080/api/v1/events";
   const token = localStorage.getItem("token");
+  const { isDarkMode } = useDarkMode();
 
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 
@@ -208,6 +210,7 @@ function EventsDataFetcher() {
               value={newEventsData.name}
               onChange={handleNewEventsChange}
               color="white"
+              style={{ color: isDarkMode ? "white" : "black" }}
             />
             <div style={{ color: "red" }}>{newEventsErrors.name}</div>
           </FormControl>

@@ -80,6 +80,7 @@ function SignIn() {
 
           setAccessToken(newAccessToken);
           localStorage.setItem("token", newAccessToken);
+          setTokenExists(true)
 
           let verifyUserCompleted = false;
 
@@ -113,14 +114,7 @@ function SignIn() {
           }
           const userData = localStorage.getItem("userInfo");
           setUserInfo(userData);
-          console.log("first push");
-          if (newAccessToken && userData) {
-            history.push("/admin/default");
-          }
-        }
-        console.log("second push");
-        if (storedToken && userInfoData) {
-          history.push("/admin/default");
+          window.location.reload()
         }
       } catch (error) {
         console.error("Error fetching token:", error.message);

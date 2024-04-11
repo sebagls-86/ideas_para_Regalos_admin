@@ -1,5 +1,10 @@
 import React from "react";
-import { BrowserRouter as Router, Route, Switch, Redirect } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Switch,
+  Redirect,
+} from "react-router-dom";
 import AuthLayout from "layouts/auth";
 import AdminLayout from "layouts/admin";
 import ErrorLayout from "views/error/ErrorPage";
@@ -14,7 +19,7 @@ const App = () => {
   const hasRequiredPermissions = () => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const userRole = userInfo && userInfo.data ? userInfo.data.user_role : null;
-    return token;
+    return token && userRole >= 1 && userRole <= 3;
   };
 
   return (
@@ -23,14 +28,23 @@ const App = () => {
         <Router>
           <Switch>
             {/* Rutas de autenticación */}
-            <Route path="/auth" component={AuthLayout} />
-            {/* Rutas protegidas de administrador */}
-            <Route path="/admin/default">
-              {hasRequiredPermissions() ? <AdminLayout /> : <Redirect to="/auth/sign-in" />}
+            <Route path="/auth/sign-in">
+              {/* Verificar si el usuario tiene token y userInfo */}
+              {token && localStorage.getItem("userInfo") ? (
+                // Si tiene token y userInfo, redirigir a la página de administrador
+                <Redirect to="/admin/default" />
+              ) : (
+                // Si no tiene token o userInfo, mostrar la página de inicio de sesión
+                <AuthLayout />
+              )}
             </Route>
-            {/* Otras rutas protegidas de administrador */}
+            {/* Rutas protegidas de administrador */}
             <Route path="/admin">
-              {hasRequiredPermissions() ? <AdminLayout /> : <Redirect to="/auth/sign-in" />}
+              {hasRequiredPermissions() ? (
+                <AdminLayout />
+              ) : (
+                <Redirect to="/auth/sign-in" />
+              )}
             </Route>
             <Route path="/error" component={ErrorLayout} />
             {/* Redirección por defecto */}

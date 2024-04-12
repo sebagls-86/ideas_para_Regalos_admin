@@ -363,6 +363,7 @@ function EventsTypeDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black"}}
                     />
                   ) : (
                     event.name
@@ -381,6 +382,7 @@ function EventsTypeDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black"}}
                     >
                       <option value="0">No</option>
                       <option value="1">Sí</option>

@@ -254,6 +254,7 @@ function EventsDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black"}}
                     />
                   ) : (
                     event.name

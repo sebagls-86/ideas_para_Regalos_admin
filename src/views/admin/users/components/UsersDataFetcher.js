@@ -286,7 +286,8 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "user_role", user.user_id)
                       }
-                      style={{ color: isDarkMode ? "black" : "white" }}
+                      style={{ color: isDarkMode ? "white" : "black", color: "black" }}
+                      
                     >
                       <option value="1">SuperAdmin</option>
                       <option value="2">Medium</option>
@@ -325,7 +326,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "name", user.user_id)
                       }
-                      color={isDarkMode ? "white" : "black"}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     user.name
@@ -340,7 +341,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "last_name", user.user_id)
                       }
-                      color={isDarkMode ? "white" : "black"}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     user.last_name

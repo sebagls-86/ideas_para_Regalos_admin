@@ -251,6 +251,7 @@ function InterestsDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     interest.interest

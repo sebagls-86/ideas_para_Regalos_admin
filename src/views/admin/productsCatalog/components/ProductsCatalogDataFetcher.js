@@ -436,6 +436,7 @@ function ProductsCatalogDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     product.name

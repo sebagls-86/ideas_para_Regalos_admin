@@ -5,6 +5,7 @@ import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
+import useDarkMode from "assets/darkModeHook";
 import {
   Box,
   Table,
@@ -40,6 +41,7 @@ function ForumsDataFetcher() {
   const apiEndpoint = "http://localhost:8080/api/v1/forums";
   const [selectedForum, setSelectedForum] = useState(null);
   const token = localStorage.getItem("token");
+  const { isDarkMode } = useDarkMode();
 
   const { FeedbackModal } = useFeedbackModal();
 
@@ -170,6 +172,7 @@ function ForumsDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     forum.title
@@ -187,6 +190,7 @@ function ForumsDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     forum.description

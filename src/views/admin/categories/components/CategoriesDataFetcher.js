@@ -292,6 +292,7 @@ function CategoriesDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black"}}
                     />
                   ) : (
                     category.name

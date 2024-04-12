@@ -303,7 +303,8 @@ function AgeRangeDataFetcher() {
                           range.age_range_id
                         )
                       }
-                      style={{ minWidth: "100px" }}
+                    
+                      style={{ color: isDarkMode ? "white" : "black", minWidth: "100px"}}
                       color="white"
                     />
                   ) : (
@@ -324,7 +325,7 @@ function AgeRangeDataFetcher() {
                           range.age_range_id
                         )
                       }
-                      style={{ minWidth: "100px" }}
+                      style={{ color: isDarkMode ? "white" : "black", minWidth: "100px"}}
                       color="white"
                     />
                   ) : (
@@ -345,7 +346,7 @@ function AgeRangeDataFetcher() {
                           range.age_range_id
                         )
                       }
-                      style={{ minWidth: "100px" }}
+                      style={{ color: isDarkMode ? "white" : "black", minWidth: "100px"}}
                       color="white"
                     />
                   ) : (

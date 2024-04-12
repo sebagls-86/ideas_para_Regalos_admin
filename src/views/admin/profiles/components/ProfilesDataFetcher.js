@@ -5,6 +5,7 @@ import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
+import useDarkMode from "assets/darkModeHook";
 import {
   Box,
   Table,
@@ -27,6 +28,7 @@ function ProfilesDataFetcher() {
   const entity = "profiles";
   const apiEndpoint = "http://localhost:8080/api/v1/profiles";
   const token = localStorage.getItem("token");
+  const { isDarkMode } = useDarkMode();
   const {
     data: profiles,
     editingRows,
@@ -187,6 +189,7 @@ function ProfilesDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     profile.name
@@ -208,6 +211,7 @@ function ProfilesDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     profile.last_name

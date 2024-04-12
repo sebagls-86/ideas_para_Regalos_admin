@@ -246,6 +246,7 @@ function RelationshipsDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     relationship.relationship_name

@@ -12,7 +12,6 @@ import {
   ModalCloseButton,
 } from "@chakra-ui/react";
 
-
 const fetchData = async (
   apiEndpoint,
   token,
@@ -33,7 +32,6 @@ const fetchData = async (
 
     const response = await fetch(apiEndpoint, requestOptions);
 
-    console.log("response", response);
 
     if (response.status === 400) {
       setShowTokenInvalidError(true);
@@ -49,11 +47,11 @@ const fetchData = async (
       console.error("Server response does not contain expected data:", data);
     }
   } catch (error) {
-    console.error("Error fetching data:", error);
-    if (error.message === "Bad Request") {
+    if ((error.message === "invalid token") || (error.message === "token expired")) {
       setShowTokenInvalidError(true);
+      localStorage.removeItem("token")
+      localStorage.removeItem("userInfo")
     } else {
-      console.log("Error message:", error.message);
       setShowErrorModal(true);
     }
   }
@@ -105,6 +103,14 @@ function useDataFetcher(apiEndpoint, token) {
     });
   };
 
+  const isFieldModified = (data, id, fieldName, newValue) => {
+    return data[id][fieldName] !== newValue;
+};
+
+const isFieldEmpty = (data, id, fieldName) => {
+    return data[id][fieldName] === null || data[id][fieldName] === "";
+};
+
   const formatToDDMMYYYY = (date) => {
     if (!date) {
       return "";
@@ -151,7 +157,6 @@ function useDataFetcher(apiEndpoint, token) {
           }
         }
 
-        console.log("Después del bucle:", formDataWithToken);
         requestBody = formDataWithToken;
       } else {
         headers["Content-Type"] = "application/json";
@@ -159,7 +164,7 @@ function useDataFetcher(apiEndpoint, token) {
       }
 
       const response = await fetch(
-        `http://localhost:8080/api/v1/${entity}/${itemId}`,
+        `${process.env.REACT_APP_API_URL}/${entity}/${itemId}`,
         {
           method: "PATCH",
           headers: headers,
@@ -172,14 +177,12 @@ function useDataFetcher(apiEndpoint, token) {
           prevEditingRows.filter((row) => row !== itemId)
         );
         openFeedbackModal("Operación realizada");
-        console.log("Operación realizada");
         reloadData();
       } else {
         setShowErrorModal(true);
         console.error(`${response.statusText}`);
       }
     } catch (error) {
-      openFeedbackModal("Error al realizar la operación");
       setShowErrorModal(true);
       console.error(error.message);
     }
@@ -355,6 +358,8 @@ function useDataFetcher(apiEndpoint, token) {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     setEditingData,
     updateEditingData,
     setShowErrorModal,

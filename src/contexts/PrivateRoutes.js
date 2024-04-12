@@ -3,11 +3,9 @@ import { Route, Redirect } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
-  const { isAuthenticated, user, isLoading } = useAuth0();
-  const token = localStorage.getItem("token")
-const userInfo = localStorage.getItem("userInfo")
-
-  console.log("isAuthenticated private route", isAuthenticated);
+  const { isAuthenticated } = useAuth0();
+  const token = localStorage.getItem("token");
+  const userInfo = localStorage.getItem("userInfo");
 
   return (
     <Route

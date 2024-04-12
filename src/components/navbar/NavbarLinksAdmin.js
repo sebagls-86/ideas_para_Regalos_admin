@@ -37,7 +37,7 @@ export default function HeaderLinks(props) {
       const storedUserInfo = localStorage.getItem("userInfo");
       if (storedUserInfo) {
         const userInfo = JSON.parse(storedUserInfo);
-        const username = userInfo.data.user_name; // Supongamos que la clave es 'username'
+        const username = userInfo.data.user_name; 
         setUserName(username);
         setTokenAvailable(true);
       }
@@ -48,12 +48,9 @@ export default function HeaderLinks(props) {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
     history.replace("/auth/login");
-    logout();
+    logout({logoutParams:{returnTo: process.env.REACT_APP_REDIRECT_LOGOUT}})
   };
 
-  console.log("userName", userName);
-
-  // Chakra Color Mode
   const navbarIcon = useColorModeValue("gray.400", "white");
   let menuBg = useColorModeValue("white", "navy.800");
   const textColor = useColorModeValue("secondaryGray.900", "white");
@@ -67,14 +64,13 @@ export default function HeaderLinks(props) {
     "14px 17px 40px 4px rgba(112, 144, 176, 0.06)"
   );
 
-  // Obtener las iniciales del usuario usando nombre y apellido
   const splitName = userName?.split(" ");
   const firstNameInitial = splitName?.length > 0 ? splitName[0][0] : "";
   const lastNameInitial = splitName?.length > 1 ? splitName[1][0] : "";
   const userInitials = (firstNameInitial + lastNameInitial).toUpperCase();
 
   if (!tokenAvailable) {
-    return null; // Si el token no está disponible o no se encuentra la información del usuario, no renderizar nada
+    return null;
   }
 
   return (
@@ -85,7 +81,7 @@ export default function HeaderLinks(props) {
       p="10px"
       borderRadius="30px"
       boxShadow={shadow}
-      overflow="hidden" // Evita que el contenido provoque desbordamiento
+      overflow="hidden"
     >
       <Flex
         bg={ethBg}
@@ -231,7 +227,7 @@ export default function HeaderLinks(props) {
               color="red.400"
               borderRadius="8px"
               px="14px"
-              onClick={handleLogout} // Agrega la función handleLogout al hacer clic en Log out
+              onClick={handleLogout}
             >
               <Text fontSize="sm">Log out</Text>
             </MenuItem>

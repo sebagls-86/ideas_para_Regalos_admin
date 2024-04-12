@@ -24,12 +24,12 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
-import { FaTrash, FaTimes, FaComments } from "react-icons/fa";
+import { FaTrash, FaTimes } from "react-icons/fa";
 import { FaGift } from "react-icons/fa6";
 import "../../../../assets/css/Tables.css";
 
 function ListsDataFetcher() {
- const apiEndpoint = "http://localhost:8080/api/v1/lists";
+ const apiEndpoint = `${process.env.REACT_APP_API_URL}/lists`;
  const token = localStorage.getItem("token"); 
  const [selectedListProducts, setSelectedListProducts] = useState(null);
   const [listNames, setListNames] = useState({});
@@ -79,7 +79,7 @@ function ListsDataFetcher() {
   const handleViewProducts = async (listId) => {
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/lists/${listId}/listProducts`,
+        `${process.env.REACT_APP_API_URL}/lists/${listId}/listProducts`,
         {
           method: "GET",
           headers: {
@@ -100,10 +100,10 @@ function ListsDataFetcher() {
         setListNames({ ...listNames, [listId]: data.data.list_name });
       } else {
         console.error("Error en la respuesta de la API:", response.status);
-        // Lógica para manejar errores de respuesta
+       
       }
     } catch (error) {
-      console.error("Error al obtener los productos de la lista:", error);
+    openFeedbackModal("Hubo un error en el servidor. Intente mas tarde")  
     }
   };
 

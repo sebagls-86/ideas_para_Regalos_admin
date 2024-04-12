@@ -15,7 +15,6 @@ import { ThemeEditorProvider } from "@hypertheme-editor/chakra-ui";
 const App = () => {
   const token = localStorage.getItem("token");
 
-  // Función para verificar si el usuario tiene los permisos adecuados
   const hasRequiredPermissions = () => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
     const userRole = userInfo && userInfo.data ? userInfo.data.user_role : null;
@@ -27,18 +26,13 @@ const App = () => {
       <ThemeEditorProvider>
         <Router>
           <Switch>
-            {/* Rutas de autenticación */}
             <Route path="/auth/sign-in">
-              {/* Verificar si el usuario tiene token y userInfo */}
               {token && localStorage.getItem("userInfo") ? (
-                // Si tiene token y userInfo, redirigir a la página de administrador
                 <Redirect to="/admin/default" />
               ) : (
-                // Si no tiene token o userInfo, mostrar la página de inicio de sesión
                 <AuthLayout />
               )}
             </Route>
-            {/* Rutas protegidas de administrador */}
             <Route path="/admin">
               {hasRequiredPermissions() ? (
                 <AdminLayout />
@@ -47,7 +41,6 @@ const App = () => {
               )}
             </Route>
             <Route path="/error" component={ErrorLayout} />
-            {/* Redirección por defecto */}
             <Redirect to="/auth/sign-in" />
           </Switch>
         </Router>

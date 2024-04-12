@@ -1,12 +1,10 @@
-import React, { useState } from "react";
+import React, {useEffect} from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
 import ErrorModal from "../../../../components/modals/modalError";
 import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
-import useDataPoster from "../../../../components/dataManage/useDataPoster";
-import useDarkMode from "../../../../assets/darkModeHook";
 import {
   Box,
   Table,
@@ -16,50 +14,33 @@ import {
   Th,
   Td,
   Flex,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalCloseButton,
-  ModalBody,
-  ModalFooter,
-  FormControl,
-  FormLabel,
   IconButton,
   Icon,
-  Input,
   Button,
 } from "@chakra-ui/react";
-import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
+import { FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function EventsDataFetcher() {
-  const entity = "events";
-  const apiEndpoint = "http://localhost:8080/api/v1/events";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/events`;
   const token = localStorage.getItem("token");
-  const { isDarkMode } = useDarkMode();
-
-  const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
+  
+  const { FeedbackModal } = useFeedbackModal();
 
   const {
     data: events,
     editingRows,
     showTokenInvalidError,
     showErrorModal,
-    editingData,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
     setEditingData,
-    setShowErrorModal,
-    handleEdit,
     handleCancel,
-    handleSave,
     handleDeleteConfirmation,
     handleCloseErrorModal,
     handleCloseTokenInvalidError,
     renderDeleteConfirmationModal,
-    reloadData,
   } = useDataFetcher(apiEndpoint, token);
 
   const customFilter = (EventType, searchTerm) => {
@@ -71,166 +52,37 @@ function EventsDataFetcher() {
     customFilter
   );
 
-  const {
-    showModal,
-    FeedbackModal: FBModal,
-    feedbackMessage,
-    handleModalOpen,
-    handleModalClose,
-    postData,
-  } = useDataPoster(
-    apiEndpoint,
-    token,
-    "Evento creada con éxito",
-    "Error al crear evento",
-    reloadData,
-    setShowErrorModal
-  );
-
-  const [newEventsData, setNewEventsData] = useState({
-    name: "",
-    image: 0,
-  });
-
-  const [newEventsErrors, setNewEventsErrors] = useState({
-    name: "",
-    image: "",
-  });
-
-  const handleNewEventsChange = (e) => {
-    const { name, value } = e.target;
-    setNewEventsErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: "",
-    }));
-
-    setNewEventsData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleCreateEventsModalClose = () => {
-    handleModalClose();
-    setNewEventsData({
-      name: "",
-      image: "",
+  useEffect(() => {
+    editingRows.forEach((eventId) => {
+      setEditingData((prevEditingData) => ({
+        ...prevEditingData,
+        [eventId]: {
+          ...prevEditingData[eventId],
+          ...events.find((event) => event.event_id === eventId),
+        },
+      }));
     });
-    setNewEventsErrors({
-      name: "",
-      image: "",
-    });
-  };
-
-  const handleCreateEventsModalOpen = () => {
-    handleModalOpen();
-  };
-
-  const validateNewEventsForm = () => {
-    const errors = {
-      name: "",
-      image: "",
-    };
-
-    if (!newEventsData.name) {
-      errors.name = "El nombre es obligatorio.";
-    }
-
-    if (!newEventsData.image) {
-      errors.name = "La carga de la imagen es obligatoria.";
-    }
-
-    setNewEventsErrors(errors);
-
-    return Object.values(errors).every((error) => error === "");
-  };
-
-  const handleCreateEvents = async () => {
-    const isFormValid = validateNewEventsForm();
-
-    if (isFormValid) {
-      postData(newEventsData);
-    } else {
-      openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
-  };
-
-  const handleEditChange = (e, fieldName, eventId) => {
-    const newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
-  
-    setEditingData((prevEditingData) => ({
-      ...prevEditingData,
-      [eventId]: {
-        ...prevEditingData[eventId],
-        [fieldName]: newValue,
-      },
-    }));
-  };
+  }, [editingRows, events, setEditingData]);
 
 
   return (
     <Box marginTop="5rem" maxHeight="500px">
-    <Flex justifyContent="space-between" alignItems="center">
-      <SearchBar
-        onSearch={handleSearch}
-        placeholder="Buscar..."
-        value={searchTerm}
-      />
-      <Button
-        fontSize="sm"
-        variant="brand"
-        fontWeight="500"
-        w="25%"
-        h="50"
-        mb="24px"
-        onClick={handleCreateEventsModalOpen}
-      >
-        Crear Evento
-      </Button>
-    </Flex>
-    {FBModal && (
-      <FBModal
-        isOpen={showModal}
-        onClose={handleCreateEventsModalClose}
-        feedbackMessage={feedbackMessage}
-      />
-    )}
-    <Modal isOpen={showModal} onClose={handleCreateEventsModalClose}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Crear Evento</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <FormControl>
-            <FormLabel>Nombre</FormLabel>
-            <Input
-              type="text"
-              name="name"
-              value={newEventsData.name}
-              onChange={handleNewEventsChange}
-              color="white"
-              style={{ color: isDarkMode ? "white" : "black" }}
-            />
-            <div style={{ color: "red" }}>{newEventsErrors.name}</div>
-          </FormControl>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={handleCreateEvents}>
-            Crear
-          </Button>
-          <Button variant="ghost" onClick={handleCreateEventsModalClose}>
-            Cancelar
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-    <Box maxHeight="500px" overflowY="auto">
+      <Flex justifyContent="space-between" alignItems="center">
+        <SearchBar
+          onSearch={handleSearch}
+          placeholder="Buscar..."
+          value={searchTerm}
+        />
+      </Flex>
+
+      <Box maxHeight="500px" overflowY="auto">
         <Table variant="simple" className="table-container">
           <Thead className="sticky-header">
             <Tr>
               <Th>ID</Th>
+              <Th>User ID</Th>
               <Th>Nombre</Th>
+              <Th>Fecha</Th>
               <Th>Acciones</Th>
             </Tr>
           </Thead>
@@ -243,57 +95,15 @@ function EventsDataFetcher() {
             {filteredData.map((event) => (
               <Tr key={event.event_id}>
                 <Td>{event.event_id}</Td>
+                <Td>{event.user_id}</Td>
+                <Td>{event.name}</Td>
+                <Td>{event.date}</Td>
                 <Td>
-                  {editingRows.includes(event.event_id) ? (
-                    <Input
-                      value={
-                        editingData[event.event_id]?.name || event.name
-                      }
-                      onChange={(e) =>
-                        handleEditChange(e, "name", event.event_id)
-                      }
-                      minWidth="100px"
-                      color="white"
-                      style={{ color: isDarkMode ? "white" : "black"}}
-                    />
-                  ) : (
-                    event.name
-                  )}
-                </Td>
-                <Td>
-                  <IconButton
-                    aria-label={
-                      editingRows.includes(event.event_id)
-                        ? "Guardar"
-                        : "Editar"
-                    }
-                    icon={
-                      <Icon
-                        as={
-                          editingRows.includes(event.event_id)
-                            ? FaCheck
-                            : FaEdit
-                        }
-                      />
-                    }
-                    onClick={() =>
-                      editingRows.includes(event.event_id)
-                        ? handleSave(
-                            entity,
-                            event.event_id,
-                            editingData[event.event_id],
-                            'formData'
-                          )
-                        : handleEdit(event.event_id)
-                    }
-                  />
                   {!editingRows.includes(event.event_id) && (
                     <IconButton
                       aria-label="Eliminar"
                       icon={<Icon as={FaTrash} />}
-                      onClick={() =>
-                        handleDeleteConfirmation(event.event_id)
-                      }
+                      onClick={() => handleDeleteConfirmation(event.event_id)}
                     />
                   )}
                   {editingRows.includes(event.event_id) && (

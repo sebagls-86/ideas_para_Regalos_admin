@@ -32,7 +32,7 @@ function mapEditedValue(value) {
 }
 
 function MessagesDataFetcher() {
-  const apiEndpoint = "http://localhost:8080/api/v1/messages";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/messages`;
   const token = localStorage.getItem("token");
   const { FeedbackModal } = useFeedbackModal();
 
@@ -124,13 +124,13 @@ function MessagesDataFetcher() {
                   {(message.images || []).map((imageUrl, index) => (
                     <Td key={index}>
                       <Image
-                        src={`http://localhost:8080${imageUrl}`}
+                        src={`${process.env.REACT_APP_URL_IMAGES}${imageUrl}`}
                         alt={`Imagen ${index + 1}`}
                         maxH="50px"
                         maxW="50px"
                         objectFit="cover"
                         onClick={() =>
-                          handleImageClick(`http://localhost:8080${imageUrl}`)
+                          handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${imageUrl}`)
                         }
                         cursor="pointer"
                       />

@@ -10,7 +10,7 @@ export default function Forums(props) {
   useEffect(() => {
     const fetchUserCount = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/v1/forums/forums-count");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/forums/forums-count`);
         const data = await response.json();
         const totalUsers = data.data;
 

@@ -35,7 +35,7 @@ import "../../../../assets/css/Tables.css";
 
 function UsersDataFetcher() {
   const entity = "users";
-  const apiEndpoint = "http://localhost:8080/api/v1/users";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/users`;
   const { isDarkMode } = useDarkMode();
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
@@ -130,7 +130,6 @@ function UsersDataFetcher() {
       }
     }
   
-    // Actualizar user_role si el campo es user_role
     if (fieldName === "user_role") {
       setEditingData((prevEditingData) => ({
         ...prevEditingData,
@@ -141,8 +140,7 @@ function UsersDataFetcher() {
       }));
     }
   
-    console.log("Editing Data:", editingData);
-  };
+    };
 
   const handleDateChange = (date, fieldName, user_id) => {
     setEditingData((prevEditingData) => ({
@@ -201,7 +199,7 @@ function UsersDataFetcher() {
   const handleSaveRoles = async (userId) => {
     const roleValue = parseInt(editedRoles[userId], 10);
     if (roleValue !== undefined) {
-      const apiUrl = `http://localhost:8080/api/v1/users/update-user-role`;
+      const apiUrl = `${process.env.REACT_APP_API_URL}/users/update-user-role`;
 
       try {
         const response = await fetch(apiUrl, {
@@ -286,7 +284,7 @@ function UsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "user_role", user.user_id)
                       }
-                      style={{ color: isDarkMode ? "white" : "black", color: "black" }}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                       
                     >
                       <option value="1">SuperAdmin</option>

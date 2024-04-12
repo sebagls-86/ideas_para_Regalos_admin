@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useEffect } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
@@ -36,7 +36,7 @@ import "../../../../assets/css/Tables.css";
 
 function CategoriesDataFetcher() {
   const entity = "categories";
-  const apiEndpoint = "http://localhost:8080/api/v1/categories";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/categories`;
   const token = localStorage.getItem("token");
   const { isDarkMode } = useDarkMode();
 
@@ -48,6 +48,8 @@ function CategoriesDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -140,7 +142,7 @@ function CategoriesDataFetcher() {
     }
 
     if (!newCategoriesData.image) {
-      errors.name = "La carga de la imagen es obligatoria.";
+      errors.image = "La carga de la imagen es obligatoria.";
     }
 
     setNewCategoriesErrors(errors);
@@ -155,21 +157,19 @@ function CategoriesDataFetcher() {
       postData(newCategoriesData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+      }
   };
 
   const [imagePreview, setImagePreview] = useState("");
 
   const handleEditChange = (e, fieldName, categoryId) => {
-    const newValue =
-      e.target.type === "file" ? e.target.files[0] : e.target.value;
+    const newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
 
     setEditingData((prevEditingData) => ({
       ...prevEditingData,
       [categoryId]: {
         ...prevEditingData[categoryId],
-        [fieldName]: newValue,
+        [fieldName]: newValue === "" ? null : newValue,
       },
     }));
 
@@ -192,6 +192,42 @@ function CategoriesDataFetcher() {
   const handleCloseImageModal = () => {
     setSelectedImage(null);
     setImageModalOpen(false);
+  };
+
+  useEffect(() => {
+    editingRows.forEach(categoryId => {
+      setEditingData(prevEditingData => ({
+        ...prevEditingData,
+        [categoryId]: {
+          ...prevEditingData[categoryId],
+          ...categories.find(category => category.category_id === categoryId)
+        }
+      }));
+    });
+  }, [editingRows, categories, setEditingData]);
+
+
+  const handleSaveChanges = (categoryId) => {
+    const modifiedFields = Object.keys(editingData[categoryId]).filter(fieldName =>
+      isFieldModified(editingData, categoryId, fieldName, categories.find(category => category.category_id === categoryId)[fieldName])
+    );
+  
+    // Verificar si no hay campos modificados
+    if (modifiedFields.length === 0) {
+      handleCancel(categoryId);
+      return;
+    }
+  
+    if (modifiedFields.some(fieldName => isFieldEmpty(editingData, categoryId, fieldName))) {
+      openFeedbackModal("No puedes dejar campos modificados vacíos.");
+    } else {
+      const updatedData = modifiedFields.reduce((acc, fieldName) => {
+        acc[fieldName] = editingData[categoryId][fieldName];
+        return acc;
+      }, {});
+  
+      handleSave(entity, categoryId, updatedData, "formData");
+    }
   };
 
   return (
@@ -285,7 +321,7 @@ function CategoriesDataFetcher() {
                   {editingRows.includes(category.category_id) ? (
                     <Input
                       value={
-                        editingData[category.category_id]?.name || category.name
+                        editingData[category.category_id]?.name
                       }
                       onChange={(e) =>
                         handleEditChange(e, "name", category.category_id)
@@ -314,7 +350,7 @@ function CategoriesDataFetcher() {
                         <Image
                           src={
                             imagePreview ||
-                            `http://localhost:8080${category.image}`
+                            `${process.env.REACT_APP_URL_IMAGES}${category.image}`
                           }
                           alt="Image Preview"
                           maxH="50px"
@@ -334,14 +370,14 @@ function CategoriesDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`http://localhost:8080${category.image}`}
+                      src={`${process.env.REACT_APP_URL_IMAGES}${category.image}`}
                       alt="Avatar"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
                         handleImageClick(
-                          `http://localhost:8080${category.image}`
+                          `${process.env.REACT_APP_URL_IMAGES}${category.image}`
                         )
                       }
                       cursor="pointer"
@@ -366,12 +402,7 @@ function CategoriesDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(category.category_id)
-                        ? handleSave(
-                            entity,
-                            category.category_id,
-                            editingData[category.category_id],
-                            "formData"
-                          )
+                      ? handleSaveChanges(category.category_id)
                         : handleEdit(category.category_id)
                     }
                   />

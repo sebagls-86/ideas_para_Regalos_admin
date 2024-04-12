@@ -1,16 +1,13 @@
-// Chakra imports
+import React, { useState, useEffect } from "react";
 import { Portal, Box, useDisclosure } from "@chakra-ui/react";
-// Layout components
 import Navbar from "components/navbar/NavbarAdmin.js";
 import Sidebar from "components/sidebar/Sidebar.js";
 import { SidebarContext } from "contexts/SidebarContext";
-import React, { useState, useEffect } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 import routes from "routes.js";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useLocation } from 'react-router-dom';
 
-// Custom Chakra theme
 export default function Dashboard(props) {
   const { ...rest } = props;
   const [activeRoute, setActiveRoute] = useState('');
@@ -22,14 +19,7 @@ export default function Dashboard(props) {
   const {
     isAuthenticated,
   } = useAuth0();
-  const API_URL = process.env.REACT_APP_API_URL;
-
-  console.log(API_URL);
-
-  console.log(process.env.NODE_ENV);
-  console.log("index arriba", isAuthenticated);
-
-
+ 
   const getRoute = () => {
     return window.location.pathname !== "/admin/full-screen-maps";
   };
@@ -51,7 +41,6 @@ export default function Dashboard(props) {
         if (
           window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
         ) {
-          console.log(routes[i].name)
           return routes[i].name;
         }
       }
@@ -133,14 +122,10 @@ export default function Dashboard(props) {
   const { onOpen } = useDisclosure();
   document.documentElement.dir = "ltr";
 
-  console.log("index", isAuthenticated);
-
   useEffect(() => {
-    // Actualizar la ruta activa cuando la ubicación cambie
     const pathname = location.pathname;
     setActiveRoute(pathname);
 
-    // Obtener el texto del Navbar activo
     const navbarText = getActiveNavbarText(routes);
     setActiveNavbar(navbarText);
   }, [location.pathname, routes]);

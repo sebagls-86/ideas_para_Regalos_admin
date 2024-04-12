@@ -8,7 +8,7 @@ export function getConfig() {
   // If this resolves to `null`, the API page changes to show some helpful info about what to do
   // with the audience.
   const audience =
-    configJson.audience && configJson.audience !== "http://localhost:8080/api/v1"
+    configJson.audience && configJson.audience !== process.env.REACT_APP_API_URL
       ? configJson.audience
       : null;
 

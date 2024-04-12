@@ -56,7 +56,6 @@ export const TokenProvider = ({ children }) => {
   };
 
   const updateLastVisitedRoute = useCallback((route) => {
-    console.log("Última ruta visitada:", route);
     setLastVisitedRoute(route);
   }, []);
 

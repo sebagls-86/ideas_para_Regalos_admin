@@ -19,6 +19,7 @@ import DefaultAuth from "layouts/auth/Default";
 import illustration from "assets/img/logoIdeasParaRegalos.png";
 import { useAuth0 } from "@auth0/auth0-react";
 import configJson from "../../../../auth_config.json";
+import useFeedbackModal from "../../../../components/modals/feedbackModal";
 
 function SignIn() {
   const { colorMode } = useColorMode();
@@ -29,6 +30,8 @@ function SignIn() {
   const [tokenExists, setTokenExists] = useState(false);
   const [isLoading, setIsLoading] = useState(null);
   const token = localStorage.getItem("token");
+  const { openFeedbackModal, FeedbackModal: FeedbackModalComponent } =
+    useFeedbackModal();
   const {
     isAuthenticated,
     loginWithRedirect,
@@ -52,7 +55,7 @@ function SignIn() {
     const fetchTokenAndVerifyUser = async () => {
       try {
         const storedToken = localStorage.getItem("token");
-       
+
         if (!storedToken && isAuthenticated) {
           setIsLoading(true);
 
@@ -73,11 +76,9 @@ function SignIn() {
             });
           }
 
-          console.log("newAccessToken", newAccessToken);
-
           setAccessToken(newAccessToken);
           localStorage.setItem("token", newAccessToken);
-          setTokenExists(true)
+          setTokenExists(true);
 
           let verifyUserCompleted = false;
 
@@ -87,7 +88,11 @@ function SignIn() {
               const userInfoFromStorage = localStorage.getItem("userInfo");
               if (!userInfoFromStorage) {
                 setIsLoading(false);
-                logout();
+                logout({
+                  logoutParams: {
+                    returnTo: process.env.REACT_APP_REDIRECT_LOGOUT,
+                  },
+                });
               }
             }
           }, 5000);
@@ -100,25 +105,34 @@ function SignIn() {
             clearTimeout(timeoutId);
             const userData = localStorage.getItem("userInfo");
             setUserInfo(userData);
-            console.log("first push");
-           
           } catch (error) {
             console.error("Error verifying user:", error.message);
             setIsLoading(false);
+            if (error.message === "unauthorized user") {
+              openFeedbackModal("Usuario no autorizado");
+            }
+            if ((error.message === "Failed to verify user") || (error.message === "Failed to fetch")) {
+              openFeedbackModal("Intente nuevamente mas tarde");
+            }
+            setTimeout(() => {}, 3000);
             localStorage.removeItem("userInfo");
             localStorage.removeItem("token");
-            logout();
+            logout({
+              logoutParams: { returnTo: process.env.REACT_APP_REDIRECT_LOGOUT },
+            });
           }
           const userData = localStorage.getItem("userInfo");
           setUserInfo(userData);
-          window.location.reload()
+          window.location.reload();
         }
       } catch (error) {
         console.error("Error fetching token:", error.message);
         setIsLoading(false);
         localStorage.removeItem("userInfo");
         localStorage.removeItem("token");
-        logout();
+        logout({
+          logoutParams: { returnTo: process.env.REACT_APP_REDIRECT_LOGOUT },
+        });
       }
     };
 
@@ -146,10 +160,8 @@ function SignIn() {
       }
 
       const verifyData = await verifyResponse.json();
-      console.log("verifyData", verifyData);
-      console.log("role", verifyData.data.user_role);
       if (verifyData.data.user_role < 1 || verifyData.data.user_role > 3) {
-        throw new Error("Failed to verify user");
+        throw new Error("unauthorized user");
       }
 
       localStorage.setItem("userInfo", JSON.stringify(verifyData));
@@ -201,6 +213,7 @@ function SignIn() {
               </Button>
             </FormControl>
           </Flex>
+          <FeedbackModalComponent />
         </Box>
       </Flex>
       <Modal

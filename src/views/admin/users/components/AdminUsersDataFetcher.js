@@ -35,7 +35,7 @@ import { useHistory } from "react-router-dom";
 
 function AdminUsersDataFetcher() {
   const entity = "users";
-  const apiEndpoint = "http://localhost:8080/api/v1/users?admins=true";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/users?admins=true`;
   const token = localStorage.getItem("token");
   const { isDarkMode } = useDarkMode();
   const history = useHistory();
@@ -136,12 +136,10 @@ function AdminUsersDataFetcher() {
         }
       }
     }
-    console.log("Editing Data:", editingData);
-  };
+    };
 
   useEffect(() => {
-    console.log("Editing Data (desde useEffect):", editingData);
-  }, [editingData]);
+    }, [editingData]);
 
   const handleSaveOrRoles = async (user_id) => {
     const editedAdminRole = editedRoles[user_id];
@@ -174,7 +172,7 @@ function AdminUsersDataFetcher() {
   const handleSaveRoles = async (userId) => {
     const roleValue = parseInt(editedRoles[userId], 10);
     if (roleValue !== undefined) {
-      const apiUrl = `http://localhost:8080/api/v1/users/update-user-role`;
+      const apiUrl = `${process.env.REACT_APP_API_URL}/users/update-user-role`;
   
       try {
         const response = await fetch(apiUrl, {
@@ -280,7 +278,7 @@ function AdminUsersDataFetcher() {
                       onChange={(e) =>
                         handleEditChange(e, "user_role", user.user_id)
                       }
-                      style={{ color: isDarkMode ? "white" : "black", color: "black" }}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     >
                       <option value="1">SuperAdmin</option>
                       <option value="2">Medium</option>
@@ -405,7 +403,7 @@ function AdminUsersDataFetcher() {
                         <Image
                           src={
                             avatarPreview ||
-                            `http://localhost:8080${user.avatar}`
+                            `${process.env.REACT_APP_URL_IMAGES}${user.avatar}`
                           }
                           alt="Avatar Preview"
                           maxH="50px"
@@ -423,13 +421,13 @@ function AdminUsersDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`http://localhost:8080${user.avatar}`}
+                      src={`${process.env.REACT_APP_URL_IMAGES}${user.avatar}`}
                       alt="Avatar"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
-                        handleImageClick(`http://localhost:8080${user.avatar}`)
+                        handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${user.avatar}`)
                       }
                       cursor="pointer"
                     />
@@ -451,7 +449,7 @@ function AdminUsersDataFetcher() {
                         <Image
                           src={
                             bannerPreview ||
-                            `http://localhost:8080${user.banner}`
+                            `${process.env.REACT_APP_URL_IMAGES}${user.banner}`
                           }
                           alt="Banner Preview"
                           maxH="50px"
@@ -469,13 +467,13 @@ function AdminUsersDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`http://localhost:8080${user.banner}`}
+                      src={`${process.env.REACT_APP_URL_IMAGES}${user.banner}`}
                       alt="Banner"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
-                        handleImageClick(`http://localhost:8080${user.banner}`)
+                        handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${user.banner}`)
                       }
                       cursor="pointer"
                     />

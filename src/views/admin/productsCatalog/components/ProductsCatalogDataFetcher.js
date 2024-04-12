@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -45,7 +45,7 @@ function mapFeaturedValue(value) {
 
 function ProductsCatalogDataFetcher() {
   const entity = "products-catalog";
-  const apiEndpoint = "http://localhost:8080/api/v1/products-catalog";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/products-catalog`;
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
   const token = localStorage.getItem("token");
@@ -58,6 +58,8 @@ function ProductsCatalogDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -205,7 +207,6 @@ function ProductsCatalogDataFetcher() {
       newProductCatalogData.images.length > 5
     ) {
       openFeedbackModal("Solo se permiten hasta 5 imágenes");
-      console.log("Solo se permiten hasta 5 imágenes");
       return;
     }
 
@@ -213,8 +214,7 @@ function ProductsCatalogDataFetcher() {
       postData(newProductCatalogData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+     }
   };
 
   const [imagesPreview, setImagesPreview] = useState("");
@@ -246,27 +246,47 @@ function ProductsCatalogDataFetcher() {
     }
   };
 
-  const handleStatuSave = async (productId) => {
-    const editedStatus = editingData[productId]?.status;
-    const isStatusComplete =
-      editedStatus !== undefined && editedStatus !== null;
-    const areOtherFieldsEdited = Object.keys(editingData[productId] || {}).some(
-      (field) => field !== "status"
+  useEffect(() => {
+    editingRows.forEach(productId => {
+      setEditingData(prevEditingData => ({
+        ...prevEditingData,
+        [productId]: {
+          ...prevEditingData[productId],
+          ...productsCatalog.find(product => product.product_catalog_id === productId)
+        }
+      }));
+    });
+  }, [editingRows, productsCatalog, setEditingData]);
+  
+
+  const handleStatusSave = (productId) => {
+    const modifiedFields = Object.keys(editingData[productId]).filter(fieldName =>
+        fieldName !== "status" && isFieldModified(editingData, productId, fieldName, productsCatalog.find(product => product.product_catalog_id === productId)[fieldName])
     );
 
-    const statusToSend = isStatusComplete
-      ? parseInt(editedStatus, 10)
-      : editedStatus;
+    const editedStatus = editingData[productId]?.status;
+    const isStatusComplete = editedStatus !== undefined && editedStatus !== null;
 
-    if (isStatusComplete || areOtherFieldsEdited) {
-      const updatedData = {
-        ...editingData[productId],
-        ...(statusToSend !== undefined && { status: statusToSend }), // Agregar status solo si no es undefined
-      };
-
-      await handleSave(entity, productId, updatedData, "formData");
+    if (isStatusComplete && isFieldModified(editingData, productId, "status", parseInt(editedStatus, 10))) {
+        modifiedFields.push("status");
     }
-  };
+
+    if (modifiedFields.length === 0) {
+        handleCancel(productId);
+        return;
+    }
+
+    if (modifiedFields.some(fieldName => isFieldEmpty(editingData, productId, fieldName))) {
+        openFeedbackModal("No puedes dejar campos modificados vacíos.");
+    } else {
+        const updatedData = modifiedFields.reduce((acc, fieldName) => {
+            acc[fieldName] = editingData[productId][fieldName];
+            return acc;
+        }, {});
+
+        handleSave(entity, productId, updatedData, "formData");
+    }
+};
 
   const handleStatusChange = (e) => {
     const { value } = e.target;
@@ -428,8 +448,7 @@ function ProductsCatalogDataFetcher() {
                   {editingRows.includes(product.product_catalog_id) ? (
                     <Input
                       value={
-                        editingData[product.product_catalog_id]?.name ||
-                        product.name
+                        editingData[product.product_catalog_id]?.name
                       }
                       onChange={(e) =>
                         handleEditChange(e, "name", product.product_catalog_id)
@@ -508,7 +527,7 @@ function ProductsCatalogDataFetcher() {
                         <Image
                           src={
                             imagesPreview ||
-                            `http://localhost:8080${product.images}`
+                            `${process.env.REACT_APP_URL_IMAGES}${product.images}`
                           }
                           alt="Images Preview"
                           maxH="50px"
@@ -528,14 +547,14 @@ function ProductsCatalogDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`http://localhost:8080${product.images}`}
+                      src={`${process.env.REACT_APP_URL_IMAGES}${product.images}`}
                       alt="Images"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
                         handleImageClick(
-                          `http://localhost:8080${product.images}`
+                          `${process.env.REACT_APP_URL_IMAGES}${product.images}`
                         )
                       }
                       cursor="pointer"
@@ -560,7 +579,7 @@ function ProductsCatalogDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(product.product_catalog_id)
-                        ? handleStatuSave(product.product_catalog_id)
+                        ? handleStatusSave(product.product_catalog_id)
                         : handleEdit(product.product_catalog_id)
                     }
                   />

@@ -22,10 +22,12 @@ import { FaEthereum } from "react-icons/fa";
 import routes from "routes.js";
 import { useAuth0 } from "@auth0/auth0-react";
 
+import FixedPlugin from "../fixedPlugin/FixedPlugin";
+
 export default function HeaderLinks(props) {
   const { secondary } = props;
   const history = useHistory();
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const [tokenAvailable, setTokenAvailable] = useState(false);
   const { logout } = useAuth0();
 
@@ -41,16 +43,15 @@ export default function HeaderLinks(props) {
       }
     }
   }, []);
-  
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
     history.replace("/auth/login");
-    logout()
+    logout();
   };
 
-  console.log("userName", userName)
+  console.log("userName", userName);
 
   // Chakra Color Mode
   const navbarIcon = useColorModeValue("gray.400", "white");
@@ -165,24 +166,20 @@ export default function HeaderLinks(props) {
               px="0"
               borderRadius="8px"
               mb="10px"
-            >
-            </MenuItem>
+            ></MenuItem>
             <MenuItem
               _hover={{ bg: "none" }}
               _focus={{ bg: "none" }}
               px="0"
               borderRadius="8px"
               mb="10px"
-            >
-            
-            </MenuItem>
+            ></MenuItem>
           </Flex>
         </MenuList>
       </Menu>
-
       <Menu>
         <MenuButton p="0px">
-        <Avatar
+          <Avatar
             _hover={{ cursor: "pointer" }}
             color="white"
             name={userName}
@@ -203,7 +200,7 @@ export default function HeaderLinks(props) {
           border="none"
         >
           <Flex w="100%" mb="0px">
-          <Text
+            <Text
               ps="20px"
               pt="16px"
               pb="10px"
@@ -241,6 +238,9 @@ export default function HeaderLinks(props) {
           </Flex>
         </MenuList>
       </Menu>
+      <Menu>
+        <FixedPlugin style={{ marginBottom: "-55rem" }} />
+        </Menu>
     </Flex>
   );
 }

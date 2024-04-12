@@ -18,7 +18,6 @@ import {
 import DefaultAuth from "layouts/auth/Default";
 import illustration from "assets/img/logoIdeasParaRegalos.png";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useHistory } from "react-router-dom";
 import configJson from "../../../../auth_config.json";
 
 function SignIn() {
@@ -30,7 +29,6 @@ function SignIn() {
   const [tokenExists, setTokenExists] = useState(false);
   const [isLoading, setIsLoading] = useState(null);
   const token = localStorage.getItem("token");
-  const history = useHistory();
   const {
     isAuthenticated,
     loginWithRedirect,
@@ -54,8 +52,7 @@ function SignIn() {
     const fetchTokenAndVerifyUser = async () => {
       try {
         const storedToken = localStorage.getItem("token");
-        const userInfoData = localStorage.getItem("userInfo");
-
+       
         if (!storedToken && isAuthenticated) {
           setIsLoading(true);
 

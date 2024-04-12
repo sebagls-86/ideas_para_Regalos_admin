@@ -3,9 +3,11 @@ import { Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink, Flex, Link, Text, useC
 import PropTypes from 'prop-types';
 import React, { useState, useEffect } from 'react';
 import AdminNavbarLinks from 'components/navbar/NavbarLinksAdmin';
+import { useLocation } from 'react-router-dom';
 
 export default function AdminNavbar(props) {
 	const [ scrolled, setScrolled ] = useState(false);
+	const location = useLocation();
 
 	useEffect(() => {
 		window.addEventListener('scroll', changeNavbar);
@@ -14,6 +16,8 @@ export default function AdminNavbar(props) {
 			window.removeEventListener('scroll', changeNavbar);
 		};
 	});
+
+	console.log(props.brandText)
 
 	const { secondary, message, brandText } = props;
 
@@ -36,6 +40,24 @@ export default function AdminNavbar(props) {
 			setScrolled(false);
 		}
 	};
+
+	useEffect(() => {
+		const changeNavbar = () => {
+		  if (window.scrollY > 1) {
+			setScrolled(true);
+		  } else {
+			setScrolled(false);
+		  }
+		};
+	
+		window.addEventListener('scroll', changeNavbar);
+	
+		return () => {
+		  window.removeEventListener('scroll', changeNavbar);
+		};
+	  }, []); 
+	
+
 
 	return (
 		<Box

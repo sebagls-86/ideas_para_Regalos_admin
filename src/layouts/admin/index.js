@@ -8,29 +8,20 @@ import React, { useState, useEffect } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 import routes from "routes.js";
 import { useAuth0 } from "@auth0/auth0-react";
-import configJson from "../../auth_config.json";
-import { useHistory } from "react-router-dom";
+import { useLocation } from 'react-router-dom';
 
 // Custom Chakra theme
 export default function Dashboard(props) {
   const { ...rest } = props;
-  // states and functions
+  const [activeRoute, setActiveRoute] = useState('');
+  const [activeNavbar, setActiveNavbar] = useState('');
+  const location = useLocation();
   const [fixed] = useState(false);
   const [toggleSidebar, setToggleSidebar] = useState(false);
-  const [accessToken, setAccessToken] = useState("");
-  const [userInfo, setUserInfo] = useState(null);
-  const [tokenExists, setTokenExists] = useState(false);
-  const [isLoading, setIsLoading] = useState(null);
-  const token = localStorage.getItem("token");
-  const history = useHistory();
-
+  
   const {
     isAuthenticated,
-    logout,
-    getAccessTokenWithPopup,
-    getAccessTokenSilently,
   } = useAuth0();
-  const audience = configJson.audience;
   const API_URL = process.env.REACT_APP_API_URL;
 
   console.log(API_URL);
@@ -38,109 +29,6 @@ export default function Dashboard(props) {
   console.log(process.env.NODE_ENV);
   console.log("index arriba", isAuthenticated);
 
-  // useEffect(() => {
-  //   const fetchTokenAndVerifyUser = async () => {
-  //     try {
-  //       const storedToken = localStorage.getItem("token");
-
-  //       if (!storedToken && isAuthenticated) {
-  //         setIsLoading(true);
-
-  //         let newAccessToken;
-  //         if (process.env.NODE_ENV === "development") {
-  //           newAccessToken = await getAccessTokenWithPopup({
-  //             authorizationParams: {
-  //               audience: audience,
-  //               scope: "read:current_user",
-  //             },
-  //           });
-  //         } else {
-  //           newAccessToken = await getAccessTokenSilently({
-  //             authorizationParams: {
-  //               audience: audience,
-  //               scope: "read:current_user",
-  //             },
-  //           });
-  //         }
-
-  //         console.log("newAccessToken", newAccessToken);
-
-  //         setAccessToken(newAccessToken);
-  //         localStorage.setItem("token", newAccessToken);
-
-  //         let verifyUserCompleted = false;
-
-  //         const timeoutId = setTimeout(() => {
-  //           if (!verifyUserCompleted) {
-  //             localStorage.removeItem("token");
-  //             const userInfoFromStorage = localStorage.getItem("userInfo");
-  //             if (!userInfoFromStorage) {
-  //               setIsLoading(false);
-  //               logout();
-  //             }
-  //           }
-  //         }, 5000);
-
-  //         try {
-  //           await verifyUser(newAccessToken);
-  //           setTokenExists(true);
-  //           setIsLoading(false);
-  //           verifyUserCompleted = true;
-  //           clearTimeout(timeoutId);
-  //         } catch (error) {
-  //           console.error("Error verifying user:", error.message);
-  //           setIsLoading(false);
-  //           localStorage.removeItem("userInfo");
-  //           localStorage.removeItem("token");
-  //           logout();
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching token:", error.message);
-  //       setIsLoading(false);
-  //       localStorage.removeItem("userInfo");
-  //       localStorage.removeItem("token");
-  //       logout();
-  //     }
-  //   };
-
-  //   if (!tokenExists) {
-  //     fetchTokenAndVerifyUser();
-  //   }
-  // }, [tokenExists, isAuthenticated]);
-
-  // const verifyUser = async (token) => {
-  //   try {
-  //     const verifyResponse = await fetch(`${API_URL}/users/verify`, {
-  //       method: "GET",
-  //       headers: {
-  //         "Content-Type": "application/x-www-form-urlencoded",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
-
-  //     if (verifyResponse.status === 401) {
-  //       throw new Error("unauthorized user");
-  //     }
-
-  //     if (!verifyResponse.ok) {
-  //       throw new Error("Failed to verify user");
-  //     }
-
-  //     const verifyData = await verifyResponse.json();
-  //     console.log("verifyData", verifyData);
-  //     console.log("role", verifyData.data.user_role);
-  //     if (verifyData.data.user_role < 1 || verifyData.data.user_role > 3) {
-  //       throw new Error("Failed to verify user");
-  //     }
-
-  //     localStorage.setItem("userInfo", JSON.stringify(verifyData));
-  //     setUserInfo(verifyData);
-  //   } catch (error) {
-  //     console.error("Error verifying user:", error.message);
-  //     throw error;
-  //   }
-  // };
 
   const getRoute = () => {
     return window.location.pathname !== "/admin/full-screen-maps";
@@ -163,6 +51,7 @@ export default function Dashboard(props) {
         if (
           window.location.href.indexOf(routes[i].layout + routes[i].path) !== -1
         ) {
+          console.log(routes[i].name)
           return routes[i].name;
         }
       }
@@ -246,9 +135,15 @@ export default function Dashboard(props) {
 
   console.log("index", isAuthenticated);
 
-  if (isLoading) {
-    return <div>Loading ...</div>;
-  }
+  useEffect(() => {
+    // Actualizar la ruta activa cuando la ubicación cambie
+    const pathname = location.pathname;
+    setActiveRoute(pathname);
+
+    // Obtener el texto del Navbar activo
+    const navbarText = getActiveNavbarText(routes);
+    setActiveNavbar(navbarText);
+  }, [location.pathname, routes]);
 
   return (
     <Box>

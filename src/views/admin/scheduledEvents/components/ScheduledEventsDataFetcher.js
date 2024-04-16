@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -36,7 +36,7 @@ import "../../../../assets/css/Tables.css";
 
 function ScheduledEventsDataFetcher() {
   const entity = "scheduledEvents";
-  const apiEndpoint = "http://localhost:8080/api/v1/scheduledEvents";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/scheduledEvents`;
   const token = localStorage.getItem("token");
   const {
     data: scheduledEvents,
@@ -70,12 +70,16 @@ function ScheduledEventsDataFetcher() {
       .toString()
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
+      const eventTypeName = ScheduledEvent.event_type_name
+      .toString()
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const dateMatch = ScheduledEvent.date
       .toString()
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
 
-    return eventTypeMatch || dateMatch || eventTypeId;
+    return eventTypeMatch || dateMatch || eventTypeName || eventTypeId;
   };
 
   const { searchTerm, handleSearch, filteredData } = useCustomFilter(
@@ -179,15 +183,14 @@ function ScheduledEventsDataFetcher() {
       postData(eventDataToSend);
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+     }
   };
 
   useEffect(() => {
     const fetchEventOptions = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/api/v1/scheduledEvents"
+          `${process.env.REACT_APP_API_URL}/scheduledEvents`
         );
         const result = await response.json();
         const eventData = result.data || [];

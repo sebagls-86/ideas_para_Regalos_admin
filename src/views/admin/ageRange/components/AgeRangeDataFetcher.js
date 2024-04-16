@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -16,6 +16,7 @@ import {
   Th,
   Td,
   Flex,
+  Image,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -35,9 +36,10 @@ import "../../../../assets/css/Tables.css";
 
 function AgeRangeDataFetcher() {
   const entity = "age-ranges";
-  const apiEndpoint = "http://localhost:8080/api/v1/age-ranges";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/age-ranges`;
   const token = localStorage.getItem("token");
   const { isDarkMode } = useDarkMode();
+  const [imagePreview, setImagePreview] = useState("");
 
   const {
     data: ageRanges,
@@ -45,6 +47,8 @@ function AgeRangeDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -111,11 +115,13 @@ function AgeRangeDataFetcher() {
       name: "",
       minimum_age: 0,
       maximum_age: 0,
+      image: "",
     });
     setNewAgeRangeErrors({
       name: "",
       minimum_age: "",
       maximum_age: "",
+      image: "",
     });
   };
 
@@ -138,6 +144,7 @@ function AgeRangeDataFetcher() {
       name: "",
       minimum_age: "",
       maximum_age: "",
+      image: "",
     };
 
     if (!newAgeRangeData.name) {
@@ -154,34 +161,99 @@ function AgeRangeDataFetcher() {
         "La edad máxima es obligatoria y debe ser un número.";
     }
 
+    if (!newAgeRangeData.image) {
+      errors.image = "La carga de la imagen es obligatoria.";
+    }
+
     setNewAgeRangeErrors(errors);
 
     return Object.values(errors).every((error) => error === "");
   };
 
+  useEffect(() => {
+    editingRows.forEach(ageRangeId => {
+      setEditingData(prevEditingData => ({
+        ...prevEditingData,
+        [ageRangeId]: {
+          ...prevEditingData[ageRangeId],
+          ...ageRanges.find(ageRange => ageRange.age_range_id === ageRangeId)
+        }
+      }));
+    });
+  }, [editingRows, ageRanges, setEditingData]);
+
   const handleCreateAgeRange = () => {
     const isFormValid = validateNewAgeRangeForm();
 
     if (isFormValid) {
-      postData(newAgeRangeData);
+      postData(newAgeRangeData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+     }
   };
 
-  const handleEditChange = (value, fieldName, ageRangeId) => {
-   const numericValue = fieldName.includes("age")
-      ? parseInt(value, 10)
-      : value;
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageModalOpen, setImageModalOpen] = useState(false);
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl);
+    setImageModalOpen(true);
+  };
+
+  const handleCloseImageModal = () => {
+    setSelectedImage(null);
+    setImageModalOpen(false);
+  };
+
+  const handleFileChange = (e, fieldName) => {
+    const file = e.target.files[0];
+
+    setNewAgeRangeData((prevData) => ({
+      ...prevData,
+      [fieldName]: file,
+    }));
+  };
+
+  const handleEditChange = (e, fieldName, categoryId) => {
+    const newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
 
     setEditingData((prevEditingData) => ({
       ...prevEditingData,
-      [ageRangeId]: {
-        ...prevEditingData[ageRangeId],
-        [fieldName]: numericValue,
+      [categoryId]: {
+        ...prevEditingData[categoryId],
+        [fieldName]: newValue === "" ? null : newValue,
       },
     }));
+
+    if (e.target.type === "file") {
+      const previewURL = URL.createObjectURL(e.target.files[0]);
+      if (fieldName === "image") {
+        setImagePreview(previewURL);
+      }
+    }
+  };
+
+  const handleSaveChanges = (ageRangeId) => {
+      const modifiedFields = Object.keys(editingData[ageRangeId]).filter(fieldName =>
+      isFieldModified(editingData, ageRangeId, fieldName, ageRanges.find(range => range.age_range_id === ageRangeId)[fieldName])
+    );
+  
+    if (modifiedFields.length === 0) {
+      handleCancel(ageRangeId);
+      return;
+    }
+  
+    if (modifiedFields.some(fieldName => isFieldEmpty(editingData, ageRangeId, fieldName))) {
+      openFeedbackModal("No puedes dejar campos modificados vacíos.");
+      return;
+    }
+  
+    const updatedData = modifiedFields.reduce((acc, fieldName) => {
+      acc[fieldName] = editingData[ageRangeId][fieldName];
+      return acc;
+    }, {});
+  
+    handleSave(entity, ageRangeId, updatedData, "formData");
   };
 
   return (
@@ -259,6 +331,18 @@ function AgeRangeDataFetcher() {
                 {newAgeRangeErrors.maximum_age}
               </div>
             </FormControl>
+            <FormControl>
+              <FormLabel>Imagen</FormLabel>
+              <Input
+                type="file"
+                name="image"
+                accept="image/*"
+                onChange={(e) => handleFileChange(e, "image")}
+                color="white"
+                style={{ color: isDarkMode ? "white" : "black" }}
+              />
+              <div style={{ color: "red" }}>{newAgeRangeErrors.image}</div>
+            </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={handleCreateAgeRange}>
@@ -278,6 +362,7 @@ function AgeRangeDataFetcher() {
               <Th>Nombre</Th>
               <Th>Edad Mínima</Th>
               <Th>Edad Máxima</Th>
+              <Th>Imagen</Th>
               <Th>Acciones</Th>
             </Tr>
           </Thead>
@@ -294,11 +379,11 @@ function AgeRangeDataFetcher() {
                   {editingRows.includes(range.age_range_id) ? (
                     <Input
                       value={
-                        editingData[range.age_range_id]?.name || range.name
+                        editingData[range.age_range_id]?.name
                       }
                       onChange={(e) =>
                         handleEditChange(
-                          e.target.value,
+                          e,
                           "name",
                           range.age_range_id
                         )
@@ -315,12 +400,11 @@ function AgeRangeDataFetcher() {
                   {editingRows.includes(range.age_range_id) ? (
                     <Input
                       value={
-                        editingData[range.age_range_id]?.minimum_age ||
-                        range.minimum_age
+                        editingData[range.age_range_id]?.minimum_age
                       }
                       onChange={(e) =>
                         handleEditChange(
-                          e.target.value,
+                          e,
                           "minimum_age",
                           range.age_range_id
                         )
@@ -336,12 +420,11 @@ function AgeRangeDataFetcher() {
                   {editingRows.includes(range.age_range_id) ? (
                     <Input
                       value={
-                        editingData[range.age_range_id]?.maximum_age ||
-                        range.maximum_age
+                        editingData[range.age_range_id]?.maximum_age
                       }
                       onChange={(e) =>
                         handleEditChange(
-                          e.target.value,
+                          e,
                           "maximum_age",
                           range.age_range_id
                         )
@@ -351,6 +434,56 @@ function AgeRangeDataFetcher() {
                     />
                   ) : (
                     range.maximum_age
+                  )}
+                </Td>
+                <Td>
+                  {editingRows.includes(range.age_range_id) ? (
+                    <div>
+                      <label htmlFor={`image-input-${range.age_range_id}`}>
+                        <Input
+                          id={`image-input-${range.age_range_id}`}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) =>
+                            handleEditChange(e, "image", range.age_range_id)
+                          }
+                        />
+                        <Image
+                          src={
+                            imagePreview ||
+                            range.image
+                          }
+                          alt="Image Preview"
+                          maxH="50px"
+                          maxW="50px"
+                          objectFit="cover"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            document
+                              .getElementById(
+                                `image-input-${range.age_range_id}`
+                              )
+                              .click();
+                          }}
+                          cursor="pointer"
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <Image
+                      src={range.image}
+                      alt="Avatar"
+                      maxH="50px"
+                      maxW="50px"
+                      objectFit="cover"
+                      onClick={() =>
+                        handleImageClick(
+                          range.image
+                        )
+                      }
+                      cursor="pointer"
+                    />
                   )}
                 </Td>
                 <Td  className="Td-actions">
@@ -371,11 +504,7 @@ function AgeRangeDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(range.age_range_id)
-                        ? handleSave(
-                          entity,
-                            range.age_range_id,
-                            editingData[range.age_range_id]
-                          )
+                      ? handleSaveChanges(range.age_range_id)
                         : handleEdit(range.age_range_id)
                     }
                   />
@@ -413,6 +542,28 @@ function AgeRangeDataFetcher() {
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar este rango de edad?"
       )}
+      <Modal
+        isOpen={isImageModalOpen}
+        onClose={handleCloseImageModal}
+        size="xl"
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <ModalBody>
+            {selectedImage && (
+              <Image
+                src={selectedImage}
+                alt="Imagen seleccionada"
+                maxH="80vh"
+                maxW="80vw"
+                objectFit="contain"
+              />
+            )}
+          </ModalBody>
+          <ModalFooter></ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }

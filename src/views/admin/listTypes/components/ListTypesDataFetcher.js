@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
@@ -35,7 +35,7 @@ import "../../../../assets/css/Tables.css";
 
 function ListTypesDataFetcher() {
   const entity = "listtypes";
-  const apiEndpoint = "http://localhost:8080/api/v1/listtypes";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/listtypes`;
   const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
   const { isDarkMode } = useDarkMode();
@@ -46,6 +46,8 @@ function ListTypesDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -79,12 +81,7 @@ function ListTypesDataFetcher() {
     handleModalOpen,
     handleModalClose,
     postData,
-  } = useDataPoster(
-    apiEndpoint,
-    token,
-    reloadData,
-    setShowErrorModal
-  );
+  } = useDataPoster(apiEndpoint, token, reloadData, setShowErrorModal);
 
   const [newListTypesData, setNewListTypesData] = useState({
     list_type_name: "",
@@ -100,7 +97,7 @@ function ListTypesDataFetcher() {
       ...prevErrors,
       [name]: "",
     }));
-  
+
     setNewListTypesData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -142,8 +139,7 @@ function ListTypesDataFetcher() {
       postData(newListTypesData);
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+      }
   };
 
   const handleEditChange = (e, fieldName, categoryId) => {
@@ -156,6 +152,54 @@ function ListTypesDataFetcher() {
         [fieldName]: newValue,
       },
     }));
+  };
+
+  useEffect(() => {
+    editingRows.forEach(listTypeId => {
+      setEditingData(prevEditingData => {
+        const updatedEditingData = { ...prevEditingData };
+        const listTypeToUpdate = updatedEditingData[listTypeId];
+  
+        const updatedListType = ListTypes.find(listType => listType.list_type_id === listTypeId);
+        const updatedListTypeData = {
+          ...listTypeToUpdate,
+          ...updatedListType
+        };
+  
+        updatedEditingData[listTypeId] = updatedListTypeData;
+  
+        return updatedEditingData;
+      });
+    });
+  }, [editingRows, ListTypes, setEditingData]);
+
+  const handleSaveChanges = (listTypeId) => {
+    const modifiedFields = Object.keys(editingData[listTypeId]).filter(
+      (fieldName) =>
+        isFieldModified(
+          editingData,
+          listTypeId,
+          fieldName,
+          ListTypes.find((listType) => listType.list_type_id === listTypeId)[
+            fieldName
+          ]
+        )
+    );
+
+    if (
+      modifiedFields.some((fieldName) =>
+        isFieldEmpty(editingData, listTypeId, fieldName)
+      )
+    ) {
+      openFeedbackModal("No puedes dejar campos modificados vacíos.");
+    } else {
+      const updatedData = modifiedFields.reduce((acc, fieldName) => {
+        acc[fieldName] = editingData[listTypeId][fieldName];
+        return acc;
+      }, {});
+
+      handleSave(entity, listTypeId, updatedData, "formData");
+    }
   };
 
   return (
@@ -241,11 +285,14 @@ function ListTypesDataFetcher() {
                   {editingRows.includes(listtype.list_type_id) ? (
                     <Input
                       value={
-                        editingData[listtype.list_type_id]?.list_type_name ||
-                        listtype.list_type_name
+                        editingData[listtype.list_type_id]?.list_type_name
                       }
                       onChange={(e) =>
-                        handleEditChange(e, "list_type_name", listtype.list_type_id)
+                        handleEditChange(
+                          e,
+                          "list_type_name",
+                          listtype.list_type_id
+                        )
                       }
                       minWidth="100px"
                       color="white"
@@ -273,11 +320,7 @@ function ListTypesDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(listtype.list_type_id)
-                        ? handleSave(
-                            entity,
-                            listtype.list_type_id,
-                            editingData[listtype.list_type_id]
-                          )
+                        ? handleSaveChanges(listtype.list_type_id)
                         : handleEdit(listtype.list_type_id)
                     }
                   />

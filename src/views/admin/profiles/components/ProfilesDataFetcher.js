@@ -26,7 +26,7 @@ import "../../../../assets/css/Tables.css";
 
 function ProfilesDataFetcher() {
   const entity = "profiles";
-  const apiEndpoint = "http://localhost:8080/api/v1/profiles";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/profiles`;
   const token = localStorage.getItem("token");
   const { isDarkMode } = useDarkMode();
   const {
@@ -35,6 +35,8 @@ function ProfilesDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -48,7 +50,7 @@ function ProfilesDataFetcher() {
     renderDeleteConfirmationModal,
   } = useDataFetcher(apiEndpoint, token);
 
-  const { FeedbackModal } = useFeedbackModal();
+  const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 
   const customFilter = (profile, searchTerm) => {
     const matchId = profile.profile_id
@@ -96,7 +98,7 @@ function ProfilesDataFetcher() {
   useEffect(() => {
     const fetchAgeRanges = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/v1/age-ranges");
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/age-ranges`);
         const result = await response.json();
         const ageRanges = result.data || [];
         setAgeRangeOptions(ageRanges);
@@ -114,7 +116,7 @@ function ProfilesDataFetcher() {
     const fetchRelationships = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/api/v1/relationships"
+          `${process.env.REACT_APP_API_URL}/relationships`
         );
         const result = await response.json();
         const relationships = result.data || [];
@@ -126,6 +128,18 @@ function ProfilesDataFetcher() {
 
     fetchRelationships();
   }, []);
+
+  useEffect(() => {
+    editingRows.forEach(profileId => {
+      setEditingData(prevEditingData => ({
+        ...prevEditingData,
+        [profileId]: {
+          ...prevEditingData[profileId],
+          ...profiles.find(profile => profile.profile_id === profileId)
+        }
+      }));
+    });
+  }, [editingRows, profiles, setEditingData]);
 
   const handleEditChange = (value, fieldName, eventId) => {
     const numericValue =
@@ -140,6 +154,23 @@ function ProfilesDataFetcher() {
         [fieldName]: numericValue,
       },
     }));
+  };
+
+  const handleSaveChanges = (eventId) => {
+    const modifiedFields = Object.keys(editingData[eventId]).filter(fieldName =>
+      isFieldModified(editingData, eventId, fieldName, profiles.find(profile => profile.profile_id === eventId)[fieldName])
+    );
+
+    if (modifiedFields.some(fieldName => isFieldEmpty(editingData, eventId, fieldName))) {
+      openFeedbackModal("No puedes dejar campos modificados vacíos.");
+    } else {
+      const updatedData = modifiedFields.reduce((acc, fieldName) => {
+        acc[fieldName] = editingData[eventId][fieldName];
+        return acc;
+      }, {});
+
+      handleSave(entity, eventId, updatedData, "formData");
+    }
   };
 
   return (
@@ -178,7 +209,7 @@ function ProfilesDataFetcher() {
                   {editingRows.includes(profile.profile_id) ? (
                     <Input
                       value={
-                        editingData[profile.profile_id]?.name || profile.name
+                        editingData[profile.profile_id]?.name
                       }
                       onChange={(e) =>
                         handleEditChange(
@@ -199,8 +230,7 @@ function ProfilesDataFetcher() {
                   {editingRows.includes(profile.profile_id) ? (
                     <Input
                       value={
-                        editingData[profile.profile_id]?.last_name ||
-                        profile.last_name
+                        editingData[profile.profile_id]?.last_name
                       }
                       onChange={(e) =>
                         handleEditChange(
@@ -302,10 +332,8 @@ function ProfilesDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(profile.profile_id)
-                        ? handleSave(
-                            entity,
-                            profile.profile_id,
-                            editingData[profile.profile_id]
+                        ? handleSaveChanges(
+                            profile.profile_id
                           )
                         : handleEdit(profile.profile_id)
                     }

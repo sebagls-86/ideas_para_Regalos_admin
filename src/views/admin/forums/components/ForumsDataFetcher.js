@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -38,12 +38,12 @@ function mapStatusValue(value) {
 
 function ForumsDataFetcher() {
   const entity = "forums";
-  const apiEndpoint = "http://localhost:8080/api/v1/forums";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/forums`;
   const [selectedForum, setSelectedForum] = useState(null);
   const token = localStorage.getItem("token");
   const { isDarkMode } = useDarkMode();
 
-  const { FeedbackModal } = useFeedbackModal();
+  const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
 
   const {
     data: forums,
@@ -107,25 +107,50 @@ function ForumsDataFetcher() {
     }));
   };
 
-  const handleStatuSave = async (forumId) => {
+  useEffect(() => {
+    editingRows.forEach((forumId) => {
+      setEditingData((prevEditingData) => ({
+        ...prevEditingData,
+        [forumId]: {
+          ...prevEditingData[forumId],
+          ...forums.find((forum) => forum.forum_id === forumId),
+        },
+      }));
+    });
+  }, [editingRows, forums, setEditingData]);
+
+  const handleStatusSave = async (forumId) => {
+    const originalForum = forums.find((forum) => forum.forum_id === forumId);
+    const editedTitle = editingData[forumId]?.title;
+    const editedDescription = editingData[forumId]?.description;
     const editedStatus = editingData[forumId]?.status;
-    const isStatusComplete =
-      editedStatus !== undefined && editedStatus !== null;
-    const areOtherFieldsEdited = Object.keys(editingData[forumId] || {}).some(
-      (field) => field !== "status"
-    );
-
-    const statusToSend = isStatusComplete
-      ? parseInt(editedStatus, 10)
-      : editedStatus;
-
-    if (isStatusComplete || areOtherFieldsEdited) {
-      // Si status está completo o hay otros campos editados, enviar a handleSave estándar
-      await handleSave(entity, forumId, {
-        ...editingData[forumId],
-        status: statusToSend,
-      });
+  
+    if (
+      editedTitle === originalForum.title &&
+      editedDescription === originalForum.description &&
+      editedStatus === originalForum.status
+    ) {
+      handleCancel(forumId);
+      return;
     }
+  
+    if (!editedTitle || !editedDescription) {
+      openFeedbackModal("No puedes dejar campos vacíos.");
+      return;
+    }
+  
+    const updatedData = {};
+    if (editedTitle !== originalForum.title) {
+      updatedData.title = editedTitle;
+    }
+    if (editedDescription !== originalForum.description) {
+      updatedData.description = editedDescription;
+    }
+    if (editedStatus !== originalForum.status) {
+      updatedData.status = editedStatus;
+    }
+  
+    await handleSave(entity, forumId, updatedData, "formData");
   };
 
   return (
@@ -166,7 +191,7 @@ function ForumsDataFetcher() {
                 <Td>
                   {editingRows.includes(forum.forum_id) ? (
                     <Input
-                      value={editingData[forum.forum_id]?.title || forum.title}
+                      value={editingData[forum.forum_id]?.title}
                       onChange={(e) =>
                         handleEditChange(e, "title", forum.forum_id)
                       }
@@ -181,10 +206,7 @@ function ForumsDataFetcher() {
                 <Td>
                   {editingRows.includes(forum.forum_id) ? (
                     <Input
-                      value={
-                        editingData[forum.forum_id]?.description ||
-                        forum.description
-                      }
+                      value={editingData[forum.forum_id]?.description}
                       onChange={(e) =>
                         handleEditChange(e, "description", forum.forum_id)
                       }
@@ -241,7 +263,7 @@ function ForumsDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(forum.forum_id)
-                        ? handleStatuSave(forum.forum_id)
+                        ? handleStatusSave(forum.forum_id)
                         : handleEdit(forum.forum_id)
                     }
                   />

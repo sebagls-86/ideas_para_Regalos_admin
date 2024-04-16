@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
@@ -35,7 +35,7 @@ import "../../../../assets/css/Tables.css";
 
 function RelationshipsDataFetcher() {
   const entity = "relationships";
-  const apiEndpoint = "http://localhost:8080/api/v1/relationships";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/relationships`;
   const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
   const { isDarkMode } = useDarkMode();
@@ -46,6 +46,8 @@ function RelationshipsDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -142,8 +144,7 @@ function RelationshipsDataFetcher() {
       postData(newRelationshipsData);
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+     }
   };
 
   const handleEditChange = (e, fieldName, categoryId) => {
@@ -156,6 +157,52 @@ function RelationshipsDataFetcher() {
         [fieldName]: newValue,
       },
     }));
+  };
+
+  useEffect(() => {
+    editingRows.forEach(relationshipId => {
+      setEditingData(prevEditingData => {
+        const updatedEditingData = { ...prevEditingData };
+        const relationshipToUpdate = updatedEditingData[relationshipId];
+
+        const updatedRelationship = Relationships.find(relationship => relationship.relationship_id === relationshipId);
+        const updatedRelationshipData = {
+          ...relationshipToUpdate,
+          ...updatedRelationship
+        };
+
+        updatedEditingData[relationshipId] = updatedRelationshipData;
+
+        return updatedEditingData;
+      });
+    });
+  }, [editingRows, Relationships, setEditingData]);
+
+  const handleSaveChanges = (relationshipId) => {
+    const modifiedFields = Object.keys(editingData[relationshipId]).filter(
+      (fieldName) =>
+        isFieldModified(
+          editingData,
+          relationshipId,
+          fieldName,
+          Relationships.find((relationship) => relationship.relationship_id === relationshipId)[fieldName]
+        )
+    );
+  
+    if (
+      modifiedFields.some((fieldName) =>
+        isFieldEmpty(editingData, relationshipId, fieldName)
+      )
+    ) {
+      openFeedbackModal("No puedes dejar campos modificados vacíos.");
+    } else {
+      const updatedData = modifiedFields.reduce((acc, fieldName) => {
+        acc[fieldName] = editingData[relationshipId][fieldName];
+        return acc;
+      }, {});
+  
+      handleSave(entity, relationshipId, updatedData);
+    }
   };
 
   return (
@@ -238,8 +285,7 @@ function RelationshipsDataFetcher() {
                   {editingRows.includes(relationship.relationship_id) ? (
                     <Input
                       value={
-                        editingData[relationship.relationship_id]?.relationship_name ||
-                        relationship.relationship_name
+                        editingData[relationship.relationship_id]?.relationship_name
                       }
                       onChange={(e) =>
                         handleEditChange(e, "relationship_name", relationship.relationship_id)
@@ -270,11 +316,7 @@ function RelationshipsDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(relationship.relationship_id)
-                        ? handleSave(
-                            entity,
-                            relationship.relationship_id,
-                            editingData[relationship.relationship_id]
-                          )
+                        ? handleSaveChanges(relationship.relationship_id)
                         : handleEdit(relationship.relationship_id)
                     }
                   />

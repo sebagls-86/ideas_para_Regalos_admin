@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import useDataFetcher from "../../../../components/dataManage/useDataFetcher";
 import useCustomFilter from "../../../../components/dataManage/useCustomFilter";
@@ -35,7 +35,7 @@ import "../../../../assets/css/Tables.css";
 
 function InterestsDataFetcher() {
   const entity = "interests";
-  const apiEndpoint = "http://localhost:8080/api/v1/interests";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/interests`;
   const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
   const { isDarkMode } = useDarkMode();
@@ -46,6 +46,8 @@ function InterestsDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldModified,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -149,8 +151,7 @@ function InterestsDataFetcher() {
       postData(newInterestsData);
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+     }
   };
 
   const handleEditChange = (e, fieldName, interestId) => {
@@ -163,6 +164,40 @@ function InterestsDataFetcher() {
         [fieldName]: newValue,
       },
     }));
+  };
+
+  useEffect(() => {
+    editingRows.forEach(interestId => {
+      setEditingData(prevEditingData => ({
+        ...prevEditingData,
+        [interestId]: {
+          ...prevEditingData[interestId],
+          ...interests.find(interest => interest.interest_id === interestId)
+        }
+      }));
+    });
+  }, [editingRows, interests, setEditingData]);
+
+  const handleSaveChanges = (interestId) => {
+    const modifiedFields = Object.keys(editingData[interestId]).filter(fieldName =>
+      isFieldModified(editingData, interestId, fieldName, interests.find(interest => interest.interest_id === interestId)[fieldName])
+    );
+  
+    if (modifiedFields.length === 0) {
+      handleCancel(interestId)
+      return
+    }
+  
+    if (modifiedFields.some(fieldName => isFieldEmpty(editingData, interestId, fieldName))) {
+      openFeedbackModal("No puedes dejar campos modificados vacíos.");
+    } else {
+      const updatedData = modifiedFields.reduce((acc, fieldName) => {
+        acc[fieldName] = editingData[interestId][fieldName];
+        return acc;
+      }, {});
+  
+      handleSave(entity, interestId, updatedData, "json");
+    }
   };
 
   return (
@@ -243,8 +278,7 @@ function InterestsDataFetcher() {
                   {editingRows.includes(interest.interest_id) ? (
                     <Input
                       value={
-                        editingData[interest.interest_id]?.interest ||
-                        interest.interest
+                        editingData[interest.interest_id]?.interest
                       }
                       onChange={(e) =>
                         handleEditChange(e, "interest", interest.interest_id)
@@ -275,11 +309,7 @@ function InterestsDataFetcher() {
                     }
                     onClick={() =>
                       editingRows.includes(interest.interest_id)
-                        ? handleSave(
-                            entity,
-                            interest.interest_id,
-                            editingData[interest.interest_id]
-                          )
+                        ? handleSaveChanges(interest.interest_id)
                         : handleEdit(interest.interest_id)
                     }
                   />

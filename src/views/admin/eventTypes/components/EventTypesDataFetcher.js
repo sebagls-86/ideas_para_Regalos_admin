@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TokenInvalidError from "../../../../components/modals/modalTokenInvalidError";
 import ErrorModal from "../../../../components/modals/modalError";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -42,7 +42,7 @@ function mapScheduledValue(value) {
 
 function EventsTypeDataFetcher() {
   const entity = "eventTypes";
-  const apiEndpoint = "http://localhost:8080/api/v1/eventTypes";
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/eventTypes`;
   const token = localStorage.getItem("token");
   const { isDarkMode } = useDarkMode();
 
@@ -52,6 +52,7 @@ function EventsTypeDataFetcher() {
     showTokenInvalidError,
     showErrorModal,
     editingData,
+    isFieldEmpty,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
     feedbackMessagePatch,
@@ -178,8 +179,7 @@ function EventsTypeDataFetcher() {
       postData(updatedEventTypeData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
-      console.log("Formulario inválido");
-    }
+     }
   };
 
   const [imagePreview, setImagePreview] = useState("");
@@ -219,17 +219,23 @@ function EventsTypeDataFetcher() {
       (field) => field !== "scheduled"
     );
   
+    const hasEmptyFields = Object.keys(editingData[eventTypeId] || {}).some(
+      (fieldName) => isFieldEmpty(editingData, eventTypeId, fieldName)
+    );
+  
     const scheduledToSend = isScheduledComplete
       ? parseInt(editedScheduled, 10)
       : editedScheduled;
   
-    if (isScheduledComplete || areOtherFieldsEdited) {
+    if ((isScheduledComplete || areOtherFieldsEdited) && !hasEmptyFields) {
       const updatedData = {
         ...editingData[eventTypeId],
         ...(scheduledToSend !== undefined && { scheduled: scheduledToSend }),
       };
   
       await handleSave(entity, eventTypeId, updatedData, "formData");
+    } else {
+      openFeedbackModal("No puedes dejar campos modificados o vacíos.");
     }
   };
 
@@ -245,6 +251,19 @@ function EventsTypeDataFetcher() {
     setSelectedImage(null);
     setImageModalOpen(false);
   };
+
+  useEffect(() => {
+    editingRows.forEach(eventTypeId => {
+      setEditingData(prevEditingData => ({
+        ...prevEditingData,
+        [eventTypeId]: {
+          ...prevEditingData[eventTypeId],
+          ...eventTypes.find(eventType => eventType.event_type_id === eventTypeId)
+        }
+      }));
+    });
+  }, [editingRows, eventTypes, setEditingData]);
+
 
   return (
     <Box marginTop="5rem" maxHeight="500px">
@@ -356,7 +375,7 @@ function EventsTypeDataFetcher() {
                   {editingRows.includes(event.event_type_id) ? (
                     <Input
                       value={
-                        editingData[event.event_type_id]?.name || event.name
+                        editingData[event.event_type_id]?.name
                       }
                       onChange={(e) =>
                         handleEditChange(e, "name", event.event_type_id)
@@ -405,10 +424,7 @@ function EventsTypeDataFetcher() {
                           }
                         />
                         <Image
-                          src={
-                            imagePreview ||
-                            `http://localhost:8080${event.image}`
-                          }
+                          src={imagePreview || `${process.env.REACT_APP_URL_IMAGES}${event.image}`}
                           alt="Image Preview"
                           maxH="50px"
                           maxW="50px"
@@ -427,13 +443,13 @@ function EventsTypeDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`http://localhost:8080${event.image}`}
+                      src={`${process.env.REACT_APP_URL_IMAGES}${event.image}`}
                       alt="Avatar"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
-                        handleImageClick(`http://localhost:8080${event.image}`)
+                        handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${event.image}`)
                       }
                       cursor="pointer"
                     />

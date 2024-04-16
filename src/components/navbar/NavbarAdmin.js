@@ -3,12 +3,10 @@ import { Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink, Flex, Link, Text, useC
 import PropTypes from 'prop-types';
 import React, { useState, useEffect } from 'react';
 import AdminNavbarLinks from 'components/navbar/NavbarLinksAdmin';
-import { useLocation } from 'react-router-dom';
 
 export default function AdminNavbar(props) {
 	const [ scrolled, setScrolled ] = useState(false);
-	const location = useLocation();
-
+	
 	useEffect(() => {
 		window.addEventListener('scroll', changeNavbar);
 
@@ -17,11 +15,8 @@ export default function AdminNavbar(props) {
 		};
 	});
 
-	console.log(props.brandText)
-
 	const { secondary, message, brandText } = props;
 
-	// Here are all the props that may change depending on navbar's type or state.(secondary, variant, scrolled)
 	let mainText = useColorModeValue('navy.700', 'white');
 	let secondaryText = useColorModeValue('gray.700', 'white');
 	let navbarPosition = 'fixed';

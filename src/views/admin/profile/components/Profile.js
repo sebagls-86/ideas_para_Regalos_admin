@@ -23,7 +23,7 @@ const Banner = () => {
       if (token) {
         try {
           const response = await fetch(
-            `http://localhost:8080/api/v1/users/${userId}`,
+            `${process.env.REACT_APP_API_URL}/users/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -51,7 +51,7 @@ const Banner = () => {
       formData.append("avatar", newAvatarFile);
 
       const response = await fetch(
-        `http://localhost:8080/api/v1/users/${userId}`,
+        `${process.env.REACT_APP_API_URL}/users/${userId}`,
         {
           method: "PATCH",
           headers: {
@@ -77,7 +77,7 @@ const Banner = () => {
       formData.append("banner", newBannerFile);
 
       const response = await fetch(
-        `http://localhost:8080/api/v1/users/${userId}`,
+        `${process.env.REACT_APP_API_URL}/users/${userId}`,
         {
           method: "PATCH",
           headers: {

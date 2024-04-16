@@ -95,7 +95,6 @@ const useDataPoster = (apiUrl, token, reloadData, showErrorCallback, customValid
             }
           }
   
-          console.log(formDataWithToken);
           requestBody = formDataWithToken;
         } else {
          headers['Content-Type'] = 'application/json';
@@ -116,23 +115,22 @@ const useDataPoster = (apiUrl, token, reloadData, showErrorCallback, customValid
           if (response.status === 403) {
             handleModalClose();
             showErrorCallback(true);
-          } else if (response.status === 400) {
+          } else if ((response.status === 400) && (response.message === "token expired")) {
             openFeedbackModal('Ocurrió un problema. Loguéate nuevamente.');
+            localStorage.removeItem("token")
+            localStorage.removeItem("userInfo")
           } else if (response.status === 500) {
             openFeedbackModal(`${response.statusText}`);
           } else {
             openFeedbackModal('Ocurrió un problema inesperado. Contacta al administrador');
-            console.error(`${response.statusText}`);
           }
         }
       } catch (error) {
-        console.log(error.message);
         openFeedbackModal('Ocurrió un problema inesperado. Contacta al administrador');
       }
     } else {
       openFeedbackModal('Formulario inválido');
-      console.log('Formulario inválido');
-    }
+      }
   };
 
   return {

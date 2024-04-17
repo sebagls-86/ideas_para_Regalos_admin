@@ -22,7 +22,7 @@ import { FaTrash, FaTimes } from "react-icons/fa";
 import "../../../../assets/css/Tables.css";
 
 function ListProductsDataFetcher() {
-  const apiEndpoint = `${process.env.REACT_APP_API_URL}/listProducts`;
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/lists/list-products`;
   const token = localStorage.getItem("token");
   const { FeedbackModal } = useFeedbackModal();
 
@@ -94,7 +94,7 @@ function ListProductsDataFetcher() {
                       icon={<Icon as={FaTrash} />}
                       onClick={() =>
                         handleCustomDeleteConfirmation(
-                          `${process.env.REACT_APP_API_URL}/lists/${listProducts.list_id}/listProducts`,
+                          `${process.env.REACT_APP_API_URL}/lists/${listProducts.list_id}/list-products`,
                           listProducts.list_product_id
                         )
                       }

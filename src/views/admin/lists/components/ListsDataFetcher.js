@@ -29,9 +29,9 @@ import { FaGift } from "react-icons/fa6";
 import "../../../../assets/css/Tables.css";
 
 function ListsDataFetcher() {
- const apiEndpoint = `${process.env.REACT_APP_API_URL}/lists`;
- const token = localStorage.getItem("token"); 
- const [selectedListProducts, setSelectedListProducts] = useState(null);
+  const apiEndpoint = `${process.env.REACT_APP_API_URL}/lists`;
+  const token = localStorage.getItem("token");
+  const [selectedListProducts, setSelectedListProducts] = useState(null);
   const [listNames, setListNames] = useState({});
   const [listProducts, setListProducts] = useState({});
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
@@ -43,7 +43,7 @@ function ListsDataFetcher() {
     showErrorModal,
     showFeedbackModal,
     FeedbackModal: FBModalPatch,
-   handleCancel,
+    handleCancel,
     handleDeleteConfirmation,
     handleCloseTokenInvalidError,
     handleCloseErrorModal,
@@ -79,7 +79,7 @@ function ListsDataFetcher() {
   const handleViewProducts = async (listId) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/lists/${listId}/listProducts`,
+        `${process.env.REACT_APP_API_URL}/lists/${listId}`,
         {
           method: "GET",
           headers: {
@@ -100,10 +100,9 @@ function ListsDataFetcher() {
         setListNames({ ...listNames, [listId]: data.data.list_name });
       } else {
         console.error("Error en la respuesta de la API:", response.status);
-       
       }
     } catch (error) {
-    openFeedbackModal("Hubo un error en el servidor. Intente mas tarde")  
+      openFeedbackModal("Hubo un error en el servidor. Intente mas tarde");
     }
   };
 
@@ -149,7 +148,10 @@ function ListsDataFetcher() {
                   <IconButton
                     aria-label="Ver Productos"
                     icon={<Icon as={FaGift} />}
-                    onClick={() => handleViewProducts(list.list_id)}
+                    onClick={() => {
+                      console.log("ID de la lista seleccionada:", list.list_id);
+                      handleViewProducts(list.list_id);
+                    }}
                   />
                 </Td>
                 <Td>{list.created_at}</Td>
@@ -176,7 +178,10 @@ function ListsDataFetcher() {
           </Tbody>
         </Table>
       </Box>
-      <FeedbackModal isOpen= {showFeedbackModal} onClose={() => showFeedbackModal(false)}/>
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => showFeedbackModal(false)}
+      />
       {FBModalPatch && (
         <FBModalPatch
           isOpen={showFeedbackModal}
@@ -187,7 +192,10 @@ function ListsDataFetcher() {
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar esta lista?"
       )}
-      <FeedbackModal isOpen= {showFeedbackModal} onClose={() => showFeedbackModal(false)}/>
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => showFeedbackModal(false)}
+      />
       {FBModalPatch && (
         <FBModalPatch
           isOpen={showFeedbackModal}
@@ -205,41 +213,30 @@ function ListsDataFetcher() {
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {listProducts[selectedListProducts?.list_id] &&
-            listProducts[selectedListProducts?.list_id].length > 0 ? (
-              Array.isArray(listProducts[selectedListProducts?.list_id]) ? (
-                listProducts[selectedListProducts?.list_id].map(
-                  (listProduct) => (
-                    <div key={listProduct.list_product_id}>
-                      <p>List Product ID: {listProduct.list_product_id}</p>
-                      <p>
-                        Product Catalog ID: {listProduct.product_catalog_id}
-                      </p>
-                    </div>
-                  )
-                )
-              ) : (
-                <div>
-                  <p>
-                    List Product ID:{" "}
-                    {
-                      listProducts[selectedListProducts?.list_id]
-                        .list_product_id
-                    }
-                  </p>
-                  <p>
-                    Product Catalog ID:{" "}
-                    {
-                      listProducts[selectedListProducts?.list_id]
-                        .product_catalog_id
-                    }
-                  </p>
-                </div>
-              )
-            ) : (
-              <p>No hay productos disponibles para esta lista.</p>
-            )}
-          </ModalBody>
+  {listProducts[selectedListProducts?.list_id] ? (
+    // Verifica si hay datos de la lista y sus productos
+    <div>
+      {console.log("Datos de productos:", listProducts[selectedListProducts?.list_id][0].products)}
+      {listProducts[selectedListProducts?.list_id][0].products && listProducts[selectedListProducts?.list_id][0].products.length > 0 ? (
+        // Si hay productos, mapea sobre ellos
+        listProducts[selectedListProducts?.list_id][0].products.map((product) => (
+          <div key={product.list_product_id}>
+            <p>List Product ID: {product.list_product_id}</p>
+            <p>Product Catalog ID: {product.product_catalog_id}</p>
+           <p>Nombre: {product.product}</p>
+           <p>----------------------------</p>
+          </div>
+        ))
+      ) : (
+        // Si no hay productos, muestra un mensaje indicando que no hay productos disponibles
+        <p>No hay productos disponibles para esta lista.</p>
+      )}
+    </div>
+  ) : (
+    // Si no hay datos, muestra un mensaje indicando que no hay productos disponibles
+    <p>No hay datos disponibles para esta lista.</p>
+  )}
+</ModalBody>
         </ModalContent>
       </Modal>
     </Box>

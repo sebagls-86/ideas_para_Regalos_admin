@@ -203,7 +203,7 @@ function ForumsDataFetcher() {
                     forum.title
                   )}
                 </Td>
-                <Td>
+                <Td style={{width: "500px", maxWidth: "500px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>
                   {editingRows.includes(forum.forum_id) ? (
                     <Input
                       value={editingData[forum.forum_id]?.description}
@@ -212,7 +212,7 @@ function ForumsDataFetcher() {
                       }
                       minWidth="100px"
                       color="white"
-                      style={{ color: isDarkMode ? "white" : "black" }}
+                      style={{ color: isDarkMode ? "white" : "black"}}
                     />
                   ) : (
                     forum.description

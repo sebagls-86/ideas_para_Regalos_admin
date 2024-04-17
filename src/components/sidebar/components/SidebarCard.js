@@ -5,7 +5,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import React from "react";
-import illustration from "assets/img/logoIdeasParaRegalos.png";
+import illustration from "assets/img/round_logoIdeasParaRegalos.png";
 
 export default function SidebarDocs() {
   const bgColor = "linear-gradient(135deg, #868CFF 0%, #4318FF 100%)";
@@ -36,7 +36,7 @@ export default function SidebarDocs() {
         top='-47px'
         transform='translate(-50%, 0%)'
       >
-        <Image src={illustration} w='40px' h='40px' />
+        <Image src={illustration} w='100%' h='100%' />
       </Flex>
       <Flex
         direction='column'

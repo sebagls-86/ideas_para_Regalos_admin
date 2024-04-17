@@ -117,7 +117,7 @@ function MessagesDataFetcher() {
             {filteredData.map((message) => (
               <Tr key={message.message_id}>
                 <Td>{message.message_id}</Td>
-                <Td>{message.message}</Td>
+                <Td style={{ width: "500px", maxWidth: "500px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{message.message}</Td>
                 <Td>{message.user_id}</Td>
                 <Td>{message.forum_id}</Td>
                 <Td>

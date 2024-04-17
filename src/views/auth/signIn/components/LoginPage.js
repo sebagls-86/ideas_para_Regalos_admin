@@ -16,7 +16,8 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import DefaultAuth from "layouts/auth/Default";
-import illustration from "assets/img/logoIdeasParaRegalos.png";
+import illustrationLight from "assets/img/logoIdeasParaRegalos.png";
+import illustrationDark from "assets/img/logoIdeasParaRegalosDark.png";
 import { useAuth0 } from "@auth0/auth0-react";
 import configJson from "../../../../auth_config.json";
 import useFeedbackModal from "../../../../components/modals/feedbackModal";
@@ -50,6 +51,8 @@ function SignIn() {
   const handleCloseServerErrorModal = () => {
     setShowServerErrorModal(false);
   };
+
+  const illustration = isDarkMode ? illustrationDark : illustrationLight;
 
   useEffect(() => {
     const fetchTokenAndVerifyUser = async () => {

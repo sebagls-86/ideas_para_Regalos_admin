@@ -1,4 +1,4 @@
-import illustration from "assets/img/logoIdeasParaRegalos.png";
+import illustration from "assets/img/round_logoIdeasParaRegalos.png";
 import { createIcon } from "@chakra-ui/react";
 
 export const IDPLogo = createIcon({

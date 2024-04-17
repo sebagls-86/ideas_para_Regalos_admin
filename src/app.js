@@ -11,6 +11,7 @@ import ErrorLayout from "views/error/ErrorPage";
 import { ChakraProvider } from "@chakra-ui/react";
 import theme from "theme/theme";
 import { ThemeEditorProvider } from "@hypertheme-editor/chakra-ui";
+import FixedPlugin from "components/fixedPlugin/FixedPlugin";
 
 const App = () => {
   const token = localStorage.getItem("token");
@@ -42,10 +43,13 @@ const App = () => {
             </Route>
             <Route path="/error" component={ErrorLayout} />
             <Redirect to="/auth/sign-in" />
+           
           </Switch>
         </Router>
       </ThemeEditorProvider>
+      <FixedPlugin></FixedPlugin>
     </ChakraProvider>
+    
   );
 };
 

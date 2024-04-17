@@ -235,7 +235,7 @@ export default function HeaderLinks(props) {
         </MenuList>
       </Menu>
       <Menu>
-        <FixedPlugin />
+       {/*} <FixedPlugin />*/}
         </Menu>
     </Flex>
   );

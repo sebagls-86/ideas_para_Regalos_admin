@@ -214,11 +214,9 @@ function ListsDataFetcher() {
           <ModalCloseButton />
           <ModalBody>
   {listProducts[selectedListProducts?.list_id] ? (
-    // Verifica si hay datos de la lista y sus productos
-    <div>
+     <div>
       {console.log("Datos de productos:", listProducts[selectedListProducts?.list_id][0].products)}
       {listProducts[selectedListProducts?.list_id][0].products && listProducts[selectedListProducts?.list_id][0].products.length > 0 ? (
-        // Si hay productos, mapea sobre ellos
         listProducts[selectedListProducts?.list_id][0].products.map((product) => (
           <div key={product.list_product_id}>
             <p>List Product ID: {product.list_product_id}</p>
@@ -228,12 +226,10 @@ function ListsDataFetcher() {
           </div>
         ))
       ) : (
-        // Si no hay productos, muestra un mensaje indicando que no hay productos disponibles
         <p>No hay productos disponibles para esta lista.</p>
       )}
     </div>
   ) : (
-    // Si no hay datos, muestra un mensaje indicando que no hay productos disponibles
     <p>No hay datos disponibles para esta lista.</p>
   )}
 </ModalBody>

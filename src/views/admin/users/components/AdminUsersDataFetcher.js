@@ -403,7 +403,7 @@ function AdminUsersDataFetcher() {
                         <Image
                           src={
                             avatarPreview ||
-                            `${process.env.REACT_APP_URL_IMAGES}${user.avatar}`
+                            `${user.avatar}`
                           }
                           alt="Avatar Preview"
                           maxH="50px"
@@ -449,7 +449,7 @@ function AdminUsersDataFetcher() {
                         <Image
                           src={
                             bannerPreview ||
-                            `${process.env.REACT_APP_URL_IMAGES}${user.banner}`
+                            `${user.banner}`
                           }
                           alt="Banner Preview"
                           maxH="50px"

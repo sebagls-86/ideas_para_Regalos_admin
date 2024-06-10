@@ -527,7 +527,7 @@ function ProductsCatalogDataFetcher() {
                         <Image
                           src={
                             imagesPreview ||
-                            `${process.env.REACT_APP_URL_IMAGES}${product.images}`
+                            `${product.images}`
                           }
                           alt="Images Preview"
                           maxH="50px"
@@ -547,14 +547,14 @@ function ProductsCatalogDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`${process.env.REACT_APP_URL_IMAGES}${product.images}`}
+                      src={`${product.images}`}
                       alt="Images"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
                         handleImageClick(
-                          `${process.env.REACT_APP_URL_IMAGES}${product.images}`
+                          `${product.images}`
                         )
                       }
                       cursor="pointer"

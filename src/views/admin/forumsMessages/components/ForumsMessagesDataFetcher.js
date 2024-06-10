@@ -124,13 +124,13 @@ function MessagesDataFetcher() {
                   {(message.images || []).map((imageUrl, index) => (
                     <Td key={index}>
                       <Image
-                        src={`${process.env.REACT_APP_URL_IMAGES}${imageUrl}`}
+                        src={`${imageUrl}`}
                         alt={`Imagen ${index + 1}`}
                         maxH="50px"
                         maxW="50px"
                         objectFit="cover"
                         onClick={() =>
-                          handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${imageUrl}`)
+                          handleImageClick(`${imageUrl}`)
                         }
                         cursor="pointer"
                       />

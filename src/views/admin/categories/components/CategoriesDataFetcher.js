@@ -350,7 +350,7 @@ function CategoriesDataFetcher() {
                         <Image
                           src={
                             imagePreview ||
-                            `${process.env.REACT_APP_URL_IMAGES}${category.image}`
+                            `${category.image}`
                           }
                           alt="Image Preview"
                           maxH="50px"
@@ -370,14 +370,14 @@ function CategoriesDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`${process.env.REACT_APP_URL_IMAGES}${category.image}`}
+                      src={`${category.image}`}
                       alt="Avatar"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
                         handleImageClick(
-                          `${process.env.REACT_APP_URL_IMAGES}${category.image}`
+                          `${category.image}`
                         )
                       }
                       cursor="pointer"

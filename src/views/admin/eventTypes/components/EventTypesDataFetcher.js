@@ -424,7 +424,7 @@ function EventsTypeDataFetcher() {
                           }
                         />
                         <Image
-                          src={imagePreview || `${process.env.REACT_APP_URL_IMAGES}${event.image}`}
+                          src={imagePreview || `${event.image}`}
                           alt="Image Preview"
                           maxH="50px"
                           maxW="50px"
@@ -443,13 +443,13 @@ function EventsTypeDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`${process.env.REACT_APP_URL_IMAGES}${event.image}`}
+                      src={`${event.image}`}
                       alt="Avatar"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
-                        handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${event.image}`)
+                        handleImageClick(`${event.image}`)
                       }
                       cursor="pointer"
                     />

@@ -421,13 +421,13 @@ function AdminUsersDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`${process.env.REACT_APP_URL_IMAGES}${user.avatar}`}
+                      src={`${user.avatar}`}
                       alt="Avatar"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
-                        handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${user.avatar}`)
+                        handleImageClick(`${user.avatar}`)
                       }
                       cursor="pointer"
                     />
@@ -467,13 +467,13 @@ function AdminUsersDataFetcher() {
                     </div>
                   ) : (
                     <Image
-                      src={`${process.env.REACT_APP_URL_IMAGES}${user.banner}`}
+                      src={`${user.banner}`}
                       alt="Banner"
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
                       onClick={() =>
-                        handleImageClick(`${process.env.REACT_APP_URL_IMAGES}${user.banner}`)
+                        handleImageClick(`${user.banner}`)
                       }
                       cursor="pointer"
                     />

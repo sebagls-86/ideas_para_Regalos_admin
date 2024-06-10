@@ -190,7 +190,7 @@ function ScheduledEventsDataFetcher() {
     const fetchEventOptions = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_URL}/scheduledEvents`
+          `${process.env.REACT_APP_API_URL}/scheduledEvents/to-schedule`
         );
         const result = await response.json();
         const eventData = result.data || [];

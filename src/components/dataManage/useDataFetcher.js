@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import useFeedbackModal from "../modals/feedbackModal";
+
 import {
   Button,
   Modal,
@@ -11,6 +12,10 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
+
+const sleep = (ms) => {
+  return new Promise(resolve => setTimeout(resolve, ms));
+};
 
 const fetchData = async (
   apiEndpoint,
@@ -31,14 +36,20 @@ const fetchData = async (
     };
 
     const response = await fetch(apiEndpoint, requestOptions);
-
+    const data = await response.json();
 
     if (response.status === 400) {
       setShowTokenInvalidError(true);
       throw new Error("Bad Request");
     }
 
-    const data = await response.json();
+    if (response.status === 401 && data.message === "Token is expired.") {
+      setShowTokenInvalidError(true);
+      await sleep(3000);
+      window.location.reload();
+    }
+
+    
 
     if (data && Array.isArray(data.data)) {
       setData(data.data);
@@ -47,10 +58,13 @@ const fetchData = async (
       console.error("Server response does not contain expected data:", data);
     }
   } catch (error) {
-    if ((error.message === "invalid token") || (error.message === "token expired")) {
+    if (
+      error.message === "invalid token" ||
+      error.message === "token expired"
+    ) {
       setShowTokenInvalidError(true);
-      localStorage.removeItem("token")
-      localStorage.removeItem("userInfo")
+      localStorage.removeItem("token");
+      localStorage.removeItem("userInfo");
     } else {
       setShowErrorModal(true);
     }
@@ -105,11 +119,11 @@ function useDataFetcher(apiEndpoint, token) {
 
   const isFieldModified = (data, id, fieldName, newValue) => {
     return data[id][fieldName] !== newValue;
-};
+  };
 
-const isFieldEmpty = (data, id, fieldName) => {
+  const isFieldEmpty = (data, id, fieldName) => {
     return data[id][fieldName] === null || data[id][fieldName] === "";
-};
+  };
 
   const formatToDDMMYYYY = (date) => {
     if (!date) {
@@ -178,6 +192,13 @@ const isFieldEmpty = (data, id, fieldName) => {
         );
         openFeedbackModal("Operación realizada");
         reloadData();
+      } else if (
+        response.status === 401 &&
+        response.message === "Token is expired."
+      ) {
+        showTokenInvalidError(true);
+        localStorage.removeItem("token");
+        localStorage.removeItem("userInfo");
       } else {
         setShowErrorModal(true);
         console.error(`${response.statusText}`);

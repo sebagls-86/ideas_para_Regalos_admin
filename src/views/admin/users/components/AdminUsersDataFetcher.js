@@ -108,8 +108,9 @@ function AdminUsersDataFetcher() {
   const [editedRoles, setEditedRoles] = useState({});
 
   const handleEditChange = (e, fieldName, user_id) => {
-    const newValue = e.target.type === "file" ? e.target.files[0] : e.target.value;
-  
+    const newValue =
+      e.target.type === "file" ? e.target.files[0] : e.target.value;
+
     if (fieldName === "user_role") {
       setEditingData((prevEditingData) => ({
         ...prevEditingData,
@@ -126,7 +127,7 @@ function AdminUsersDataFetcher() {
           [fieldName]: newValue,
         },
       }));
-  
+
       if (e.target.type === "file") {
         const previewURL = URL.createObjectURL(e.target.files[0]);
         if (fieldName === "avatar") {
@@ -136,18 +137,18 @@ function AdminUsersDataFetcher() {
         }
       }
     }
-    };
+  };
 
-  useEffect(() => {
-    }, [editingData]);
+  useEffect(() => {}, [editingData]);
 
   const handleSaveOrRoles = async (user_id) => {
     const editedAdminRole = editedRoles[user_id];
-    const isAdminRoleComplete = editedAdminRole !== undefined && editedAdminRole !== null;
+    const isAdminRoleComplete =
+      editedAdminRole !== undefined && editedAdminRole !== null;
     const areOtherFieldsEdited = Object.keys(editingData[user_id] || {}).some(
       (field) => field !== "user_role"
     );
-  
+
     if (isAdminRoleComplete) {
       await handleSaveRoles(user_id);
     } else if (areOtherFieldsEdited) {
@@ -173,7 +174,7 @@ function AdminUsersDataFetcher() {
     const roleValue = parseInt(editedRoles[userId], 10);
     if (roleValue !== undefined) {
       const apiUrl = `${process.env.REACT_APP_API_URL}/users/update-user-role`;
-  
+
       try {
         const response = await fetch(apiUrl, {
           method: "PATCH",
@@ -186,17 +187,22 @@ function AdminUsersDataFetcher() {
             role_id: roleValue,
           }),
         });
-  
+
         if (response.ok) {
           openFeedbackModal("Rol actualizado con éxito");
           reloadData();
-          handleCancel(userId)
+          handleCancel(userId);
+        } else if (response.status === 401 && response.message === "Token is expired.") {
+          showTokenInvalidError(true);
+          localStorage.removeItem("token");
+          localStorage.removeItem("userInfo");
         } else {
           openFeedbackModal("Error en la solicitud");
           console.error("Error al actualizar el rol:", response.statusText);
         }
       } catch (error) {
-        history.push("/error");}
+        history.push("/error");
+      }
     }
   };
 
@@ -228,7 +234,6 @@ function AdminUsersDataFetcher() {
     setImageModalOpen(false);
   };
 
-
   return (
     <Box marginTop="5rem" height="100%">
       <Flex justifyContent="space-between" alignItems="center">
@@ -237,9 +242,8 @@ function AdminUsersDataFetcher() {
           placeholder="Buscar..."
           value={searchTerm}
         />
-        
       </Flex>
-      
+
       <Box maxHeight="500px" overflowY="auto">
         <Table variant="simple" className="table-container">
           <Thead className="sticky-header">
@@ -285,14 +289,14 @@ function AdminUsersDataFetcher() {
                       <option value="3">Soft</option>
                       <option value="4">User</option>
                     </select>
+                  ) : user.user_role === 1 ? (
+                    "SuperAdmin"
+                  ) : user.user_role === 2 ? (
+                    "Medium"
+                  ) : user.user_role === 3 ? (
+                    "Soft"
                   ) : (
-                    user.user_role === 1
-                      ? "SuperAdmin"
-                      : user.user_role === 2
-                      ? "Medium"
-                      : user.user_role === 3
-                      ? "Soft"
-                      : "User"
+                    "User"
                   )}
                 </Td>
                 <Td>
@@ -303,10 +307,9 @@ function AdminUsersDataFetcher() {
                       }
                       onChange={(e) =>
                         handleEditChange(e, "user_name", user.user_id)
-                        
                       }
                       color="white"
-                      style={{ color: isDarkMode ? "white" : "black"}}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     user.user_name
@@ -320,7 +323,7 @@ function AdminUsersDataFetcher() {
                         handleEditChange(e, "name", user.user_id)
                       }
                       color="white"
-                      style={{ color: isDarkMode ? "white" : "black"}}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     user.name
@@ -336,7 +339,7 @@ function AdminUsersDataFetcher() {
                         handleEditChange(e, "last_name", user.user_id)
                       }
                       color="white"
-                      style={{ color: isDarkMode ? "white" : "black"}}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     user.last_name
@@ -350,7 +353,7 @@ function AdminUsersDataFetcher() {
                         handleEditChange(e, "email", user.user_id)
                       }
                       color="white"
-                      style={{ color: isDarkMode ? "white" : "black"}}
+                      style={{ color: isDarkMode ? "white" : "black" }}
                     />
                   ) : (
                     user.email
@@ -368,11 +371,7 @@ function AdminUsersDataFetcher() {
                           : "")
                       }
                       onChange={(date) =>
-                        handleDateChange(
-                          date,
-                          "birth_date",
-                          user.user_id
-                        )
+                        handleDateChange(date, "birth_date", user.user_id)
                       }
                       dateFormat="dd-MM-yyyy"
                       placeholderText="Seleccionar fecha"
@@ -401,10 +400,7 @@ function AdminUsersDataFetcher() {
                           }
                         />
                         <Image
-                          src={
-                            avatarPreview ||
-                            `${user.avatar}`
-                          }
+                          src={avatarPreview || `${user.avatar}`}
                           alt="Avatar Preview"
                           maxH="50px"
                           maxW="50px"
@@ -426,9 +422,7 @@ function AdminUsersDataFetcher() {
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
-                      onClick={() =>
-                        handleImageClick(`${user.avatar}`)
-                      }
+                      onClick={() => handleImageClick(`${user.avatar}`)}
                       cursor="pointer"
                     />
                   )}
@@ -447,10 +441,7 @@ function AdminUsersDataFetcher() {
                           }
                         />
                         <Image
-                          src={
-                            bannerPreview ||
-                            `${user.banner}`
-                          }
+                          src={bannerPreview || `${user.banner}`}
                           alt="Banner Preview"
                           maxH="50px"
                           maxW="50px"
@@ -472,9 +463,7 @@ function AdminUsersDataFetcher() {
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
-                      onClick={() =>
-                        handleImageClick(`${user.banner}`)
-                      }
+                      onClick={() => handleImageClick(`${user.banner}`)}
                       cursor="pointer"
                     />
                   )}

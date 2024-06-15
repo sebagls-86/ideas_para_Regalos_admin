@@ -46,11 +46,16 @@ function mapFeaturedValue(value) {
 function ProductsCatalogDataFetcher() {
   const entity = "products-catalog";
   const apiEndpoint = `${process.env.REACT_APP_API_URL}/products-catalog`;
+  const [categories, setCategories] = useState([]);
+  const [eventTypes, setEventTypes] = useState([]);
+  const [categoryMap, setCategoryMap] = useState({});
+  const [eventTypeMap, setEventTypeMap] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageModalOpen, setImageModalOpen] = useState(false);
   const token = localStorage.getItem("token");
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
   const { isDarkMode } = useDarkMode();
+  const endpoint = process.env.REACT_APP_API_URL;
 
   const {
     data: productsCatalog,
@@ -118,6 +123,36 @@ function ProductsCatalogDataFetcher() {
     featured: false,
   });
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoriesRes, eventTypesRes] = await Promise.all([
+          fetch(endpoint + "/categories").then((res) => res.json()),
+          fetch(endpoint + "/eventTypes").then((res) => res.json()),
+        ]);
+
+        const categoriesData = categoriesRes.data.reduce((map, category) => {
+          map[category.category_id] = category.name;
+          return map;
+        }, {});
+
+        const eventTypesData = eventTypesRes.data.reduce((map, eventType) => {
+          map[eventType.event_type_id] = eventType.name;
+          return map;
+        }, {});
+
+        setCategories(categoriesRes.data);
+        setEventTypes(eventTypesRes.data);
+        setCategoryMap(categoriesData);
+        setEventTypeMap(eventTypesData);
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const handleNewProductCatalogChange = (e) => {
     const { value, name } = e.target;
     setNewProductCatalogErrors((prevErrors) => ({
@@ -147,17 +182,43 @@ function ProductsCatalogDataFetcher() {
       status: false,
       images: null,
       featured: false,
+      categories: [],
+      events: [],
     });
     setNewProductCatalogErrors({
       name: "",
       status: false,
       images: null,
       featured: false,
+      categories: "",
+      events: "",
     });
   };
 
   const handleCreateProductCatalogModalOpen = () => {
     handleModalOpen();
+  };
+
+  const handleCategoryChange = (e) => {
+    const selectedCategories = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+    setNewProductCatalogData((prevData) => ({
+      ...prevData,
+      categories: selectedCategories,
+    }));
+  };
+  
+  const handleEventChange = (e) => {
+    const selectedEvents = Array.from(
+      e.target.selectedOptions,
+      (option) => option.value
+    );
+    setNewProductCatalogData((prevData) => ({
+      ...prevData,
+      events: selectedEvents,
+    }));
   };
 
   const validateNewProductCatalogForm = () => {
@@ -166,6 +227,8 @@ function ProductsCatalogDataFetcher() {
       status: "",
       images: "",
       featured: "",
+      categories: "",
+      events: "",
     };
 
     if (!newProductCatalogData.name) {
@@ -191,7 +254,15 @@ function ProductsCatalogDataFetcher() {
       newProductCatalogData.featured !== true &&
       newProductCatalogData.featured !== false
     ) {
-      errors.status = "Marcar si es un evento calendarizado o no.";
+      errors.featured = "Marcar si el producto es destacado o no.";
+    }
+
+    if (newProductCatalogData.categories.length === 0) {
+      errors.categories = "Selecciona al menos una categoría.";
+    }
+
+    if (newProductCatalogData.events.length === 0) {
+      errors.events = "Selecciona al menos un evento.";
     }
 
     setNewProductCatalogErrors(errors);
@@ -214,7 +285,7 @@ function ProductsCatalogDataFetcher() {
       postData(newProductCatalogData, "formData");
     } else {
       openFeedbackModal("Formulario inválido");
-     }
+    }
   };
 
   const [imagesPreview, setImagesPreview] = useState("");
@@ -247,46 +318,69 @@ function ProductsCatalogDataFetcher() {
   };
 
   useEffect(() => {
-    editingRows.forEach(productId => {
-      setEditingData(prevEditingData => ({
+    editingRows.forEach((productId) => {
+      setEditingData((prevEditingData) => ({
         ...prevEditingData,
         [productId]: {
           ...prevEditingData[productId],
-          ...productsCatalog.find(product => product.product_catalog_id === productId)
-        }
+          ...productsCatalog.find(
+            (product) => product.product_catalog_id === productId
+          ),
+        },
       }));
     });
   }, [editingRows, productsCatalog, setEditingData]);
-  
 
   const handleStatusSave = (productId) => {
-    const modifiedFields = Object.keys(editingData[productId]).filter(fieldName =>
-        fieldName !== "status" && isFieldModified(editingData, productId, fieldName, productsCatalog.find(product => product.product_catalog_id === productId)[fieldName])
+    const modifiedFields = Object.keys(editingData[productId]).filter(
+      (fieldName) =>
+        fieldName !== "status" &&
+        isFieldModified(
+          editingData,
+          productId,
+          fieldName,
+          productsCatalog.find(
+            (product) => product.product_catalog_id === productId
+          )[fieldName]
+        )
     );
 
     const editedStatus = editingData[productId]?.status;
-    const isStatusComplete = editedStatus !== undefined && editedStatus !== null;
+    const isStatusComplete =
+      editedStatus !== undefined && editedStatus !== null;
 
-    if (isStatusComplete && isFieldModified(editingData, productId, "status", parseInt(editedStatus, 10))) {
-        modifiedFields.push("status");
+    if (
+      isStatusComplete &&
+      isFieldModified(
+        editingData,
+        productId,
+        "status",
+        parseInt(editedStatus, 10)
+      )
+    ) {
+      modifiedFields.push("status");
     }
 
     if (modifiedFields.length === 0) {
-        handleCancel(productId);
-        return;
+      handleCancel(productId);
+      return;
     }
 
-    if (modifiedFields.some(fieldName => isFieldEmpty(editingData, productId, fieldName))) {
-        openFeedbackModal("No puedes dejar campos modificados vacíos.");
+    if (
+      modifiedFields.some((fieldName) =>
+        isFieldEmpty(editingData, productId, fieldName)
+      )
+    ) {
+      openFeedbackModal("No puedes dejar campos modificados vacíos.");
     } else {
-        const updatedData = modifiedFields.reduce((acc, fieldName) => {
-            acc[fieldName] = editingData[productId][fieldName];
-            return acc;
-        }, {});
+      const updatedData = modifiedFields.reduce((acc, fieldName) => {
+        acc[fieldName] = editingData[productId][fieldName];
+        return acc;
+      }, {});
 
-        handleSave(entity, productId, updatedData, "formData");
+      handleSave(entity, productId, updatedData, "formData");
     }
-};
+  };
 
   const handleStatusChange = (e) => {
     const { value } = e.target;
@@ -341,7 +435,7 @@ function ProductsCatalogDataFetcher() {
           feedbackMessage={feedbackMessage}
         />
       )}
-      <Modal isOpen={showModal} onClose={handleCreateProductCatalogModalClose}>
+      <Modal isOpen={showModal} onClose={handleModalClose}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Agregar nuevo producto</ModalHeader>
@@ -359,14 +453,13 @@ function ProductsCatalogDataFetcher() {
               />
               <div style={{ color: "red" }}>{newProductCatalogErrors.name}</div>
             </FormControl>
+
             <FormControl>
               <FormLabel>Status</FormLabel>
               <Select
                 name="status"
                 value={newProductCatalogData.status ? "1" : "0"}
                 onChange={handleStatusChange}
-                color="white"
-                style={{ color: isDarkMode ? "white" : "black" }}
               >
                 <option value="0">Inactivo</option>
                 <option value="1">Activo</option>
@@ -375,22 +468,22 @@ function ProductsCatalogDataFetcher() {
                 {newProductCatalogErrors.status}
               </div>
             </FormControl>
+
             <FormControl>
               <FormLabel>Destacado</FormLabel>
               <Select
                 name="featured"
                 value={newProductCatalogData.featured ? "1" : "0"}
                 onChange={handleFeaturedChange}
-                color="white"
-                style={{ color: isDarkMode ? "white" : "black" }}
               >
                 <option value="0">No</option>
-                <option value="1">Si</option>
+                <option value="1">Sí</option>
               </Select>
               <div style={{ color: "red" }}>
                 {newProductCatalogErrors.featured}
               </div>
             </FormControl>
+
             <FormControl>
               <FormLabel>Imagen</FormLabel>
               <Input
@@ -404,6 +497,43 @@ function ProductsCatalogDataFetcher() {
               <div style={{ color: "red" }}>
                 {newProductCatalogErrors.image}
               </div>
+            </FormControl>
+
+            <FormControl>
+              <FormLabel>Categoría</FormLabel>
+              <Select
+                name="categories"
+                multiple
+                value={newProductCatalogData.categories}
+                onChange={handleCategoryChange}
+              >
+                {categories.map((category) => (
+                  <option
+                    key={category.category_id}
+                    value={category.category_id}
+                  >
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl>
+              <FormLabel>Eventos</FormLabel>
+              <Select
+                name="events"
+                multiple
+                value={newProductCatalogData.events}
+                onChange={handleEventChange}
+              >
+                {eventTypes.map((eventType) => (
+                  <option
+                    key={eventType.event_type_id}
+                    value={eventType.event_type_id}
+                  >
+                    {eventType.name}
+                  </option>
+                ))}
+              </Select>
             </FormControl>
           </ModalBody>
           <ModalFooter>
@@ -423,12 +553,15 @@ function ProductsCatalogDataFetcher() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+      
       <Box maxHeight="500px" overflowY="auto">
         <Table variant="simple" mt={8} className="table-container">
           <Thead className="sticky-header">
             <Tr>
               <Th>ID</Th>
               <Th>Nombre</Th>
+              <Th>Categorias</Th>
+              <Th>Eventos</Th>
               <Th>Estado</Th>
               <Th>Destacado</Th>
               <Th>Imágenes</Th>
@@ -447,9 +580,7 @@ function ProductsCatalogDataFetcher() {
                 <Td>
                   {editingRows.includes(product.product_catalog_id) ? (
                     <Input
-                      value={
-                        editingData[product.product_catalog_id]?.name
-                      }
+                      value={editingData[product.product_catalog_id]?.name}
                       onChange={(e) =>
                         handleEditChange(e, "name", product.product_catalog_id)
                       }
@@ -460,6 +591,22 @@ function ProductsCatalogDataFetcher() {
                   ) : (
                     product.name
                   )}
+                </Td>
+                <Td>
+                  {product.categories.map((categoryId) => (
+                    <span key={categoryId}>
+                      {categoryMap[categoryId]}
+                      {" | "}
+                    </span>
+                  ))}
+                </Td>
+                <Td>
+                  {product.event_types.map((eventTypeId) => (
+                    <span key={eventTypeId}>
+                      {eventTypeMap[eventTypeId]}
+                      {" | "}
+                    </span>
+                  ))}
                 </Td>
                 <Td>
                   {editingRows.includes(product.product_catalog_id) ? (
@@ -525,10 +672,7 @@ function ProductsCatalogDataFetcher() {
                           }
                         />
                         <Image
-                          src={
-                            imagesPreview ||
-                            `${product.images}`
-                          }
+                          src={imagesPreview || `${product.images}`}
                           alt="Images Preview"
                           maxH="50px"
                           maxW="50px"
@@ -552,11 +696,7 @@ function ProductsCatalogDataFetcher() {
                       maxH="50px"
                       maxW="50px"
                       objectFit="cover"
-                      onClick={() =>
-                        handleImageClick(
-                          `${product.images}`
-                        )
-                      }
+                      onClick={() => handleImageClick(`${product.images}`)}
                       cursor="pointer"
                     />
                   )}

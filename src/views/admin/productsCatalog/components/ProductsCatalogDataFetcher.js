@@ -89,8 +89,7 @@ function ProductsCatalogDataFetcher() {
     reloadData,
   } = useDataFetcher(apiEndpoint, token);
 
-  console.log("productsCatalog", productsCatalog)
-
+  
   const customFilter = (productsCatalog, searchTerm) => {
     const idMatch = productsCatalog.product_catalog_id
       .toString()
@@ -98,6 +97,7 @@ function ProductsCatalogDataFetcher() {
       .includes(searchTerm.toLowerCase());
     const nameMatch = productsCatalog.name
       .toString()
+      .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const statusMatch = productsCatalog.status
       .toString()

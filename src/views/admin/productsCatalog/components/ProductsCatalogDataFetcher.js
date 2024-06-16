@@ -65,6 +65,7 @@ function ProductsCatalogDataFetcher() {
   const [selectedEvents, setSelectedEvents] = useState({});
   const [originalEvents, setOriginalEvents] = useState({});
 
+
   const {
     data: productsCatalog,
     editingRows,
@@ -209,6 +210,7 @@ function ProductsCatalogDataFetcher() {
     handleModalOpen();
   };
 
+
   const [currentProductCatalogId, setCurrentProductCatalogId] = useState(null);
 
   const handleEditCategories = (product) => {
@@ -239,6 +241,7 @@ function ProductsCatalogDataFetcher() {
     setEventsModalOpen(true);
   };
 
+
   const handleCategoryChange = (e) => {
     const selectedCategories = Array.from(
       e.target.selectedOptions,
@@ -249,6 +252,7 @@ function ProductsCatalogDataFetcher() {
       categories: selectedCategories,
     }));
   };
+
 
   const determineCategoryChanges = (productCatalogId, selectedCategories) => {
     const original = originalCategories[productCatalogId] || [];
@@ -417,6 +421,7 @@ function ProductsCatalogDataFetcher() {
       [productCatalogId]: selectedEventsIds,
     }));
   };
+
 
   const handleEventChange = (e) => {
     const selectedEvents = Array.from(

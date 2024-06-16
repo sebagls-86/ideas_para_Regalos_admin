@@ -9,6 +9,7 @@ import { SearchBar } from "../../../../components/navbar/searchBar/SearchBar";
 import useDarkMode from "assets/darkModeHook";
 import {
   Box,
+  Badge,
   Table,
   Thead,
   Tbody,
@@ -56,6 +57,13 @@ function ProductsCatalogDataFetcher() {
   const { openFeedbackModal, FeedbackModal } = useFeedbackModal();
   const { isDarkMode } = useDarkMode();
   const endpoint = process.env.REACT_APP_API_URL;
+  const [currentEditingProduct, setCurrentEditingProduct] = useState(null);
+  const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState({});
+  const [originalCategories, setOriginalCategories] = useState({});
+  const [isEventsModalOpen, setEventsModalOpen] = useState(false);
+  const [selectedEvents, setSelectedEvents] = useState({});
+  const [originalEvents, setOriginalEvents] = useState({});
 
   const {
     data: productsCatalog,
@@ -79,6 +87,8 @@ function ProductsCatalogDataFetcher() {
     renderDeleteConfirmationModal,
     reloadData,
   } = useDataFetcher(apiEndpoint, token);
+
+  console.log("productsCatalog", productsCatalog)
 
   const customFilter = (productsCatalog, searchTerm) => {
     const idMatch = productsCatalog.product_catalog_id
@@ -199,6 +209,36 @@ function ProductsCatalogDataFetcher() {
     handleModalOpen();
   };
 
+  const [currentProductCatalogId, setCurrentProductCatalogId] = useState(null);
+
+  const handleEditCategories = (product) => {
+    setCurrentProductCatalogId(product.product_catalog_id);
+    setCurrentEditingProduct(product);
+    setSelectedCategories((prevData) => ({
+      ...prevData,
+      [product.product_catalog_id]: product.categories,
+    }));
+    setOriginalCategories((prevData) => ({
+      ...prevData,
+      [product.product_catalog_id]: product.categories,
+    }));
+    setCategoryModalOpen(true);
+  };
+
+  const handleEditEventTypes = (product) => {
+    setCurrentProductCatalogId(product.product_catalog_id);
+    setCurrentEditingProduct(product);
+    setSelectedEvents((prevData) => ({
+      ...prevData,
+      [product.product_catalog_id]: product.event_types,
+    }));
+    setOriginalEvents((prevData) => ({
+      ...prevData,
+      [product.product_catalog_id]: product.event_types,
+    }));
+    setEventsModalOpen(true);
+  };
+
   const handleCategoryChange = (e) => {
     const selectedCategories = Array.from(
       e.target.selectedOptions,
@@ -209,7 +249,175 @@ function ProductsCatalogDataFetcher() {
       categories: selectedCategories,
     }));
   };
-  
+
+  const determineCategoryChanges = (productCatalogId, selectedCategories) => {
+    const original = originalCategories[productCatalogId] || [];
+    const selected = selectedCategories || [];
+
+    const categoriesToAdd = selected.filter(
+      (category) => !original.includes(category)
+    );
+    const categoriesToRemove = original.filter(
+      (category) => !selected.includes(category)
+    );
+
+    return { categoriesToAdd, categoriesToRemove };
+  };
+
+  const determineEventsChanges = (productCatalogId, selectedEvents) => {
+    const original = originalEvents[productCatalogId] || [];
+    const selected = selectedEvents || [];
+
+    const eventsToAdd = selected.filter(
+      (event_types) => !original.includes(event_types)
+    );
+    const eventsToRemove = original.filter(
+      (event_types) => !selected.includes(event_types)
+    );
+
+    return { eventsToAdd, eventsToRemove };
+  };
+
+  const saveCategoryChanges = async (
+    productCatalogId,
+    categoriesToAdd,
+    categoriesToRemove
+  ) => {
+    try {
+      if (categoriesToAdd.length > 0) {
+        await fetch(endpoint + "/productsCatalogAssociations", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_catalog_id: productCatalogId,
+            categories_ids: categoriesToAdd,
+          }),
+        });
+      }
+
+      if (categoriesToRemove.length > 0) {
+        await fetch(endpoint + "/productsCatalogAssociations/"+categoriesToRemove[0], {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_catalog_id: productCatalogId,
+            categories_ids: categoriesToRemove,
+          }),
+        });
+      }
+
+      setCategories((prevCategories) => {
+        const updatedCategories = prevCategories.filter(
+          (category) => !categoriesToRemove.includes(category.category_id)
+        );
+        return [
+          ...updatedCategories,
+          ...categoriesToAdd.map((id) => ({ category_id: id })),
+        ];
+      });
+
+      reloadData();
+      handleCancel(productCatalogId)
+    } catch (error) {
+      console.error("Error saving category changes", error);
+    }
+  };
+
+  const saveEventsChanges = async (
+    productCatalogId,
+    eventsToAdd,
+    eventsToRemove
+  ) => {
+    try {
+      if (eventsToAdd.length > 0) {
+        await fetch(endpoint + "/productsCatalogAssociations", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_catalog_id: productCatalogId,
+            event_types_ids: eventsToAdd,
+          }),
+        });
+        reloadData();
+        handleCancel(productCatalogId)
+      }
+
+      if (eventsToRemove.length > 0) {
+        await fetch(endpoint + "/productsCatalogAssociations/"+eventsToRemove[0], {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            product_catalog_id: productCatalogId,
+            event_types_ids: eventsToRemove,
+          }),
+        });
+      }
+
+        setEventTypes((prevEvents) => {
+          const updateEvents = prevEvents.filter(
+            (eventTypes) => !eventsToRemove.includes(eventTypes.event_type_id)
+          );
+          return [
+            ...updateEvents,
+            ...eventsToAdd.map((id) => ({ event_type_id: id })),
+          ];
+        });
+
+        reloadData();
+        handleCancel(productCatalogId)
+      
+    } catch (error) {
+      console.error("Error saving category changes", error);
+    }
+  };
+
+  const handleSaveCategories = async (
+    productCatalogId,
+    selectedCategoryIds
+  ) => {
+    const { categoriesToAdd, categoriesToRemove } = determineCategoryChanges(
+      productCatalogId,
+      selectedCategoryIds
+    );
+
+    await saveCategoryChanges(
+      productCatalogId,
+      categoriesToAdd,
+      categoriesToRemove
+    );
+
+    setSelectedCategories((prevSelected) => ({
+      ...prevSelected,
+      [productCatalogId]: selectedCategoryIds,
+    }));
+  };
+
+  const handleSaveEvents = async (productCatalogId, selectedEventsIds) => {
+    const { eventsToAdd, eventsToRemove } = determineEventsChanges(
+      productCatalogId,
+      selectedEventsIds
+    );
+
+    await saveEventsChanges(productCatalogId, eventsToAdd, eventsToRemove);
+
+    setSelectedEvents((prevSelected) => ({
+      ...prevSelected,
+      [productCatalogId]: selectedEventsIds,
+    }));
+  };
+
   const handleEventChange = (e) => {
     const selectedEvents = Array.from(
       e.target.selectedOptions,
@@ -408,6 +616,143 @@ function ProductsCatalogDataFetcher() {
     setImageModalOpen(false);
   };
 
+  const CategoryModal = ({
+    isOpen,
+    onClose,
+    categories,
+    selectedCategories,
+    currentProductCatalogId,
+    onSave,
+  }) => {
+    const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
+
+    useEffect(() => {
+      setSelectedCategoryIds(selectedCategories[currentProductCatalogId] || []);
+    }, [selectedCategories, currentProductCatalogId]);
+
+    const toggleCategory = (categoryId) => {
+      setSelectedCategoryIds((prevSelected) => {
+        if (prevSelected.includes(categoryId)) {
+          return prevSelected.filter((id) => id !== categoryId);
+        } else {
+          return [...prevSelected, categoryId];
+        }
+      });
+    };
+
+    useEffect(() => {
+      console.log("Updated selectedCategoryIds:", selectedCategoryIds);
+    }, [selectedCategoryIds]);
+
+    const handleSaveCat = () => {
+      setSelectedCategories((prevSelected) => ({
+        ...prevSelected,
+        [currentProductCatalogId]: selectedCategoryIds,
+      }));
+
+      onSave(currentProductCatalogId, selectedCategoryIds);
+      onClose();
+    };
+
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Selecciona Categorías</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {categories.map((category) => (
+              <Badge
+                key={category.category_id}
+                colorScheme={
+                  selectedCategoryIds.includes(category.category_id)
+                    ? "red"
+                    : "blue"
+                }
+                m={1}
+                p={2}
+                cursor="pointer"
+                onClick={() => toggleCategory(category.category_id)}
+              >
+                {category.name}
+              </Badge>
+            ))}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={handleSaveCat}>
+              Guardar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  };
+
+  const EventsModal = ({
+    isOpen,
+    onClose,
+    events,
+    selectedEvents,
+    currentProductCatalogId,
+    onSave,
+  }) => {
+    const [selectedEventsIds, setSelectedEventsIds] = useState([]);
+
+    useEffect(() => {
+      setSelectedEventsIds(selectedEvents[currentProductCatalogId] || []);
+    }, [selectedEvents, currentProductCatalogId]);
+
+    const toggleEvent = (eventId) => {
+      setSelectedEventsIds((prevSelected) => {
+        if (prevSelected.includes(eventId)) {
+          return prevSelected.filter((id) => id !== eventId);
+        } else {
+          return [...prevSelected, eventId];
+        }
+      });
+    };
+
+    const handleSaveEv = () => {
+      onSave(currentProductCatalogId, selectedEventsIds);
+      onClose();
+    };
+
+    return (
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Selecciona Eventos</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            {events.map((event) => (
+              <Badge
+                key={event.event_type_id}
+                colorScheme={
+                  selectedEventsIds.includes(event.event_type_id)
+                    ? "red"
+                    : "blue"
+                }
+                m={1}
+                p={2}
+                cursor="pointer"
+                onClick={() => toggleEvent(event.event_type_id)}
+              >
+                {event.name}
+              </Badge>
+            ))}
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="blue" onClick={handleSaveEv}>
+              Guardar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    );
+  };
+
+  const sortedData = [...filteredData].sort((a, b) => a.product_catalog_id - b.product_catalog_id);
+
   return (
     <Box marginTop="5rem" maxHeight="500px">
       <Flex justifyContent="space-between" alignItems="center">
@@ -553,7 +898,7 @@ function ProductsCatalogDataFetcher() {
           </ModalFooter>
         </ModalContent>
       </Modal>
-      
+
       <Box maxHeight="500px" overflowY="auto">
         <Table variant="simple" mt={8} className="table-container">
           <Thead className="sticky-header">
@@ -574,7 +919,7 @@ function ProductsCatalogDataFetcher() {
           />
           <ErrorModal isOpen={showErrorModal} onClose={handleCloseErrorModal} />
           <Tbody className="scrollable-content">
-            {filteredData.map((product) => (
+            {sortedData.map((product) => (
               <Tr key={product.product_catalog_id}>
                 <Td>{product.product_catalog_id}</Td>
                 <Td>
@@ -596,17 +941,27 @@ function ProductsCatalogDataFetcher() {
                   {product.categories.map((categoryId) => (
                     <span key={categoryId}>
                       {categoryMap[categoryId]}
-                      {" | "}
+                      {"  "}
                     </span>
                   ))}
+                  {editingRows.includes(product.product_catalog_id) && (
+                    <Button onClick={() => handleEditCategories(product)}>
+                      Edit
+                    </Button>
+                  )}
                 </Td>
                 <Td>
                   {product.event_types.map((eventTypeId) => (
                     <span key={eventTypeId}>
                       {eventTypeMap[eventTypeId]}
-                      {" | "}
+                      {"  "}
                     </span>
                   ))}
+                  {editingRows.includes(product.product_catalog_id) && (
+                    <Button onClick={() => handleEditEventTypes(product)}>
+                      Edit
+                    </Button>
+                  )}
                 </Td>
                 <Td>
                   {editingRows.includes(product.product_catalog_id) ? (
@@ -780,6 +1135,22 @@ function ProductsCatalogDataFetcher() {
       {renderDeleteConfirmationModal(
         "¿Estás seguro de que deseas eliminar este producto?"
       )}
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setCategoryModalOpen(false)}
+        categories={categories}
+        selectedCategories={selectedCategories}
+        currentProductCatalogId={currentProductCatalogId}
+        onSave={handleSaveCategories}
+      />
+      <EventsModal
+        isOpen={isEventsModalOpen}
+        onClose={() => setEventsModalOpen(false)}
+        events={eventTypes}
+        selectedEvents={selectedEvents}
+        currentProductCatalogId={currentProductCatalogId}
+        onSave={handleSaveEvents}
+      />
     </Box>
   );
 }

@@ -186,6 +186,8 @@ function useDataFetcher(apiEndpoint, token) {
         }
       );
 
+      const data = await response.json();
+
       if (response.ok) {
         setEditingRows((prevEditingRows) =>
           prevEditingRows.filter((row) => row !== itemId)
@@ -194,7 +196,7 @@ function useDataFetcher(apiEndpoint, token) {
         reloadData();
       } else if (
         response.status === 401 &&
-        response.message === "Token is expired."
+        data.message === "Token is expired."
       ) {
         showTokenInvalidError(true);
         localStorage.removeItem("token");
@@ -219,6 +221,8 @@ function useDataFetcher(apiEndpoint, token) {
         },
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         openFeedbackModal("Operación realizada");
         reloadData();
@@ -227,6 +231,13 @@ function useDataFetcher(apiEndpoint, token) {
       if (response.status === 403) {
         setShowErrorModal(true);
         throw new Error("Forbidden");
+      }else if (
+        response.status === 401 &&
+        data.message === "Token is expired."
+      ) {
+        showTokenInvalidError(true);
+        localStorage.removeItem("token");
+        localStorage.removeItem("userInfo");
       }
 
       const updatedData = data.filter((item) => item.id !== itemId);
@@ -259,6 +270,8 @@ function useDataFetcher(apiEndpoint, token) {
         },
       });
 
+      const data = await response.json();
+
       if (response.ok) {
         openFeedbackModal("Operación realizada");
         reloadData();
@@ -267,6 +280,13 @@ function useDataFetcher(apiEndpoint, token) {
       if (response.status === 403) {
         setShowErrorModal(true);
         throw new Error("Forbidden");
+      }else if (
+        response.status === 401 &&
+        data.message === "Token is expired."
+      ) {
+        showTokenInvalidError(true);
+        localStorage.removeItem("token");
+        localStorage.removeItem("userInfo");
       }
 
       const updatedData = data.filter((item) => item.id !== itemId);

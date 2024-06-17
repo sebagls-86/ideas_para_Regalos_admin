@@ -120,18 +120,24 @@ function ProductsCatalogDataFetcher() {
     postData,
   } = useDataPoster(apiEndpoint, token, reloadData, setShowErrorModal);
 
-  const [newProductCatalogData, setNewProductCatalogData] = useState({
+  const initialFormState = {
     name: "",
     status: false,
     images: null,
     featured: false,
-  });
+    categories: [],
+    events: [],
+  };
+
+  const [newProductCatalogData, setNewProductCatalogData] = useState(initialFormState);
 
   const [newProductCatalogErrors, setNewProductCatalogErrors] = useState({
     name: "",
     status: false,
     images: null,
     featured: false,
+    categories: "",
+    events: "",
   });
 
   useEffect(() => {
@@ -480,12 +486,12 @@ function ProductsCatalogDataFetcher() {
 
     setNewProductCatalogErrors(errors);
 
-    return Object.values(errors).every((error) => error === "");
+    return errors;
   };
 
   const handleCreateProductCatalog = async () => {
-    const isFormValid = validateNewProductCatalogForm();
-
+    const errors = validateNewProductCatalogForm();
+   
     if (
       newProductCatalogData.images &&
       newProductCatalogData.images.length > 5
@@ -494,10 +500,18 @@ function ProductsCatalogDataFetcher() {
       return;
     }
 
+    const isFormValid = Object.values(errors).every((error) => error === "");
+
     if (isFormValid) {
       postData(newProductCatalogData, "formData");
+      setNewProductCatalogData(initialFormState);
     } else {
-      openFeedbackModal("Formulario inválido");
+      const errorMessages = Object.values(newProductCatalogErrors)
+        .filter((error) => error !== "")
+        .map((error) => `${error}<br>`)
+        .join("");
+      
+      openFeedbackModal(`Formulario inválido:<br>${errorMessages}`);
     }
   };
 
@@ -646,8 +660,7 @@ function ProductsCatalogDataFetcher() {
     };
 
     useEffect(() => {
-      console.log("Updated selectedCategoryIds:", selectedCategoryIds);
-    }, [selectedCategoryIds]);
+     }, [selectedCategoryIds]);
 
     const handleSaveCat = () => {
       setSelectedCategories((prevSelected) => ({

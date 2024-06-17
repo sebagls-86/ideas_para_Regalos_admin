@@ -3,18 +3,20 @@ import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, Modal
 
 const FeedbackModal = ({ isOpen, onClose, feedbackMessage }) => (
   <Modal isOpen={isOpen} onClose={onClose}>
-    <ModalOverlay />
-    <ModalContent>
-      <ModalHeader>Feedback</ModalHeader>
-      <ModalCloseButton />
-      <ModalBody>{feedbackMessage}</ModalBody>
-      <ModalFooter>
-        <Button colorScheme="blue" onClick={onClose}>
-          Cerrar
-        </Button>
-      </ModalFooter>
-    </ModalContent>
-  </Modal>
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>Feedback</ModalHeader>
+    <ModalCloseButton />
+    <ModalBody>
+      <div dangerouslySetInnerHTML={{ __html: feedbackMessage }} />
+    </ModalBody>
+    <ModalFooter>
+      <Button colorScheme="blue" onClick={onClose}>
+        Cerrar
+      </Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
 );
 
 const useFeedbackModal = () => {

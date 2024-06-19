@@ -17,7 +17,7 @@ const useCustomFilter = (initialData, customFilter) => {
     } else {
       setFilteredData(initialData);
     }
-  }, [searchTerm, initialData, customFilter]);
+  }, [searchTerm, initialData]);
 
   const handleSearch = (term) => {
     setSearchTerm(term);

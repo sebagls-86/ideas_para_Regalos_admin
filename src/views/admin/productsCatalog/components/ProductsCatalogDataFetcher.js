@@ -168,7 +168,7 @@ function ProductsCatalogDataFetcher() {
     };
 
     fetchData();
-  }, []);
+  }, [endpoint]);
 
   const handleNewProductCatalogChange = (e) => {
     const { value, name } = e.target;
@@ -322,16 +322,6 @@ function ProductsCatalogDataFetcher() {
         });
       }
 
-      setCategories((prevCategories) => {
-        const updatedCategories = prevCategories.filter(
-          (category) => !categoriesToRemove.includes(category.category_id)
-        );
-        return [
-          ...updatedCategories,
-          ...categoriesToAdd.map((id) => ({ category_id: id })),
-        ];
-      });
-
       reloadData();
       handleCancel(productCatalogId)
     } catch (error) {
@@ -374,16 +364,6 @@ function ProductsCatalogDataFetcher() {
           }),
         });
       }
-
-        setEventTypes((prevEvents) => {
-          const updateEvents = prevEvents.filter(
-            (eventTypes) => !eventsToRemove.includes(eventTypes.event_type_id)
-          );
-          return [
-            ...updateEvents,
-            ...eventsToAdd.map((id) => ({ event_type_id: id })),
-          ];
-        });
 
         reloadData();
         handleCancel(productCatalogId)

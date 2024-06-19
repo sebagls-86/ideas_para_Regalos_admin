@@ -111,22 +111,21 @@ const useDataPoster = (apiUrl, token, reloadData, showErrorCallback, customValid
           handleModalClose();
           openFeedbackModal("Operación realizada");
           reloadData();
-        } else {
-          if (response.status === 403) {
-            handleModalClose();
+        } else if  (response.status === 403){
+           handleModalClose();
             showErrorCallback(true);
-          } else if ((response.status === 401) && (response.message === "Token is expired.")) {
-            openFeedbackModal('Tu sesión expiró. Loguéate nuevamente.');
-            localStorage.removeItem("token")
-            localStorage.removeItem("userInfo")
-            window.location.reload();
-          } else if (response.status === 500) {
+        } else if ((response.status === 401) && (response.message === "Token is expired.")) {
+           openFeedbackModal('Tu sesión expiró. Loguéate nuevamente.');
+           localStorage.removeItem("token")
+           localStorage.removeItem("userInfo")
+           window.location.reload();
+        } else if (response.status === 500) {
             openFeedbackModal(`${response.statusText}`);
-          } else {
+        }
+        else {
             openFeedbackModal('Ocurrió un problema inesperado. Contacta al administrador');
           }
-        }
-      } catch (error) {
+        } catch (error) {
         openFeedbackModal('Ocurrió un problema inesperado. Contacta al administrador');
       }
     } else {

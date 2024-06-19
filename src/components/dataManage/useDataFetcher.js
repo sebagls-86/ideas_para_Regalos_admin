@@ -198,7 +198,8 @@ function useDataFetcher(apiEndpoint, token) {
         response.status === 401 &&
         data.message === "Token is expired."
       ) {
-        showTokenInvalidError(true);
+        openFeedbackModal("Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
+        sleep(3000);
         localStorage.removeItem("token");
         localStorage.removeItem("userInfo");
       } else {
@@ -235,6 +236,8 @@ function useDataFetcher(apiEndpoint, token) {
         response.status === 401 &&
         data.message === "Token is expired."
       ) {
+        openFeedbackModal("Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
+        sleep(3000);
         showTokenInvalidError(true);
         localStorage.removeItem("token");
         localStorage.removeItem("userInfo");

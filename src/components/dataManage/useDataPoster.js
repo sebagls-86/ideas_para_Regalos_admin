@@ -107,6 +107,8 @@ const useDataPoster = (apiUrl, token, reloadData, showErrorCallback, customValid
           body: requestBody,
         });
 
+        var data = await response.json();
+
         if (response.ok) {
           handleModalClose();
           openFeedbackModal("Operación realizada");
@@ -114,7 +116,7 @@ const useDataPoster = (apiUrl, token, reloadData, showErrorCallback, customValid
         } else if  (response.status === 403){
            handleModalClose();
             showErrorCallback(true);
-        } else if ((response.status === 401) && (response.message === "Token is expired.")) {
+        } else if ((response.status === 401) && (data.message === "Token is expired.")) {
            openFeedbackModal('Tu sesión expiró. Loguéate nuevamente.');
            localStorage.removeItem("token")
            localStorage.removeItem("userInfo")

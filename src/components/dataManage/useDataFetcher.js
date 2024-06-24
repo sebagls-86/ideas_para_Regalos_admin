@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useHistory } from "react-router-dom";
 import useFeedbackModal from "../modals/feedbackModal";
 
+
 import {
   Button,
   Modal,
@@ -38,14 +39,12 @@ const fetchData = async (
     const response = await fetch(apiEndpoint, requestOptions);
     const data = await response.json();
 
-    if (response.status === 400) {
-      setShowTokenInvalidError(true);
-      throw new Error("Bad Request");
-    }
-
+  
     if (response.status === 401 && data.message === "Token is expired.") {
       setShowTokenInvalidError(true);
-      await sleep(3000);
+      sleep(3000);
+      localStorage.removeItem("token");
+      localStorage.removeItem("userInfo");
       window.location.reload();
     }
 
@@ -62,7 +61,6 @@ const fetchData = async (
       error.message === "invalid token" ||
       error.message === "token expired"
     ) {
-      setShowTokenInvalidError(true);
       localStorage.removeItem("token");
       localStorage.removeItem("userInfo");
     } else {
@@ -238,7 +236,6 @@ function useDataFetcher(apiEndpoint, token) {
       ) {
         openFeedbackModal("Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
         sleep(3000);
-        showTokenInvalidError(true);
         localStorage.removeItem("token");
         localStorage.removeItem("userInfo");
       }
@@ -287,7 +284,8 @@ function useDataFetcher(apiEndpoint, token) {
         response.status === 401 &&
         data.message === "Token is expired."
       ) {
-        showTokenInvalidError(true);
+        openFeedbackModal("Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
+        sleep(3000);
         localStorage.removeItem("token");
         localStorage.removeItem("userInfo");
       }

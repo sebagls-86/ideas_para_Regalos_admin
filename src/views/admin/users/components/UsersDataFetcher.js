@@ -131,12 +131,9 @@ function UsersDataFetcher() {
     }
   
     if (fieldName === "user_role") {
-      setEditingData((prevEditingData) => ({
-        ...prevEditingData,
-        [user_id]: {
-          ...prevEditingData[user_id],
-          [fieldName]: newValue,
-        },
+      setEditedRoles((prevEditedRoles) => ({
+        ...prevEditedRoles,
+        [user_id]: newValue,
       }));
     }
   

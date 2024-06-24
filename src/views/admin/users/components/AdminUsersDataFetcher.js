@@ -103,6 +103,10 @@ function AdminUsersDataFetcher() {
     customFilter
   );
 
+  const sleep = (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  };
+
   const [avatarPreview, setAvatarPreview] = useState("");
   const [bannerPreview, setBannerPreview] = useState("");
   const [editedRoles, setEditedRoles] = useState({});
@@ -193,7 +197,8 @@ function AdminUsersDataFetcher() {
           reloadData();
           handleCancel(userId);
         } else if (response.status === 401 && response.message === "Token is expired.") {
-          showTokenInvalidError(true);
+          openFeedbackModal("Su sesión ha expirado. Por favor, inicie sesión nuevamente.");
+          sleep(3000);
           localStorage.removeItem("token");
           localStorage.removeItem("userInfo");
         } else {

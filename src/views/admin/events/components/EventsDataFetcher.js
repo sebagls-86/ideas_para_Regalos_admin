@@ -82,7 +82,6 @@ function EventsDataFetcher() {
               <Th>ID</Th>
               <Th>User ID</Th>
               <Th>Nombre</Th>
-              <Th>Fecha</Th>
               <Th>Acciones</Th>
             </Tr>
           </Thead>
@@ -97,7 +96,6 @@ function EventsDataFetcher() {
                 <Td>{event.event_id}</Td>
                 <Td>{event.user_id}</Td>
                 <Td>{event.name}</Td>
-                <Td>{event.date}</Td>
                 <Td>
                   {!editingRows.includes(event.event_id) && (
                     <IconButton

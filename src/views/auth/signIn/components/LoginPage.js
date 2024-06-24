@@ -212,7 +212,7 @@ function SignIn() {
                 type="submit"
                 onClick={() => loginWithRedirect()}
               >
-                Sign In
+                Log In
               </Button>
             </FormControl>
           </Flex>

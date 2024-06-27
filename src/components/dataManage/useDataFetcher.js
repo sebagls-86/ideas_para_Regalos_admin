@@ -258,6 +258,7 @@ function useDataFetcher(apiEndpoint, token) {
     await handleDelete(deleteConfirmationId);
     setShowDeleteConfirmation(false);
     setDeleteConfirmationId(null);
+    reloadData();
   };
 
   const handleCustomDelete = async (customDeleteUrl, itemId) => {
